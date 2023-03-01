@@ -1,10 +1,16 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {Picker} from '@react-native-picker/picker';
 import {i18n} from '../i18n';
 import {useColorScheme} from 'react-native';
 
 const LanguageToggle = () => {
   const isDarkMode = useColorScheme() === 'dark';
+  const [selectedLanguage, setSelectedLanguage] = React.useState(i18n.locale);
+  useEffect(() => {
+    i18n.onChange(change => {
+      setSelectedLanguage(change.locale);
+    });
+  }, []);
   const style = isDarkMode
     ? {
         color: '#fff',
@@ -12,7 +18,6 @@ const LanguageToggle = () => {
     : {
         color: '#000',
       };
-  const language = i18n.locale;
   const setLanguage = (value: string) => {
     if (value === 'en-US') {
       // return i18n.defaultLocale
@@ -22,15 +27,15 @@ const LanguageToggle = () => {
 
   return (
     <Picker
-      selectedValue={language}
+      selectedValue={selectedLanguage}
       onValueChange={setLanguage}
       itemStyle={{
         color: 'red',
         backgroundColor: 'blue',
       }}
       style={[{minWidth: 100}, style]}>
-      <Picker.Item value="en-US" label="En" />
-      <Picker.Item value="es" label="Es" />
+      <Picker.Item value="en-US" label="English" />
+      <Picker.Item value="es" label="Español" />
       <Picker.Item value="ar" label="عربي" />
     </Picker>
   );

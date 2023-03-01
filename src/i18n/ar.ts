@@ -1,4 +1,9 @@
 const ar = {
+  login: {
+    signIn: 'تسجيل الدخول',
+    email: 'البريد الإلكتروني',
+    password: 'كلمه السر',
+  },
   patientFile: {
     visitHistory: 'سجل الزيارات',
     visitHistoryDescription: 'سجل آخر زيارات المريض مع مقدم الرعاية الصحية',

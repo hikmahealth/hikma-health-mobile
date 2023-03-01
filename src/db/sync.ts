@@ -1,20 +1,29 @@
-import {synchronize} from '@nozbe/watermelondb/sync';
+import {hasUnsyncedChanges, synchronize} from '@nozbe/watermelondb/sync';
 import database from '.';
 import {HIKMA_API} from '@env';
 import {Alert} from 'react-native';
+import {interpret} from 'xstate';
+import {syncMachine} from '../components/state_machines/sync';
 
 const SYNC_API = `${HIKMA_API}/api/v2/sync`;
 
-export async function syncDB() {
+const syncServiceT = interpret(syncMachine);
+
+export async function syncDB(
+  syncService: typeof syncServiceT,
+  hasLocalChangesToPush: boolean,
+) {
   await synchronize({
     database,
     sendCreatedAsUpdated: false,
     pullChanges: async ({lastPulledAt, schemaVersion, migration}) => {
+      // const hasRecordsToUpload = await hasUnsyncedChanges({database});
+      // console.warn({hasRecordsToUpload});
       const urlParams = `last_pulled_at=${lastPulledAt}&schema_version=${schemaVersion}&migration=${encodeURIComponent(
         JSON.stringify(migration),
       )}`;
+      syncService.send('FETCH');
       const response = await fetch(`${SYNC_API}?${urlParams}`);
-      console.log({response});
       if (!response.ok) {
         throw new Error(await response.text());
       }
@@ -58,17 +67,43 @@ export async function syncDB() {
         patient.updated_at = new Date(patient.updated_at).getTime();
       });
 
+      const newRecordsToChange = countRecordsInChanges(changes);
+      syncService.send({
+        type: 'RESOLVE_CONFLICTS',
+        downloadedRecords: newRecordsToChange,
+      });
+      // syncService.send({
+      //   type: 'downloaded records loaded',
+      //   downloadedRecords: newRecordsToChange.length,
+      // });
+      // syncService.send('COMPLETED');
+
+      if (!hasLocalChangesToPush) {
+        setTimeout(
+          () =>
+            syncService.send({
+              type: 'COMPLETED',
+              downloadedRecords: newRecordsToChange,
+            }),
+          2_500,
+        );
+      }
+
       // console.warn(changes.events);
 
       // Remove the last
 
       // const datedChanges = changes
-      console.warn({changes, timestamp});
+      // console.warn({changes, timestamp});
       return {changes, timestamp};
     },
     pushChanges: async ({changes, lastPulledAt}) => {
       // record timestamp at begining of push
       const timestamp = Date.now();
+      syncService.send({
+        type: 'UPLOAD',
+        uploadedRecords: countRecordsInChanges(changes),
+      });
       const response = await fetch(
         `${SYNC_API}?last_pulled_at=${lastPulledAt}`,
         {
@@ -82,7 +117,7 @@ export async function syncDB() {
 
       // calculate how long it took to push
       const timeToPush = (Date.now() - timestamp) / 1000;
-      Alert.alert('Good news, it took: ' + timeToPush);
+      syncService.send({type: 'COMPLETED'});
       if (!response.ok) {
         throw new Error(await response.text());
       }
@@ -90,3 +125,8 @@ export async function syncDB() {
     migrationsEnabledAtVersion: 1,
   });
 }
+
+const countRecordsInChanges = (changes: {[key: string]: []}) =>
+  Object.values(changes)
+    .flatMap(b => Object.values(b))
+    .flat().length;

@@ -1,6 +1,8 @@
 const es = {
   login: {
     signIn: 'Iniciar Sesión',
+    email: 'Correo electrónico',
+    password: 'Contraseña',
   },
   patientFile: {
     visitHistory: 'Historia de la visita',

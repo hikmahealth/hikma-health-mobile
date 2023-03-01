@@ -1,9 +1,8 @@
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {Button, RadioButton} from 'react-native-paper';
+import {RadioButton} from 'react-native-paper';
 import {Alert, View} from 'react-native';
 import {SubmitHandler, useForm, FormProvider} from 'react-hook-form';
-import {Screen} from '../components/Screen';
-import {Text} from '../components/Text';
+import {Button, Text, Screen, ControlledTextField} from '../components';
 import {RootStackParamList} from '../../App';
 import {format} from 'date-fns';
 import {translate} from '../i18n';
@@ -11,8 +10,6 @@ import {ViewStyle} from 'react-native/types';
 import {ControlledDatePickerButton} from '../components/DatePicker';
 import Patient from '../db/model/Patient';
 import {registerNewPatient, updatePatientWithId} from '../db/api';
-import {ControlledTextField} from '../components';
-import {primaryTheme} from '../styles/buttons';
 import {primary} from '../styles/colors';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'NewPatient'>;
@@ -138,10 +135,7 @@ export default function NewPatientScreen(props: Props) {
               <RadioButton.Item color={primary} label="Female" value="female" />
             </RadioButton.Group>
           </View>
-          <Button
-            mode="contained"
-            onPress={formMethods.handleSubmit(onSubmit)}
-            theme={primaryTheme}>
+          <Button mode="contained" onPress={formMethods.handleSubmit(onSubmit)}>
             {translate('save')}
           </Button>
         </FormProvider>

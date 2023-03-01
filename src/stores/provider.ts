@@ -16,8 +16,10 @@ export const useProviderStore = create<ProviderState>()(
     (set, get) => ({
       provider: null,
       clinic: null,
-      setProvider: (provider: User | null = null) =>
-        set(state => ({...state, provider})),
+      setProvider: (provider: User | null = null) => {
+        console.warn({provider});
+        set(state => ({...state, provider}));
+      },
       setClinic: (clinic: Clinic | null = null) =>
         set(state => ({...state, clinic})),
     }),

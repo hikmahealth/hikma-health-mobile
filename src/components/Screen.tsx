@@ -60,6 +60,9 @@ interface BaseScreenProps {
 interface FixedScreenProps extends BaseScreenProps {
   preset?: 'fixed';
 }
+interface FullScreenFixedProps extends BaseScreenProps {
+  preset?: 'fullScreenFixed';
+}
 interface ScrollScreenProps extends BaseScreenProps {
   preset?: 'scroll';
   /**
@@ -85,6 +88,7 @@ interface AutoScreenProps extends Omit<ScrollScreenProps, 'preset'> {
 export type ScreenProps =
   | ScrollScreenProps
   | FixedScreenProps
+  | FullScreenFixedProps
   | AutoScreenProps;
 
 const isIos = Platform.OS === 'ios';
@@ -149,6 +153,11 @@ function useAutoPreset(props: AutoScreenProps) {
     onContentSizeChange,
     onLayout,
   };
+}
+
+function FullScreenFixed(props: ScreenProps) {
+  const {style, contentContainerStyle, children} = props;
+  return <View style={{height: '100%'}}>{children}</View>;
 }
 
 function ScreenWithoutScrolling(props: ScreenProps) {
@@ -224,17 +233,24 @@ export function Screen(props: ScreenProps) {
     <View style={[$containerStyle, {backgroundColor}, $containerInsets]}>
       <StatusBar style={statusBarStyle} {...StatusBarProps} />
 
-      <KeyboardAvoidingView
-        behavior={isIos ? 'padding' : undefined}
-        keyboardVerticalOffset={keyboardOffset}
-        {...KeyboardAvoidingViewProps}
-        style={[$keyboardAvoidingViewStyle, KeyboardAvoidingViewProps?.style]}>
-        {isNonScrolling(props.preset) ? (
-          <ScreenWithoutScrolling {...props} />
-        ) : (
-          <ScreenWithScrolling {...props} />
-        )}
-      </KeyboardAvoidingView>
+      {props.preset === 'fullScreenFixed' ? (
+        <FullScreenFixed {...props} />
+      ) : (
+        <KeyboardAvoidingView
+          behavior={isIos ? 'padding' : undefined}
+          keyboardVerticalOffset={keyboardOffset}
+          {...KeyboardAvoidingViewProps}
+          style={[
+            $keyboardAvoidingViewStyle,
+            KeyboardAvoidingViewProps?.style,
+          ]}>
+          {isNonScrolling(props.preset) ? (
+            <ScreenWithoutScrolling {...props} />
+          ) : (
+            <ScreenWithScrolling {...props} />
+          )}
+        </KeyboardAvoidingView>
+      )}
     </View>
   );
 }

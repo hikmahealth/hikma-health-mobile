@@ -18,6 +18,7 @@ import {Event, EventTypes} from '../types';
 import {Q} from '@nozbe/watermelondb';
 import {getEventDisplay} from '../components/EventFormDisplay';
 import {calculateAgeInYears} from '../utils/dateUtils';
+import {deleteEvent} from '../db/api';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EventList'>;
 
@@ -104,6 +105,48 @@ export function EventList(props: Props) {
     }
   };
 
+  const confirmDeleteEvent = (event: Event) => {
+    Alert.alert('Delete', 'Are you sure you want to delete this event?', [
+      {
+        text: 'Cancel',
+      },
+      {
+        text: 'Delete',
+        onPress: () => {
+          deleteEvent(event.id)
+            .then(res => {
+              setEventsList(eventsList.filter(e => e.id !== event.id));
+              ToastAndroid.show('Event deleted', ToastAndroid.SHORT);
+            })
+            .catch(error => {
+              console.error(error);
+              ToastAndroid.show('Error deleting event', ToastAndroid.SHORT);
+            });
+        },
+      },
+    ]);
+  };
+
+  const openEventOptions = (event: Event) => {
+    Alert.alert(
+      'Event Options',
+      'What do you want to do?',
+      [
+        {
+          text: 'Edit',
+          onPress: () => editEvent(event),
+        },
+        {
+          text: 'Delete',
+          onPress: () => confirmDeleteEvent(event),
+        },
+      ],
+      {
+        cancelable: true,
+      },
+    );
+  };
+
   const renderItem = ({item}: {item: Event}) => {
     const display = getEventDisplay(item);
     const time = new Date(item.createdAt).toLocaleTimeString([], {
@@ -113,7 +156,7 @@ export function EventList(props: Props) {
     });
 
     return (
-      <TouchableOpacity style={{}} onLongPress={() => editEvent(item)}>
+      <TouchableOpacity style={{}} onLongPress={() => openEventOptions(item)}>
         <View style={{}}>
           <View style={{margin: 10}}>
             <Text>{`${item.eventType}, ${time}`}</Text>

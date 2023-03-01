@@ -1,10 +1,14 @@
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {List} from 'react-native-paper';
 import {View, ViewStyle} from 'react-native';
-import {RootStackParamList, VisitScreensProps} from '../../App';
+import {RootStackParamList} from '../../App';
 import {Text, Screen} from '../components';
 import {translate, TxKeyPath} from '../i18n';
 import {useProviderStore} from '../stores/provider';
+import {
+  PatientFlowParamList,
+  VisitScreensProps,
+} from '../navigators/PatientFlowNavigator';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'NewVisit'>;
 
@@ -17,7 +21,7 @@ const patientVisitLinks = (
   patientAge: number,
 ): {
   labelTx: TxKeyPath;
-  route: keyof RootStackParamList;
+  route: keyof PatientFlowParamList;
   descriptionTx: TxKeyPath;
   iconName: string;
   params: VisitScreensProps | (VisitScreensProps & {patientAge: number});

@@ -111,7 +111,7 @@ export async function createEvent(
 export async function getLatestPatientEventByType(
   patientId: string,
   eventType: EventTypes,
-) {
+): Promise<string> {
   const results = await database
     .get<EventModel>('events')
     .query(
@@ -126,6 +126,17 @@ export async function getLatestPatientEventByType(
   }
 
   return '';
+}
+
+// Delete an event
+export async function deleteEvent(eventId: string): Promise<any> {
+  return await database.write(async () => {
+    const event = await database.get<EventModel>('events').find(eventId);
+    const deletedEvent = await event.update(evt => {
+      evt.isDeleted = true;
+    });
+    return await event.markAsDeleted();
+  });
 }
 
 // get all events of a patient by type
@@ -180,3 +191,8 @@ export async function getClinic() {
 //     );
 //   });
 // }
+
+export async function getUnsyncedRecords() {
+  // return watermelon db rows that are not synced from the server
+  return 0;
+}

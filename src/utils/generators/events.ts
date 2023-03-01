@@ -29,7 +29,7 @@ const generatePhysiotherapyMetadata = (
   doctor?: string,
 ): PhysiotherapyMetadata => ({
   doctor: doctor || faker.name.fullName(),
-  previousTreatment: faker.lorem.word(),
+  previousTreatment: sample([true, false]) as boolean,
   previousTreatmentText: faker.lorem.sentence(),
   complaint: faker.lorem.sentence(),
   findings: faker.lorem.sentence(),
@@ -85,6 +85,7 @@ const generateEventAndMetadata = (
     case 'Complaint':
       return [eventType, faker.lorem.sentence()];
     default:
+      // @ts-ignore
       return [eventType, {doctor: doctor || faker.name.fullName}];
   }
 };

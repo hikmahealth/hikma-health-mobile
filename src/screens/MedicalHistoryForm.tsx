@@ -1,15 +1,14 @@
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {View, ViewStyle} from 'react-native';
-import {Button} from 'react-native-paper';
-import {RootStackParamList} from '../../App';
 import {Event} from '../types/Event';
-import {Screen, Text, ControlledTextField} from '../components';
+import {Screen, Text, Button, ControlledTextField} from '../components';
 import {useForm, SubmitHandler, FormProvider} from 'react-hook-form';
 import {translate} from '../i18n';
 import {createEvent} from '../db/api';
 import {primaryTheme} from '../styles/buttons';
+import {PatientFlowParamList} from '../navigators/PatientFlowNavigator';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'MedicalHistoryForm'>;
+type Props = NativeStackScreenProps<PatientFlowParamList, 'MedicalHistoryForm'>;
 
 export type MedicalHistoryMetadata = {
   doctor: string;
@@ -72,10 +71,7 @@ export function MedicalHistoryForm(props: Props) {
             name="vaccinations"
           />
 
-          <Button
-            theme={primaryTheme}
-            mode="contained"
-            onPress={formMethods.handleSubmit(onSubmit)}>
+          <Button mode="contained" onPress={formMethods.handleSubmit(onSubmit)}>
             {translate('save')}
           </Button>
         </FormProvider>

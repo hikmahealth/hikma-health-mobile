@@ -2,27 +2,17 @@ import {Q} from '@nozbe/watermelondb';
 import {useDatabase} from '@nozbe/watermelondb/hooks';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {useEffect, useState} from 'react';
-import {useForm, SubmitHandler, FormProvider} from 'react-hook-form';
-import {
-  View,
-  Alert,
-  ViewStyle,
-  FlatList,
-  TouchableOpacity,
-  InteractionManager,
-} from 'react-native';
-import {Button} from 'react-native-paper';
-import {RootStackParamList} from '../../App';
-import {Screen, Text, ControlledTextField} from '../components';
-import {createEvent, deleteVisit} from '../db/api';
+import {View, Alert, FlatList, TouchableOpacity} from 'react-native';
+import {Screen, Text} from '../components';
+import {deleteVisit} from '../db/api';
 import VisitModel from '../db/model/Visit';
 import {translate} from '../i18n';
+import {PatientFlowParamList} from '../navigators/PatientFlowNavigator';
 import {Visit} from '../types';
-import {EventTypes, Event} from '../types/Event';
 import {displayName} from '../utils/patient';
 import {VitalsMetadata} from './VitalsForm';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'VisitList'>;
+type Props = NativeStackScreenProps<PatientFlowParamList, 'VisitList'>;
 
 export function VisitList(props: Props) {
   const {route, navigation} = props;
@@ -54,7 +44,7 @@ export function VisitList(props: Props) {
     }, 100);
   }, []);
 
-  const keyExtractor = (item, index) => index.toString();
+  const keyExtractor = (item: any, index: number) => index.toString();
 
   const renderItem = ({item}: {item: Visit}) => (
     <TouchableOpacity
@@ -62,7 +52,6 @@ export function VisitList(props: Props) {
       onPress={() =>
         props.navigation.navigate('EventList', {
           patient,
-          userName: 'Dr. Doctor',
           visit: item,
         })
       }

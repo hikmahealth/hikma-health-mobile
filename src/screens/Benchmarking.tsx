@@ -2,14 +2,12 @@ import {useDatabase} from '@nozbe/watermelondb/hooks';
 import {omit} from 'lodash';
 import {useState} from 'react';
 import {Alert, View, ViewStyle} from 'react-native';
-import {Button, TextInput} from 'react-native-paper';
-import {Text, Screen} from '../components';
-import {createEvent, createVisit, registerNewPatient} from '../db/api';
+import {TextInput} from 'react-native-paper';
+import {Text, Button, Screen} from '../components';
 import EventModel from '../db/model/Event';
 import PatientModel from '../db/model/Patient';
 import VisitModel from '../db/model/Visit';
 import {useProviderStore} from '../stores/provider';
-import {primaryTheme} from '../styles/buttons';
 import {Patient} from '../types';
 import {generateEvent} from '../utils/generators/events';
 import {generatePatient} from '../utils/generators/patients';
@@ -17,8 +15,8 @@ import {generateVisit} from '../utils/generators/visits';
 
 export function Benchmarking() {
   const database = useDatabase();
-  const [patientsCount, setPatientsCount] = useState(10);
-  const [eventsPerPatient, setEventsPerPatient] = useState(2);
+  const [patientsCount, setPatientsCount] = useState(2_500);
+  const [eventsPerPatient, setEventsPerPatient] = useState(0);
   const [provider, clinic] = useProviderStore(store => [
     store.provider,
     store.clinic,
@@ -76,17 +74,20 @@ export function Benchmarking() {
         });
     });
 
-    console.log('Patients saved', batchPatientRegistrations);
-
-    let batchVisits = batchPatientRegistrations.map(patient => {
-      const visit = generateVisit(patient.id, providerId, clinicId);
-      return database.get<VisitModel>('visits').prepareCreate(newVisit => {
-        newVisit.patientId = visit.patientId;
-        newVisit.clinicId = visit.clinicId;
-        newVisit.providerId = visit.providerId;
-        newVisit.checkInTimestamp = visit.checkInTimestamp;
-      });
-    });
+    let batchVisits =
+      eventsPerPatient === 0
+        ? []
+        : batchPatientRegistrations.map(patient => {
+            const visit = generateVisit(patient.id, providerId, clinicId);
+            return database
+              .get<VisitModel>('visits')
+              .prepareCreate(newVisit => {
+                newVisit.patientId = visit.patientId;
+                newVisit.clinicId = visit.clinicId;
+                newVisit.providerId = visit.providerId;
+                newVisit.checkInTimestamp = visit.checkInTimestamp;
+              });
+          });
 
     let batchEvents = batchVisits.flatMap(visit => {
       const eventsList = Array.from({length: eventsPerPatient}, () =>
@@ -160,17 +161,13 @@ export function Benchmarking() {
           onChangeText={t => setEventsPerPatient(+t)}
         />
 
-        <Button
-          theme={primaryTheme}
-          loading={loading}
-          onPress={submit}
-          mode="contained">
+        <Button loading={loading} onPress={submit} mode="contained">
           Generate
         </Button>
 
-        <Button onPress={deleteAllData} loading={loading} mode="text">
-          Delete All Data
-        </Button>
+        {/* <Button onPress={deleteAllData} loading={loading} mode="text"> */}
+        {/*   Delete All Data */}
+        {/* </Button> */}
       </View>
     </Screen>
   );

@@ -64,22 +64,24 @@ export function Text(props: TextProps) {
     ...rest
   } = props;
 
-  const [v, setV] = React.useState(0);
+  // const [v, setV] = React.useState(0);
 
   const i18nText = tx && translate(tx, txOptions);
   const content = i18nText || text || children;
 
-  useEffect(() => {
-    //   console.warn('I18n has been updated!');
-    const sub = i18n.onChange(ab => {
-      console.warn('Language Change', ab);
-      setV(i18n.version);
-    });
+  // useEffect(() => {
+  //   //   console.warn('I18n has been updated!');
+  //   const sub = i18n.onChange(ab => {
+  //     console.warn('Language Change', ab);
+  //     setV(i18n.version);
+  //   });
 
-    return () => {
-      sub();
-    };
-  }, []);
+  //   return () => {
+  //     sub();
+  //   };
+  // }, []);
+
+  // console.log('text render');
 
   // const preset: Presets = $presets[props.preset] ? props.preset : 'default';
   const $styles = [

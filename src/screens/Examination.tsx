@@ -1,20 +1,19 @@
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {FormProvider, SubmitHandler, useForm} from 'react-hook-form';
 import {View, ViewStyle} from 'react-native';
-import {Button} from 'react-native-paper';
-
-import {RootStackParamList} from '../../App';
 import {
   Screen,
   ControlledTextField,
   ControlledRadioGroup,
   Text,
+  Button,
 } from '../components';
 import {Examination, Event} from '../types';
 import {translate} from '../i18n';
 import {createEvent} from '../db/api';
+import {PatientFlowParamList} from '../navigators/PatientFlowNavigator';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'ExaminationForm'>;
+type Props = NativeStackScreenProps<PatientFlowParamList, 'ExaminationForm'>;
 
 export function ExaminationForm(props: Props) {
   const {route, navigation} = props;

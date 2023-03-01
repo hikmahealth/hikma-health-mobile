@@ -1,6 +1,8 @@
 const en = {
   login: {
     signIn: 'Sign In',
+    email: 'Email Address',
+    password: 'Password',
   },
   patientFile: {
     visitHistory: 'Visit History',

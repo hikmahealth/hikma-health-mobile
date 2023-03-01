@@ -2,14 +2,14 @@ import {Picker} from '@react-native-picker/picker';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {useForm, FormProvider} from 'react-hook-form';
 import {View, ViewStyle} from 'react-native';
-import {Button} from 'react-native-paper';
 import {RootStackParamList} from '../../App';
-import {Screen, Text, ControlledTextField} from '../components';
+import {Screen, Text, Button, ControlledTextField} from '../components';
 import {createEvent} from '../db/api';
 import {translate} from '../i18n';
+import {PatientFlowParamList} from '../navigators/PatientFlowNavigator';
 import {primaryTheme} from '../styles/buttons';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'MedicineForm'>;
+type Props = NativeStackScreenProps<PatientFlowParamList, 'MedicineForm'>;
 
 type MedicineType =
   | 'tablet'
@@ -99,10 +99,7 @@ export function MedicineForm(props: Props) {
             keyboardType="number-pad"
           />
 
-          <Button
-            theme={primaryTheme}
-            mode="contained"
-            onPress={formMethods.handleSubmit(onSubmit)}>
+          <Button mode="contained" onPress={formMethods.handleSubmit(onSubmit)}>
             {translate('save')}
           </Button>
         </FormProvider>

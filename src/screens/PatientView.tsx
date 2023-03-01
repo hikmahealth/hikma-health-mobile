@@ -1,10 +1,13 @@
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
 import {format} from 'date-fns';
 import {useCallback, useEffect, useState} from 'react';
 import {View, ViewStyle, FlatList} from 'react-native';
-import {Avatar, List, Button, FAB} from 'react-native-paper';
+import {Avatar, List, FAB} from 'react-native-paper';
 import {RootStackParamList} from '../../App';
-import {Screen, Text, PatientSummary} from '../components';
+import {Screen, Text, Button, PatientSummary} from '../components';
 import {createVisit, getLatestPatientEventByType} from '../db/api';
 import {translate, TxKeyPath} from '../i18n';
 import {Event, Patient} from '../types';
@@ -15,17 +18,19 @@ import {primary} from '../styles/colors';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PatientView'>;
 
-const patientLinks = (
-  patientId: string,
-  patient: Patient,
-  visitId: string,
-): {
+type PatientLink = {
   labelTx: TxKeyPath;
   route: keyof RootStackParamList;
   descriptionTx: TxKeyPath;
   iconName: string;
   params: Partial<RootStackParamList[keyof RootStackParamList]>;
-}[] => [
+};
+
+const patientLinks = (
+  patientId: string,
+  patient: Patient,
+  visitId: string,
+): PatientLink[] => [
   {
     labelTx: 'patientFile.visitHistory',
     route: 'VisitList',
@@ -116,7 +121,9 @@ export function PatientView(props: Props) {
   let links = patientLinks(patient.id, patient, '');
 
   const renderItem = useCallback(
-    ({item}) => <LinkItem link={item} navigation={navigation} />,
+    ({item}: {item: PatientLink}) => (
+      <LinkItem link={item} navigation={navigation} />
+    ),
     [],
   );
 
@@ -148,7 +155,13 @@ export function PatientView(props: Props) {
   );
 }
 
-const LinkItem = ({link, navigation}) => {
+const LinkItem = ({
+  link,
+  navigation,
+}: {
+  link: PatientLink;
+  navigation: NativeStackNavigationProp<any>;
+}) => {
   return (
     <List.Item
       key={link.labelTx}

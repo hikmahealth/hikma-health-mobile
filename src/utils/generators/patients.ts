@@ -14,7 +14,9 @@ export const generatePatient = (): Patient => ({
   sex: sample(['male', 'female']) as string,
   phone: faker.phone.number(),
   camp: faker.address.streetAddress(),
+  // @ts-ignore: This object is for use directly as insert into db
   createdAt: faker.date.past(2).getTime(),
+  // @ts-ignore: This object is for use directly as insert into db
   updatedAt: faker.date.past(2).getTime(),
 });
 

@@ -1,9 +1,9 @@
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {FormProvider, SubmitHandler, useForm} from 'react-hook-form';
 import {View, ViewStyle} from 'react-native';
-import {Button, TextInput} from 'react-native-paper';
+import {TextInput} from 'react-native-paper';
 import {RootStackParamList} from '../../App';
-import {Text, Screen, ControlledTextField, Row} from '../components';
+import {Button, Text, Screen, ControlledTextField, Row} from '../components';
 import {createEvent} from '../db/api';
 import {translate} from '../i18n';
 import {primaryTheme} from '../styles/buttons';

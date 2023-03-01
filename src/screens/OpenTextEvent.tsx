@@ -1,14 +1,13 @@
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {useForm, SubmitHandler, FormProvider} from 'react-hook-form';
 import {View, Alert, ViewStyle} from 'react-native';
-import {Button} from 'react-native-paper';
-import {RootStackParamList} from '../../App';
-import {Screen, Text, ControlledTextField} from '../components';
+import {Screen, Button, Text, ControlledTextField} from '../components';
 import {createEvent} from '../db/api';
 import {translate} from '../i18n';
+import {PatientFlowParamList} from '../navigators/PatientFlowNavigator';
 import {EventTypes, Event} from '../types/Event';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'OpenTextEvent'>;
+type Props = NativeStackScreenProps<PatientFlowParamList, 'OpenTextEvent'>;
 
 type OpenTextEvent = {
   patientId: string;

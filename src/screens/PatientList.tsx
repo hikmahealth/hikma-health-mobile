@@ -1,35 +1,21 @@
 import {Screen} from '../components/Screen';
 import {Text} from '../components/Text';
 import {FAB, Searchbar} from 'react-native-paper';
-import {
-  FlatList,
-  Platform,
-  StyleSheet,
-  useColorScheme,
-  View,
-  ViewStyle,
-} from 'react-native';
+import {useColorScheme, View, ViewStyle} from 'react-native';
 import {translate} from '../i18n';
 import {useCallback, useEffect, useState} from 'react';
 import {PatientListItem} from '../components/PatientListItem';
-import {generatePatient, generatePatients} from '../utils/generators/patients';
 import {Patient} from '../types/Patient';
-import {useNavigation} from '@react-navigation/native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {useDatabase} from '@nozbe/watermelondb/hooks';
-import {RootStackParamList} from '../../App';
 import PatientModel from '../db/model/Patient';
 import {Q} from '@nozbe/watermelondb';
 import {FlashList} from '@shopify/flash-list';
-import ClinicModel from '../db/model/Clinic';
-import EventModel from '../db/model/Event';
-import {sortBy} from 'lodash';
 import {primary} from '../styles/colors';
-// import database from '../db';
+import {PatientFlowParamList} from '../navigators/PatientFlowNavigator';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'PatientList'>;
+type Props = NativeStackScreenProps<PatientFlowParamList, 'PatientList'>;
 
-// const patients = generatePatients(50);
 const RESULTS_PER_PAGE = 20;
 const INITIAL_RESULTS_PER_PAGE = 60;
 
@@ -79,7 +65,7 @@ export default function PatientList(props: Props) {
       )
       .observe()
       .subscribe((patients: PatientModel[]) => {
-        console.warn('sub');
+        // console.warn('sub');
         setPatients(patients as unknown as Patient[]);
       });
 
@@ -145,14 +131,10 @@ export default function PatientList(props: Props) {
 
   return (
     <>
-      <Screen preset="auto">
-        {/* <FlatList */}
+      <Screen preset="fullScreenFixed">
         <FlashList
-          // renderItem={({item}) => <Text>{item.title}</Text>}
           onRefresh={getNextPagePatients}
           refreshing={false}
-          // initialNumToRender={10}
-          // windowSize={10}
           ItemSeparatorComponent={() => <View style={$separator} />}
           ListHeaderComponent={
             <HeaderSearch
@@ -160,16 +142,13 @@ export default function PatientList(props: Props) {
               totalPatientsCount={totalPatientsCount}
             />
           }
-          // keyExtractor={item => item.id}
+          ListFooterComponent={() => <View style={{height: 40}} />}
           data={patients}
           estimatedItemSize={100}
-          // initialNumToRender={10}
-          // onEndReached={getNextPagePatients}
-          // renderItem={renderItem}
+          onEndReached={getNextPagePatients}
           renderItem={({item}: {item: Patient}) => (
             <PatientListItem
               patient={item}
-              // key={item.id}
               onPatientSelected={openPatientFile}
               language={language}
             />

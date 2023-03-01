@@ -1,5 +1,5 @@
 import {StackActions, useNavigation} from '@react-navigation/native';
-import {useEffect, useState} from 'react';
+import {useContext, useEffect, useState} from 'react';
 import {
   useColorScheme,
   Image,
@@ -8,16 +8,19 @@ import {
   ViewStyle,
   Alert,
 } from 'react-native';
-import {Button, TextInput} from 'react-native-paper';
-import {Screen} from '../components/Screen';
-import {Text} from '../components/Text';
+import {TextInput} from 'react-native-paper';
+import {Text, Button, Screen} from '../components';
 import {translate} from '../i18n';
 import {HIKMA_API} from '@env';
 import {useProviderStore} from '../stores/provider';
 import {useSyncStore} from '../stores/sync';
 import {syncDB} from '../db/sync';
 import {getClinic} from '../db/api';
-import {primaryTheme} from '../styles/buttons';
+import {GlobalServiceContext} from '../components/SyncModal';
+import {useActor} from '@xstate/react';
+import database from '../db';
+import {hasUnsyncedChanges} from '@nozbe/watermelondb/sync';
+import LanguageToggle from '../components/LanguageToggle';
 
 export default function Login() {
   const navigation = useNavigation();
@@ -27,33 +30,19 @@ export default function Login() {
     state.provider,
     state.setProvider,
     state.setClinic,
+    state.clinic,
   ]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const globalServices = useContext(GlobalServiceContext);
+  const [state, send] = useActor(globalServices.syncService);
 
   const [email, setEmail] = useState('admin@hikmahealth.org');
   const [password, setPassword] = useState('HikmaAdmin25!');
 
-  const fetchAndSetClinic = async () => {
-    const clinic = (await getClinic())[0];
-    clinic && setClinic({id: clinic.id, name: clinic.name});
-  };
-
-  // if there is a provider, then navigate the user directly to PatientList page
-  useEffect(() => {
-    if (!clinic) {
-      fetchAndSetClinic();
-    }
-    if (provider) {
-      navigation.dispatch(
-        StackActions.replace('PatientList', {
-          userId: '###',
-        }),
-      );
-    }
-  }, [provider]);
-
   const signIn = async () => {
     setIsLoading(true);
+    console.warn('1');
     const response = await fetch(`${HIKMA_API}/api/login`, {
       method: 'POST',
       headers: {
@@ -65,6 +54,7 @@ export default function Login() {
         password: password,
       }),
     });
+    console.warn('2');
     const result = await response.json();
 
     // If there is an error message, then there is no user logged in
@@ -76,15 +66,18 @@ export default function Login() {
       );
     }
 
+    console.warn('3');
+
     setProvider(result);
+    const hasLocalChangesToPush = await hasUnsyncedChanges({database});
 
     try {
-      setSyncStatus(true);
-      await syncDB();
+      // setSyncStatus(true);
+      await syncDB({send}, hasLocalChangesToPush);
       const clinic = (await getClinic())[0];
       clinic && setClinic({id: clinic.id, name: clinic.name});
     } catch (error) {
-      setSyncStatus(false);
+      // setSyncStatus(false);
       setIsLoading(false);
       console.error('Sync failed', error);
       return;
@@ -95,7 +88,7 @@ export default function Login() {
 
   const launchIcon = isDarkmode
     ? require('./../assets/images/logo_no_text.png')
-    : require('./../assets/images/launch_icon.jpg');
+    : require('./../assets/images/launch_icon.png');
 
   return (
     <Screen preset="fixed">
@@ -108,21 +101,24 @@ export default function Login() {
         <TextInput
           onChangeText={setEmail}
           value={email}
-          label="Email Address"
+          // label="Email Address"
+          label={translate('login.email')}
           mode="outlined"
         />
         <TextInput
           value={password}
           onChangeText={setPassword}
+          label={translate('login.password')}
           secureTextEntry
-          label="Password"
+          // label="Password"
           mode="outlined"
         />
+
+        <LanguageToggle />
 
         <Button
           loading={isLoading}
           disabled={isLoading}
-          theme={primaryTheme}
           mode="contained"
           style={$authButton}
           onPress={signIn}>

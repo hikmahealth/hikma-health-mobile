@@ -1,18 +1,18 @@
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {useMemo, useState} from 'react';
-import {Pressable, View, ViewStyle} from 'react-native';
+import {View, ViewStyle} from 'react-native';
 import {MapOrEntries, useMap} from 'usehooks-ts';
-import {Button, Divider, RadioButton} from 'react-native-paper';
-import {RootStackParamList} from '../../App';
-import {Screen, Text, If} from '../components';
+import {Divider} from 'react-native-paper';
+import {Screen, Button, Text, If, HorizontalRadioGroup} from '../components';
 import {translate, TxKeyPath} from '../i18n';
 import {Collapsible} from '../components/Collapsible';
 import {subDays} from 'date-fns';
 import {DatePickerButton} from '../components/DatePicker';
 import {createEvent} from '../db/api';
 import {primaryTheme} from '../styles/buttons';
+import {PatientFlowParamList} from '../navigators/PatientFlowNavigator';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Covid19Form'>;
+type Props = NativeStackScreenProps<PatientFlowParamList, 'Covid19Form'>;
 // const emergencyResult = () => {
 //   return chestPain || confusion || bluish;
 // };
@@ -128,19 +128,6 @@ export function Covid19Form(props: Props) {
   }, [syMap.get('chestPain'), syMap.get('confusion'), syMap.get('bluish')]);
 
   const testAndIsolate = useMemo(() => {
-    // if the patient has fever ||
-    // dryCough ||
-    // diffBreathing ||
-    // soreThroat ||
-    // exposureKnown ||
-    // travel ||
-    // diabetes ||
-    // cardioDisease ||
-    // pulmonaryDisease ||
-    // renalDisease ||
-    // malignancy ||
-    // pregnant ||
-    // immunocompromised
     const dangerSigns = [
       'dryCough',
       'diffBreathing',
@@ -243,45 +230,13 @@ export function Covid19Form(props: Props) {
         </Collapsible>
         <Divider style={$sectionDivider} />
 
-        <Button theme={primaryTheme} mode="contained" onPress={submit}>
+        <Button mode="contained" onPress={submit}>
           {translate('save')}
         </Button>
       </View>
     </Screen>
   );
 }
-
-type HorizontalRadioGroupProps = {
-  options: {value: string; label: string}[];
-  onChange: (value: string) => void;
-  value: string;
-  label: string;
-};
-
-const HorizontalRadioGroup = (props: HorizontalRadioGroupProps) => {
-  const {options, onChange, label, value} = props;
-  return (
-    <View style={$horizontalRadioContainer}>
-      <Text variant="bodyLarge" text={label} />
-      <View style={{flexDirection: 'row', alignItems: 'center', columnGap: 14}}>
-        {options.map(option => (
-          <Pressable
-            key={option.value}
-            onPress={() => onChange(option.value)}
-            style={{flexDirection: 'row', alignItems: 'center'}}>
-            <RadioButton
-              value={option.value}
-              theme={primaryTheme}
-              onPress={() => onChange(option.value)}
-              status={value === option.value ? 'checked' : 'unchecked'}
-            />
-            <Text variant="labelLarge">{option.label}</Text>
-          </Pressable>
-        ))}
-      </View>
-    </View>
-  );
-};
 
 type Covid19DisplayProps = {
   metadataObj: Covid19FormMetadata;
@@ -415,13 +370,6 @@ export const Covid19Display = (props: Covid19DisplayProps) => {
 const $screen: ViewStyle = {
   paddingHorizontal: 20,
   marginVertical: 20,
-};
-
-const $horizontalRadioContainer: ViewStyle = {
-  flex: 1,
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
 };
 
 const $sectionDivider: ViewStyle = {
