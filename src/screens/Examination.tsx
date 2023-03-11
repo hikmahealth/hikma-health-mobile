@@ -1,13 +1,12 @@
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {FormProvider, SubmitHandler, useForm} from 'react-hook-form';
 import {View, ViewStyle} from 'react-native';
-import {
-  Screen,
-  ControlledTextField,
-  ControlledRadioGroup,
-  Text,
-  Button,
-} from '../components';
+import {Text} from '../components/Text';
+import {Button} from '../components/Button';
+import {Screen} from '../components/Screen';
+import {ControlledTextField} from '../components/ControlledTextField';
+import {HorizontalRadioGroup} from '../components/HorizontalRadioGroup';
+import {If} from '../components/If';
 import {Examination, Event} from '../types';
 import {translate} from '../i18n';
 import {createEvent} from '../db/api';

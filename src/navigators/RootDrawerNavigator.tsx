@@ -1,6 +1,8 @@
 import {createDrawerNavigator} from '@react-navigation/drawer';
 import {View} from 'react-native';
-import {Text, AppBarNav, CustomDrawerContent} from '../components';
+import {Text} from '../components/Text';
+import {AppBarNav} from '../components/AppBarNav';
+import {CustomDrawerContent} from '../components/CustomDrawerContent';
 import {Benchmarking} from '../screens/Benchmarking';
 import {PatientFlow} from './PatientFlowNavigator';
 

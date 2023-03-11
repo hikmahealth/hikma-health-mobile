@@ -1,11 +1,20 @@
-import {hasUnsyncedChanges, synchronize} from '@nozbe/watermelondb/sync';
+import {
+  hasUnsyncedChanges,
+  SyncDatabaseChangeSet,
+  synchronize,
+} from '@nozbe/watermelondb/sync';
 import database from '.';
-import {HIKMA_API} from '@env';
+
+import Config from 'react-native-config';
+// import {HIKMA_API} from '@env';
 import {Alert} from 'react-native';
 import {interpret} from 'xstate';
 import {syncMachine} from '../components/state_machines/sync';
 
-const SYNC_API = `${HIKMA_API}/api/v2/sync`;
+// const env = process.env;
+// const HIKMA_API = env.HIKMA_API;
+
+const SYNC_API = `${Config.HIKMA_API}/api/v2/sync`;
 
 const syncServiceT = interpret(syncMachine);
 
@@ -38,31 +47,31 @@ export async function syncDB(
 
       const {changes, timestamp} = await response.json();
       // loop through the changes object and for every event convert the string date into a js Date object
-      changes.events?.created.forEach(event => {
+      changes.events?.created.forEach((event: any) => {
         event.created_at = new Date(event.created_at).getTime();
         event.updated_at = new Date(event.updated_at).getTime();
       });
-      changes.events?.updated.forEach(event => {
+      changes.events?.updated.forEach((event: any) => {
         event.created_at = new Date(event.created_at).getTime();
         event.updated_at = new Date(event.updated_at).getTime();
       });
 
       // do the same for the visits
-      changes.visits?.created.forEach(visit => {
+      changes.visits?.created.forEach((visit: any) => {
         visit.created_at = new Date(visit.created_at).getTime();
         visit.updated_at = new Date(visit.updated_at).getTime();
       });
-      changes.visits?.updated.forEach(visit => {
+      changes.visits?.updated.forEach((visit: any) => {
         visit.created_at = new Date(visit.created_at).getTime();
         visit.updated_at = new Date(visit.updated_at).getTime();
       });
 
       // do the same for the patients
-      changes.patients?.created.forEach(patient => {
+      changes.patients?.created.forEach((patient: any) => {
         patient.created_at = new Date(patient.created_at).getTime();
         patient.updated_at = new Date(patient.updated_at).getTime();
       });
-      changes.visits?.updated.forEach(patient => {
+      changes.visits?.updated.forEach((patient: any) => {
         patient.created_at = new Date(patient.created_at).getTime();
         patient.updated_at = new Date(patient.updated_at).getTime();
       });
@@ -126,7 +135,7 @@ export async function syncDB(
   });
 }
 
-const countRecordsInChanges = (changes: {[key: string]: []}) =>
+const countRecordsInChanges = (changes: SyncDatabaseChangeSet) =>
   Object.values(changes)
     .flatMap(b => Object.values(b))
     .flat().length;

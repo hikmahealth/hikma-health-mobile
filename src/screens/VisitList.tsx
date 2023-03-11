@@ -3,7 +3,8 @@ import {useDatabase} from '@nozbe/watermelondb/hooks';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {useEffect, useState} from 'react';
 import {View, Alert, FlatList, TouchableOpacity} from 'react-native';
-import {Screen, Text} from '../components';
+import {Text} from '../components/Text';
+import {Screen} from '../components/Screen';
 import {deleteVisit} from '../db/api';
 import VisitModel from '../db/model/Visit';
 import {translate} from '../i18n';
@@ -30,6 +31,7 @@ export function VisitList(props: Props) {
       )
       .fetch()
       .then(res => {
+        // @ts-ignore
         setPatientVisits(res);
       })
       .catch(error => {

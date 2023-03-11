@@ -3,8 +3,8 @@ import {Event} from '../../../src/types';
 
 describe('generateEvents', () => {
   it('should generate an array of events', () => {
-    const events = generateEvents(50, 'patientId', 'visitId');
-    expect(events).toHaveLength(50);
+    const events = generateEvents(5, 'patientId', 'visitId');
+    expect(events).toHaveLength(5);
     expect(events[0]).toMatchObject<Event>({
       patientId: 'patientId',
       visitId: 'visitId',

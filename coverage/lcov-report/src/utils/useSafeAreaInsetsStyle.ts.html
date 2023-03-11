@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">88.88% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/9</span>
+                <span class='fraction'>8/9</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/10</span>
+                <span class='fraction'>5/10</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>1/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">88.88% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/9</span>
+                <span class='fraction'>8/9</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -112,20 +112,11 @@
 <a name='L47'></a><a href='#L47'>47</a>
 <a name='L48'></a><a href='#L48'>48</a>
 <a name='L49'></a><a href='#L49'>49</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -134,10 +125,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -147,11 +135,23 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -160,11 +160,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import {FlexStyle} from 'react-native';
-<span class="cstat-no" title="statement not covered" >import {Edge, useSafeAreaInsets} from 'react-native-safe-area-context';</span>
+import {Edge, useSafeAreaInsets} from 'react-native-safe-area-context';
 &nbsp;
 export type ExtendedEdge = Edge | 'start' | 'end';
 &nbsp;
-const propertySuffixMap = <span class="cstat-no" title="statement not covered" >{</span>
+const propertySuffixMap = {
   top: 'Top',
   bottom: 'Bottom',
   left: 'Start',
@@ -173,7 +173,7 @@ const propertySuffixMap = <span class="cstat-no" title="statement not covered" >
   end: 'End',
 };
 &nbsp;
-const edgeInsetMap = <span class="cstat-no" title="statement not covered" >{</span>
+const edgeInsetMap = {
   start: 'left',
   end: 'right',
 };
@@ -183,9 +183,9 @@ const edgeInsetMap = <span class="cstat-no" title="statement not covered" >{</sp
  *
  * - [Documentation and Examples](https://github.com/infinitered/ignite/blob/master/docs/Utils-useSafeAreaInsetsStyle.md)
  */
-<span class="cstat-no" title="statement not covered" >export function <span class="fstat-no" title="function not covered" >u</span>seSafeAreaInsetsStyle(</span>
-<span class="cstat-no" title="statement not covered" >  safeAreaEdges: ExtendedEdge[] = [],</span>
-<span class="cstat-no" title="statement not covered" >  property: 'padding' | 'margin' = 'padding',</span>
+export function useSafeAreaInsetsStyle(
+<span class="branch-0 cbranch-no" title="branch not covered" >  safeAreaEdges: ExtendedEdge[] = [</span>],
+<span class="branch-1 cbranch-no" title="branch not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >  property: 'padding' | 'margin' = '</span></span>padding',
 ): Pick&lt;
   FlexStyle,
   | 'marginBottom'
@@ -197,9 +197,9 @@ const edgeInsetMap = <span class="cstat-no" title="statement not covered" >{</sp
   | 'paddingStart'
   | 'paddingTop'
 &gt; {
-  const insets = <span class="cstat-no" title="statement not covered" >useSafeAreaInsets();</span>
+  const insets = useSafeAreaInsets();
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return safeAreaEdges.reduce(<span class="fstat-no" title="function not covered" >(a</span>cc, e) =&gt; {</span>
+  return safeAreaEdges.reduce(<span class="fstat-no" title="function not covered" >(a</span>cc, e) =&gt; {
 <span class="cstat-no" title="statement not covered" >    return {</span>
       ...acc,
       // @ts-ignore
@@ -214,7 +214,7 @@ const edgeInsetMap = <span class="cstat-no" title="statement not covered" >{</sp
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2023-03-01T09:04:39.822Z
+                at 2023-03-04T02:01:57.707Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

@@ -7,7 +7,9 @@ import {useCallback, useEffect, useState} from 'react';
 import {View, ViewStyle, FlatList} from 'react-native';
 import {Avatar, List, FAB} from 'react-native-paper';
 import {RootStackParamList} from '../../App';
-import {Screen, Text, Button, PatientSummary} from '../components';
+import {Text} from '../components/Text';
+import {Button} from '../components/Button';
+import {Screen} from '../components/Screen';
 import {createVisit, getLatestPatientEventByType} from '../db/api';
 import {translate, TxKeyPath} from '../i18n';
 import {Event, Patient} from '../types';
@@ -15,8 +17,9 @@ import {useProviderStore} from '../stores/provider';
 import {displayName, displayNameAvatar} from '../utils/patient';
 import {calculateAgeInYears} from '../utils/dateUtils';
 import {primary} from '../styles/colors';
+import {PatientFlowParamList} from '../navigators/PatientFlowNavigator';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'PatientView'>;
+type Props = NativeStackScreenProps<PatientFlowParamList, 'PatientView'>;
 
 type PatientLink = {
   labelTx: TxKeyPath;
@@ -174,7 +177,7 @@ const LinkItem = ({
   );
 };
 
-const PatientFileSummary = ({
+export const PatientFileSummary = ({
   patient,
   goToEditPatient,
 }: {

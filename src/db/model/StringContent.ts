@@ -8,8 +8,8 @@ export default class StringContentModel extends Model {
     string_ids: {type: 'belongs_to', key: 'string_id'},
   };
 
-  @text('string_id') stringId;
-  @text('language') language;
-  @text('content') content;
-  @date('edited_at') editedAt;
+  @text('string_id') stringId!: string;
+  @text('language') language!: string;
+  @text('content') content!: string;
+  @date('edited_at') editedAt!: Date;
 }

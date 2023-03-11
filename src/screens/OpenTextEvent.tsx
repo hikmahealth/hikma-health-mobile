@@ -1,7 +1,10 @@
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {useForm, SubmitHandler, FormProvider} from 'react-hook-form';
 import {View, Alert, ViewStyle} from 'react-native';
-import {Screen, Button, Text, ControlledTextField} from '../components';
+import {Text} from '../components/Text';
+import {Button} from '../components/Button';
+import {Screen} from '../components/Screen';
+import {ControlledTextField} from '../components/ControlledTextField';
 import {createEvent} from '../db/api';
 import {translate} from '../i18n';
 import {PatientFlowParamList} from '../navigators/PatientFlowNavigator';

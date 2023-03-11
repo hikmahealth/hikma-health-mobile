@@ -11,7 +11,8 @@ import {
   ToastAndroid,
 } from 'react-native';
 import {RootStackParamList} from '../../App';
-import {Text, Screen} from '../components';
+import {Text} from '../components/Text';
+import {Screen} from '../components/Screen';
 import EventModel from '../db/model/Event';
 import {translate} from '../i18n';
 import {Event, EventTypes} from '../types';

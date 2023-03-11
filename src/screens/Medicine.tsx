@@ -1,5 +1,5 @@
 import {View} from 'react-native';
-import {Text} from '../components';
+import {Text} from '../components/Text';
 import {translate} from '../i18n';
 
 export type MedicineMetadata = {

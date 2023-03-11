@@ -2,14 +2,12 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {useEffect} from 'react';
 import {useForm, SubmitHandler, FormProvider} from 'react-hook-form';
 import {View, ViewStyle} from 'react-native';
-import {
-  Screen,
-  Text,
-  ControlledTextField,
-  HorizontalRadioGroup,
-  If,
-  Button,
-} from '../components';
+import {Text} from '../components/Text';
+import {Button} from '../components/Button';
+import {Screen} from '../components/Screen';
+import {ControlledTextField} from '../components/ControlledTextField';
+import {HorizontalRadioGroup} from '../components/HorizontalRadioGroup';
+import {If} from '../components/If';
 import {createEvent, getLatestPatientEventByType} from '../db/api';
 import {translate} from '../i18n';
 import {PatientFlowParamList} from '../navigators/PatientFlowNavigator';

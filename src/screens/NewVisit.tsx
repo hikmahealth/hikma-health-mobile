@@ -2,7 +2,8 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {List} from 'react-native-paper';
 import {View, ViewStyle} from 'react-native';
 import {RootStackParamList} from '../../App';
-import {Text, Screen} from '../components';
+import {Text} from '../components/Text';
+import {Screen} from '../components/Screen';
 import {translate, TxKeyPath} from '../i18n';
 import {useProviderStore} from '../stores/provider';
 import {

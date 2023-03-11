@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">36% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/25</span>
+                <span class='fraction'>9/25</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">36% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/25</span>
+                <span class='fraction'>9/25</span>
             </div>
         
             
@@ -177,26 +177,22 @@
 <a name='L112'></a><a href='#L112'>112</a>
 <a name='L113'></a><a href='#L113'>113</a>
 <a name='L114'></a><a href='#L114'>114</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -233,7 +229,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -290,22 +290,22 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import {View} from 'react-native';
-<span class="cstat-no" title="statement not covered" >import {</span>
+import {
   PhysiotherapyDisplay,
   PhysiotherapyMetadata,
 } from '../screens/PhysiotherapyForm';
-<span class="cstat-no" title="statement not covered" >import {</span>
+import {
   MedicalHistoryDisplay,
   MedicalHistoryMetadata,
 } from '../screens/MedicalHistoryForm';
-<span class="cstat-no" title="statement not covered" >import {MedicineDisplay, MedicineMetadata} from '../screens/Medicine';</span>
-<span class="cstat-no" title="statement not covered" >import {ExaminationDisplay} from '../screens/Examination';</span>
-<span class="cstat-no" title="statement not covered" >import {VitalsDisplay} from '../screens/VisitList';</span>
-<span class="cstat-no" title="statement not covered" >import {Covid19Display, Covid19FormMetadata} from '../screens/Covid19Form';</span>
-<span class="cstat-no" title="statement not covered" >import {Text} from './Text';</span>
+import {MedicineDisplay, MedicineMetadata} from '../screens/Medicine';
+import {ExaminationDisplay} from '../screens/Examination';
+import {VitalsDisplay} from '../screens/VisitList';
+import {Covid19Display, Covid19FormMetadata} from '../screens/Covid19Form';
+import {Text} from './Text';
 import {Event, Examination} from '../types';
 import {translate} from '../i18n';
-<span class="cstat-no" title="statement not covered" >import {parseMetadata} from '../utils/parsers';</span>
+import {parseMetadata} from '../utils/parsers';
 import {VitalsMetadata} from '../screens/VitalsForm';
 &nbsp;
 type Props = {};
@@ -346,7 +346,7 @@ type Props = {};
 //   )
 // }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >export function <span class="fstat-no" title="function not covered" >g</span>etEventDisplay(</span>event: Event) {
+export function <span class="fstat-no" title="function not covered" >getEventDisplay(</span>event: Event) {
   let display;
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  switch (event.eventType) {</span>
@@ -409,7 +409,7 @@ type Props = {};
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2023-03-01T09:04:39.822Z
+                at 2023-03-04T02:01:57.707Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

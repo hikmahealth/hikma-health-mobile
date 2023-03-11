@@ -17,7 +17,9 @@ type EventMetadata =
   | Covid19FormMetadata
   | string;
 
-const generateMedicineMetadata = (doctor?: string): MedicineMetadata => ({
+export const generateMedicineMetadata = (
+  doctor?: string,
+): MedicineMetadata => ({
   doctor: doctor || faker.name.fullName(),
   medication: faker.science.chemicalElement().name,
   type: faker.science.chemicalElement().name,
@@ -25,7 +27,7 @@ const generateMedicineMetadata = (doctor?: string): MedicineMetadata => ({
   days: faker.datatype.number({min: 1, max: 30}),
 });
 
-const generatePhysiotherapyMetadata = (
+export const generatePhysiotherapyMetadata = (
   doctor?: string,
 ): PhysiotherapyMetadata => ({
   doctor: doctor || faker.name.fullName(),
@@ -40,7 +42,7 @@ const generatePhysiotherapyMetadata = (
   referralText: faker.lorem.sentence(),
 });
 
-const generateExaminationMetadata = (doctor?: string): Examination => ({
+export const generateExaminationMetadata = (doctor?: string): Examination => ({
   doctor: doctor || faker.name.fullName(),
   examination: faker.lorem.word(),
   generalObservations: faker.lorem.sentence(),
@@ -51,7 +53,7 @@ const generateExaminationMetadata = (doctor?: string): Examination => ({
   referralText: faker.lorem.sentence(),
 });
 
-const generateVitalsMetadata = (doctor?: string): VitalsMetadata => ({
+export const generateVitalsMetadata = (doctor?: string): VitalsMetadata => ({
   doctor: doctor || faker.name.fullName(),
   heartRate: faker.datatype.number({min: 40, max: 100}),
   systolic: faker.datatype.number({min: 80, max: 140}),
@@ -63,7 +65,7 @@ const generateVitalsMetadata = (doctor?: string): VitalsMetadata => ({
   bloodGlucose: faker.datatype.number({min: 40, max: 200}),
 });
 
-const generateEventAndMetadata = (
+export const generateEventAndMetadata = (
   doctor?: string,
 ): [EventTypes, EventMetadata] => {
   const eventType = sample([

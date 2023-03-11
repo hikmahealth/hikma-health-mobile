@@ -26,19 +26,19 @@ export default class PatientModel extends Model {
   };
 
   // @relation('visits', 'patient_id') visit;
-  @children('visits') visits;
+  @children('visits') visits: any;
 
   // @text('id') id;
-  @text('given_name') givenName;
-  @text('surname') surname;
-  @text('date_of_birth') dateOfBirth;
-  @text('country') country;
-  @text('hometown') hometown;
-  @text('phone') phone;
-  @text('sex') sex;
-  @text('camp') camp;
-  @date('image_timestamp') imageTimestamp;
-  @field('is_deleted') isDeleted;
-  @readonly @date('created_at') createdAt;
-  @readonly @date('updated_at') updatedAt;
+  @text('given_name') givenName!: string;
+  @text('surname') surname!: string;
+  @text('date_of_birth') dateOfBirth!: string;
+  @text('country') country!: string;
+  @text('hometown') hometown!: string;
+  @text('phone') phone!: string;
+  @text('sex') sex!: string;
+  @text('camp') camp!: string;
+  @date('image_timestamp') imageTimestamp?: number;
+  @field('is_deleted') isDeleted!: boolean;
+  @readonly @date('created_at') createdAt!: Date;
+  @readonly @date('updated_at') updatedAt!: Date;
 }

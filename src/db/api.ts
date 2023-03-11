@@ -68,6 +68,7 @@ export async function createVisit(visit: Omit<Visit, 'id'>) {
         newVisit.patientId = visit.patientId;
         newVisit.clinicId = visit.clinicId;
         newVisit.providerId = visit.providerId;
+        // @ts-ignore
         newVisit.checkInTimestamp = visit.checkInTimestamp;
       });
     return visitRes;

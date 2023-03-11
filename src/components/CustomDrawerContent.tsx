@@ -19,7 +19,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import database from '../db';
 import {syncDB} from '../db/sync';
 import {translate} from '../i18n';
-import {Text} from '.';
+import {Text} from './Text';
 import {GlobalServiceContext} from './SyncModal';
 import {useProviderStore} from '../stores/provider';
 import LanguageToggle from './LanguageToggle';

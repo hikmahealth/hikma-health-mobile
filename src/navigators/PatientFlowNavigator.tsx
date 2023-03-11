@@ -41,7 +41,10 @@ export type PatientFlowParamList = {
 
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {View} from 'react-native';
-import {Text, AppBarNav, CustomDrawerContent} from '../components';
+import {Text} from '../components/Text';
+import {AppBarNav} from '../components/AppBarNav';
+import {CustomDrawerContent} from '../components/CustomDrawerContent';
+
 import {translate} from '../i18n';
 import {Covid19Form} from '../screens/Covid19Form';
 import {EventList} from '../screens/EventList';

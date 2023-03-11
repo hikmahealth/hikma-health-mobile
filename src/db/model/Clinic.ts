@@ -5,8 +5,8 @@ import {Associations} from '@nozbe/watermelondb/Model';
 export default class ClinicModel extends Model {
   static table = 'clinics';
 
-  @text('name') name;
-  @field('is_deleted') isDeleted;
-  @readonly @date('created_at') createdAt;
-  @readonly @date('updated_at') updatedAt;
+  @text('name') name!: string;
+  @field('is_deleted') isDeleted!: boolean;
+  @readonly @date('created_at') createdAt!: Date;
+  @readonly @date('updated_at') updatedAt!: Date;
 }

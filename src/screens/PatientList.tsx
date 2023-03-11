@@ -183,6 +183,7 @@ const HeaderSearch = ({submitSearch, totalPatientsCount}) => {
         clearIcon={'close'}
         onIconPress={() => submitSearch(searchQuery)}
         value={searchQuery}
+        // right={<Text>Search</Text>}
       />
       <Text>{totalPatientsCount.toLocaleString()} Patients</Text>
     </View>

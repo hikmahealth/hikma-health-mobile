@@ -8,6 +8,7 @@ import {
   readonly,
   writer,
 } from '@nozbe/watermelondb/decorators';
+import {EventTypes} from '../../types';
 
 // 'CREATE TABLE IF NOT EXISTS events (id varchar(32) PRIMARY KEY, patient_id varchar(32) REFERENCES patients(id) ON DELETE CASCADE, visit_id varchar(32) REFERENCES visits(id) ON DELETE CASCADE, event_type text, event_timestamp text, edited_at text, event_metadata text, deleted integer DEFAULT 0);',
 
@@ -19,11 +20,11 @@ export default class EventModel extends Model {
     visits: {type: 'belongs_to', key: 'visit_id'},
   };
 
-  @text('patient_id') patientId;
-  @text('visit_id') visitId;
-  @text('event_type') eventType;
-  @text('event_metadata') eventMetadata;
-  @field('is_deleted') isDeleted;
-  @readonly @date('created_at') createdAt;
-  @readonly @date('updated_at') updatedAt;
+  @text('patient_id') patientId!: string;
+  @text('visit_id') visitId!: string;
+  @text('event_type') eventType!: EventTypes;
+  @text('event_metadata') eventMetadata!: string;
+  @field('is_deleted') isDeleted!: boolean;
+  @readonly @date('created_at') createdAt!: Date;
+  @readonly @date('updated_at') updatedAt!: Date;
 }

@@ -1,6 +1,6 @@
 import {Pressable, View, ViewStyle} from 'react-native';
 import {RadioButton} from 'react-native-paper';
-import {Text} from '../components';
+import {Text} from '../components/Text';
 import {primaryTheme} from '../styles/buttons';
 
 type HorizontalRadioGroupProps = {

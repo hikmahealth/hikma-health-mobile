@@ -9,9 +9,12 @@ import {
   Alert,
 } from 'react-native';
 import {TextInput} from 'react-native-paper';
-import {Text, Button, Screen} from '../components';
+import {Text} from '../components/Text';
+import {Button} from '../components/Button';
+import {Screen} from '../components/Screen';
 import {translate} from '../i18n';
 import {HIKMA_API} from '@env';
+// import Config from 'react-native-config';
 import {useProviderStore} from '../stores/provider';
 import {useSyncStore} from '../stores/sync';
 import {syncDB} from '../db/sync';
@@ -21,6 +24,10 @@ import {useActor} from '@xstate/react';
 import database from '../db';
 import {hasUnsyncedChanges} from '@nozbe/watermelondb/sync';
 import LanguageToggle from '../components/LanguageToggle';
+
+const Config = {
+  HIKMA_API: HIKMA_API,
+};
 
 export default function Login() {
   const navigation = useNavigation();
@@ -39,11 +46,14 @@ export default function Login() {
 
   const [email, setEmail] = useState('admin@hikmahealth.org');
   const [password, setPassword] = useState('HikmaAdmin25!');
+  console.warn(Config.HIKMA_API);
 
   const signIn = async () => {
     setIsLoading(true);
-    console.warn('1');
-    const response = await fetch(`${HIKMA_API}/api/login`, {
+    console.warn('1: ', Config.HIKMA_API);
+    const r1 = await fetch('https://jsonplaceholder.typicode.com/todos/1');
+    console.warn('r1: ', r1);
+    const response = await fetch(`${Config.HIKMA_API}/api/login`, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -73,6 +83,7 @@ export default function Login() {
 
     try {
       // setSyncStatus(true);
+      // @ts-ignore
       await syncDB({send}, hasLocalChangesToPush);
       const clinic = (await getClinic())[0];
       clinic && setClinic({id: clinic.id, name: clinic.name});
@@ -93,7 +104,12 @@ export default function Login() {
   return (
     <Screen preset="fixed">
       <View style={$brandingContainer}>
-        <Image source={launchIcon} style={$launchIcon} resizeMode="contain" />
+        <Image
+          testID="loginLogo"
+          source={launchIcon}
+          style={$launchIcon}
+          resizeMode="contain"
+        />
         <Text variant="titleLarge">HIKMA HEALTH</Text>
       </View>
 

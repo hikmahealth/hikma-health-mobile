@@ -8,14 +8,6 @@ module.exports = {
   },
   plugins: [
     ["@babel/plugin-proposal-decorators", { "legacy": true }],
-    [
-      "module:react-native-dotenv",
-      {
-        envName: "APP_ENV",
-        moduleName: "@env",
-        path: ".env"
-      }
-    ],
     '@babel/plugin-proposal-class-properties',
     '@babel/plugin-proposal-private-methods',
     'react-native-reanimated/plugin',

@@ -38,6 +38,7 @@ export const AppBarNav = (props: Props) => {
   const initSync = async () => {
     const hasLocalChangesToPush = await hasUnsyncedChanges({database});
     try {
+      // @ts-ignore
       await syncDB({send}, hasLocalChangesToPush);
     } catch (error) {
       console.error('Error syncing: ', error);
@@ -46,14 +47,14 @@ export const AppBarNav = (props: Props) => {
   return (
     <Appbar.Header elevated>
       {canGoBack ? (
-        <Appbar.BackAction onPress={navigation.goBack} />
+        <Appbar.BackAction testID="backButton" onPress={navigation.goBack} />
       ) : (
         <Appbar.Action
           icon="menu"
           onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
         />
       )}
-      <Appbar.Content title={title} />
+      <Appbar.Content testID="headerContent" title={title} />
       <Appbar.Action icon="refresh" onPress={initSync} />
     </Appbar.Header>
   );

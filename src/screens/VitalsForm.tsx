@@ -2,13 +2,15 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {FormProvider, SubmitHandler, useForm} from 'react-hook-form';
 import {View, ViewStyle} from 'react-native';
 import {TextInput} from 'react-native-paper';
-import {RootStackParamList} from '../../App';
-import {Button, Text, Screen, ControlledTextField, Row} from '../components';
+import {Text} from '../components/Text';
+import {Button} from '../components/Button';
+import {Screen} from '../components/Screen';
+import {ControlledTextField} from '../components/ControlledTextField';
 import {createEvent} from '../db/api';
-import {translate} from '../i18n';
+import {PatientFlowParamList} from '../navigators/PatientFlowNavigator';
 import {primaryTheme} from '../styles/buttons';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'VitalsForm'>;
+type Props = NativeStackScreenProps<PatientFlowParamList, 'VitalsForm'>;
 
 export type VitalsMetadata = {
   doctor: string;

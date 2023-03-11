@@ -14,9 +14,25 @@ import EventModel from './model/Event';
 import VisitModel from './model/Visit';
 import {setGenerator} from '@nozbe/watermelondb/utils/common/randomId';
 import ClinicModel from './model/Clinic';
+import mockDBAdapter from '../../test/mockDBAdapter';
 
 // set the unique identifier to be uuid1
 setGenerator(() => uuidv1());
+
+// const adapter = __TEST__
+//   ? mockDBAdapter
+//   : new SQLiteAdapter({
+//       schema,
+//       // (You might want to comment it out for development purposes -- see Migrations documentation)
+//       migrations,
+//       dbName: 'hikmadb',
+//       jsi: true,
+//       onSetUpError: error => {
+//         // TODO: Handle error appropriately
+//         console.warn('Database failed to load: ', error);
+//         // Database failed to load -- offer the user to reload the app or log out
+//       },
+//     });
 
 const adapter = new SQLiteAdapter({
   schema,

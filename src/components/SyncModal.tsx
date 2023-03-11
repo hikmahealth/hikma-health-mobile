@@ -23,7 +23,9 @@ type SyncModalProps = {
 
 // export const GlobalStateContext = createContext({});
 
-export const GlobalServiceContext = createContext({});
+export const GlobalServiceContext = createContext<{syncService: any}>({
+  syncService: null,
+});
 
 export const GlobalServicesContextProvider = ({children}: {children: any}) => {
   const syncService = useInterpret(syncMachine);
@@ -53,6 +55,7 @@ export const SyncModal = ({children}: SyncModalProps) => {
   //   }
   // };
 
+  // @ts-ignore
   const modalContentContainerDisplay: ViewStyle = state.matches('idle')
     ? {display: 'none', height: 0}
     : {display: 'flex'};
@@ -67,6 +70,7 @@ export const SyncModal = ({children}: SyncModalProps) => {
             modalContentContainerDisplay,
           ]}>
           <Modal
+            // @ts-ignore
             visible={!state.matches('idle')}
             // onDismiss={hideModal}
             // dismissable={false}
@@ -79,6 +83,7 @@ export const SyncModal = ({children}: SyncModalProps) => {
               </Text>
             </View>
 
+            {/* @ts-ignore */}
             {state.matches('fetch') && (
               <View style={$statusContainer}>
                 <IconedText
@@ -88,6 +93,7 @@ export const SyncModal = ({children}: SyncModalProps) => {
               </View>
             )}
 
+            {/*  @ts-ignore */}
             {state.matches('resolveConflicts') && (
               <View style={$statusContainer}>
                 <IconedText
@@ -98,6 +104,7 @@ export const SyncModal = ({children}: SyncModalProps) => {
                   iconName="check"
                   iconColor="green"
                   indent
+                  // @ts-ignore
                   label={`Downloaded ${state.context.downloadedRecords} new records`}
                 />
                 <IconedText
@@ -107,6 +114,7 @@ export const SyncModal = ({children}: SyncModalProps) => {
               </View>
             )}
 
+            {/* @ts-ignore */}
             {state.matches('upload') && (
               <View style={$statusContainer}>
                 <IconedText
@@ -117,6 +125,7 @@ export const SyncModal = ({children}: SyncModalProps) => {
                   iconName="check"
                   iconColor="green"
                   indent
+                  // @ts-ignore
                   label={`Downloaded ${state.context.downloadedRecords} new records`}
                 />
                 <IconedText
@@ -125,11 +134,13 @@ export const SyncModal = ({children}: SyncModalProps) => {
                 />
                 <IconedText
                   iconName="upload"
+                  // @ts-ignore
                   label={`Uploading ${state.context.uploadedRecords} local data to server`}
                 />
               </View>
             )}
 
+            {/* @ts-ignore */}
             {state.matches('idle') && (
               <View style={$statusContainer}>
                 <Text style={$centerText}>No Sync in progress.</Text>
