@@ -67,3 +67,7 @@ yarn-error.log
 /coverage/*
 
 .env
+
+
+# ignore yarn folder
+.yarn

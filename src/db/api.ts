@@ -99,6 +99,19 @@ export async function createEvent(event: Omit<Event, "id" | "createdAt" | "updat
   })
 }
 
+
+// Update an event
+export async function updateEvent(eventId: string, event: Event) {
+  return await database.write(async () => {
+    const evt = await database.get<EventModel>("events").find(eventId)
+    const res = evt.update((newEvent) => {
+      newEvent.eventMetadata = event.eventMetadata
+    })
+
+    return res
+  })
+}
+
 // Get latest event by type
 export async function getLatestPatientEventByType(
   patientId: string,

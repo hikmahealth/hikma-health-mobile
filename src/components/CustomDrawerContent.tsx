@@ -64,17 +64,10 @@ export function CustomDrawerContent(props: Props) {
           onPress={() => navigation.navigate("PatientFlow")}
         />
 
-        <DrawerItem
-          label="Reports"
+               <DrawerItem
+          label="Summary Stats"
           icon={({ focused, color, size }) => <Icon color={color} size={size} name={"chart-bar"} />}
-          // onPress={() => navigation.navigate('PatientFlow')}
-          onPress={() => {}}
-        />
-
-        <DrawerItem
-          label="Settings"
-          icon={({ focused, color, size }) => <Icon color={color} size={size} name={"tools"} />}
-          onPress={() => navigation.navigate("Settings")}
+          onPress={() => navigation.navigate("SummaryStats")}
         />
 
         <DrawerItem

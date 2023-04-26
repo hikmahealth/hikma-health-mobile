@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker"
-import { format } from "date-fns"
+import { format, subMonths, subYears } from "date-fns"
 import { sample } from "lodash"
 import { Patient } from "../../types/Patient"
 
@@ -8,7 +8,7 @@ export const generatePatient = (): Patient => ({
   id: faker.datatype.uuid(),
   givenName: faker.name.firstName(),
   surname: faker.name.lastName(),
-  dateOfBirth: format(faker.date.past(), "yyyy-MM-dd"),
+  dateOfBirth: format(faker.date.between(subYears(new Date(), 80), subMonths(new Date(), 3)), "yyyy-MM-dd"),
   country: faker.address.country(),
   hometown: faker.address.city(),
   sex: sample(["male", "female"]) as string,

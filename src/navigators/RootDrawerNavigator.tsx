@@ -1,10 +1,11 @@
 import { createDrawerNavigator } from "@react-navigation/drawer"
 import { View } from "react-native"
-import {Text} from "../components/Text"
+import { Text } from "../components/Text"
 import { AppBarNav } from "../components/AppBarNav"
 import { CustomDrawerContent } from "../components/CustomDrawerContent"
 import { Benchmarking } from "../screens/Benchmarking"
 import { PatientFlow } from "./PatientFlowNavigator"
+import { SummaryStats } from "../screens/SummaryStats"
 
 const Drawer = createDrawerNavigator()
 
@@ -33,11 +34,11 @@ export function RootNavigator() {
         component={PatientFlow}
       />
       <Drawer.Screen
-        name="Settings"
+        name="SummaryStats"
         options={{
-          title: "Settings",
+          title: "Summary Stats",
         }}
-        component={SettingsScreen}
+        component={SummaryStats}
       />
       {/* // FOR DEVELOPMENT PURPOSES ONLY */}
       <Drawer.Screen

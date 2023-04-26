@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react"
 import { NativeStackScreenProps } from "@react-navigation/native-stack"
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form"
 import { useDatabase } from "@nozbe/watermelondb/hooks"
+import { isValid } from "date-fns"
+import { Q } from "@nozbe/watermelondb"
 import { View, ViewStyle } from "react-native"
 import Icon from "react-native-vector-icons/MaterialCommunityIcons"
 import SectionedMultiSelect from "react-native-sectioned-multi-select"
@@ -15,7 +17,8 @@ import { translate } from "../i18n"
 import { PatientFlowParamList } from "../navigators/PatientFlowNavigator"
 import EventFormModel from "../db/model/EventForm"
 import { ControlledSelectField } from "../components/ControlledSelectField"
-import { createEvent } from "../db/api"
+import { createEvent, updateEvent } from "../db/api"
+import { parseMetadata } from "../utils/parsers"
 import { DiagnosisPickerButton, ICD10Entry } from "./DiagnosisPicker"
 import { MedicationEntry, MedicationsFormItem } from "./MedicationEditor"
 
@@ -39,13 +42,46 @@ const updateMedications = (medications: MedicationEntry[], newMedication: Medica
 
 export function EventFormScreen(props: Props) {
   const { navigation, route } = props
-  const { patientId, formId, visitId, diagnoses: selectedDiagnoses, medication } = route.params
+  const { patientId, formId, visitId, diagnoses: selectedDiagnoses, medication, formData, onUpdate } = route.params
   const [eventForm, setEventForm] = useState<EventFormModel | null>(null)
   const [diagnoses, setDiagnoses] = useState<ICD10Entry[]>([])
   const [medications, setMedications] = useState<MedicationEntry[]>([])
+  const [loading, setLoading] = useState(false)
 
   const { ...formMethods } = useForm()
   const database = useDatabase()
+
+  // On page load, if there is formData in the props, set the data from the form data and set the eventForm from the event_type
+  useEffect(() => {
+    if (formData) {
+      const metadata = formatDates(parseMetadata(JSON.parse(formData)?.event_metadata));
+      // if there is a date field in the metadata, ensure that the date is a Date object
+
+      if (metadata?.date) {
+        metadata.date = new Date(metadata.date)
+      }
+      if (metadata) {
+        // set the diagnosis and medications from the formData
+        setDiagnoses(metadata.diagnosis)
+        setMedications(metadata.medications)
+      formMethods.reset(metadata)
+      }
+
+      // Query the database for the event form with the name equal to the formData.event_type
+      database.get<EventFormModel>("event_forms").query(Q.where("name", JSON.parse(formData).event_type)).fetch().then((form) => {
+        // if there are forms returned, get the first form from the database
+        if (form.length > 0) {
+          const formObj = {
+            name: form[0].name,
+            description: form[0].description,
+            id: form[0].id,
+            metadata: JSON.parse(form[0].metadata),
+          }
+          setEventForm(formObj)
+        }
+      })
+    }
+  }, [formData])
 
   // if route has diagnoses, set diagnoses to route diagnoses
   useEffect(() => {
@@ -58,6 +94,9 @@ export function EventFormScreen(props: Props) {
   }, [selectedDiagnoses, medication])
 
   const onSubmit: SubmitHandler<FormData> = (data) => {
+    if (loading) {
+      return
+    }
     // if diagnosis is in form, add diagnoses to data
     if (eventForm?.metadata.find((f) => f.fieldType === "diagnosis")) {
       data.diagnosis = diagnoses
@@ -67,6 +106,14 @@ export function EventFormScreen(props: Props) {
     if (eventForm?.metadata.find((f) => f.fieldType === "medicine")) {
       data.medications = medications
     }
+
+    setLoading(true)
+
+    if (formData && JSON.parse(formData).id) {
+      return updateEvent(JSON.parse(formData).id, {
+        eventMetadata: JSON.stringify(data)
+      }).then(res => navigation.goBack({refresh: true})).catch(err => console.error(err)).finally(() => {setLoading(false); onUpdate && onUpdate()})
+    }
     createEvent({
       eventType: eventForm.name,
       patientId,
@@ -75,14 +122,20 @@ export function EventFormScreen(props: Props) {
       eventMetadata: JSON.stringify(data),
     })
       .then((res) => {
-        navigation.goBack()
+        navigation.goBack({
+          refresh: true
+        })
+        onUpdate && onUpdate()
       })
       .catch((err) => {
         console.error("error", err)
-      })
+      }).finally(() => setLoading(false))
   }
 
   useEffect(() => {
+    if (!formId) {
+      return
+    }
     database
       .get<EventFormModel>("event_forms")
       .find(formId)
@@ -103,7 +156,7 @@ export function EventFormScreen(props: Props) {
         console.error("error", err)
         setEventForm(null)
       })
-  }, [])
+  }, [formId])
 
   const deleteMedication = (id: string) => {
     setMedications((s) => s.filter((m) => m.id !== id))
@@ -199,14 +252,28 @@ export function EventFormScreen(props: Props) {
                 return <Text>Not implemented yet</Text>
               }
             })}
-          <Button mode="contained" onPress={formMethods.handleSubmit(onSubmit)}>
+          <Button mode="contained" loading={loading} onPress={formMethods.handleSubmit(onSubmit)}>
             {translate("save")}
           </Button>
+      <View style={{ height: 40 }} />
         </View>
       </FormProvider>
     </Screen>
   )
 }
+
+// Function takes an object, if any of the values are a valid date or string that could be a dete, format them into a Date object
+const formatDates = (obj: any) => {
+  const newObj = { ...obj }
+  Object.keys(newObj).forEach((key) => {
+    if (newObj[key] && (newObj[key].includes("/") || newObj[key].includes("-"))) {
+      newObj[key] = isValid(new Date(newObj[key])) ? new Date(newObj[key]) : newObj[key]
+    }
+  })
+  return newObj
+}
+
+
 const $flex1: ViewStyle = {
   flex: 1,
 }

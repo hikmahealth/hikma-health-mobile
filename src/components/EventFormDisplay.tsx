@@ -64,9 +64,10 @@ const isDate = (d: Date | string | number | undefined | null): boolean => {
   if (typeof d === "string") {
     return !isNaN(Date.parse(d))
   }
-  if (typeof d === "number") {
-    return !isNaN(d)
-  }
+  // Issue with this is that it will return true for numbers like 1234567890 or just 123 😱
+  // if (typeof d === "number") {
+  //   return !isNaN(d)
+  // }
   return d instanceof Date
 }
 
@@ -160,6 +161,7 @@ export function getEventDisplay(event: Event) {
   return display
 
   // TODO: Clean up below
+    // Tombstonee: April 25 2023
   // LEFT behind for reference during transition period
 
   switch (event.eventType) {

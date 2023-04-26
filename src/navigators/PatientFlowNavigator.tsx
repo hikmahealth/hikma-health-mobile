@@ -30,6 +30,8 @@ export type VisitScreensProps = {
   eventType?: EventTypes
 }
 
+type JSONString = string
+
 export type PatientFlowParamList = {
   Login: undefined
   PatientList: undefined
@@ -62,7 +64,7 @@ export type PatientFlowParamList = {
   Covid19Form: VisitScreensProps & { patientAge: number }
   OpenTextEvent: VisitScreensProps
   VitalsForm: VisitScreensProps
-  EventForm: VisitScreensProps & { formId: string }
+  EventForm: VisitScreensProps & { formId: string, formData: JSONString | undefined }
   DiagnosisPicker: undefined
   MedicationEditor: { medication: MedicationEntry }
 }

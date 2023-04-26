@@ -18,55 +18,52 @@ type Props = NativeStackScreenProps<RootStackParamList, "EventList">
 
 export function EventList(props: Props) {
   const { navigation, route } = props
-  const { visit, providerId, clinicId, patient } = route.params
+  const { visit, patient, providerId } = route.params
+  const [updateCount, setUpdateCount] = useState(0)
 
   const [eventsList, setEventsList] = useState<Event[]>([])
 
   const database = useDatabase()
 
   useEffect(() => {
-    database
+    const eventSub = database
       .get<EventModel>("events")
       .query(
         Q.where("visit_id", visit.id),
         // sort by created at
         Q.sortBy("created_at", Q.desc),
-      )
-      .fetch()
-      .then((res) => {
-        setEventsList(res)
-      })
-      .catch((error) => {
-        setEventsList([])
-        Alert.alert("Error", "Something went wrong. Please try again.")
-      })
-  }, [])
+      ).observe()
+        .subscribe((events) => {
+          console.log("EVENTS RERENDER")
+          setEventsList(events)
+        })
+    return () => {
+      console.log("EVENTS UNSUBSCRIBE")
+      eventSub?.unsubscribe()
+    }
+  }, [updateCount])
 
-  const keyExtractor = (item, index) => index.toString()
+  const onUpdate = () => setUpdateCount((count) => count + 1)
+
+  const keyExtractor = (item, index) => {
+    // combile the item id and the item updatedAt to  create a unique key
+    return `${item.id}-${item.updatedAt}`
+  }
 
   const goToNewPatientVisit = () => {
-    // createVisit({
-    //   providerId,
-    //   patientId: patient.id,
-    //   clinicId,
-    //   checkInTimestamp: new Date().getTime(),
-    // })
-    //   .then(res => {
     navigation.navigate("NewVisit", {
       patientId: patient.id,
       patientAge: calculateAgeInYears(new Date(patient.dateOfBirth)),
       providerId,
       visitId: visit.id,
     })
-    // console.log(res);
-    // })
-    // .catch(error => console.error(error));
   }
 
-  const editEvent = (event: Event) => {
-    // FIXME: Implement these screens
-    ToastAndroid.show("Not implemented yet", ToastAndroid.SHORT)
-    return
+  const editEvent = (event: Event, onUpdate: () => void) => {
+    return navigation.navigate("EventForm", {
+      formData: JSON.stringify(event._raw),
+      onUpdate
+    })
     switch (event.eventType) {
       case "Vitals":
         props.navigation.navigate("EditVitals", { event, userName })
@@ -125,14 +122,14 @@ export function EventList(props: Props) {
     ])
   }
 
-  const openEventOptions = (event: Event) => {
+  const openEventOptions = (event: Event, onUpdate: () => void) => {
     Alert.alert(
       "Event Options",
       "What do you want to do?",
       [
         {
           text: "Edit",
-          onPress: () => editEvent(event),
+          onPress: () => editEvent(event, onUpdate),
         },
         {
           text: "Delete",
@@ -154,7 +151,7 @@ export function EventList(props: Props) {
     })
 
     return (
-      <TouchableOpacity style={{ paddingVertical: 8 }} onLongPress={() => openEventOptions(item)}>
+      <TouchableOpacity style={{ paddingVertical: 8 }} onLongPress={() => openEventOptions(item, onUpdate)}>
         <View style={{}}>
           <View style={{ margin: 10 }}>
             <Text variant="bodyLarge">{`${item.eventType}, ${time}`}</Text>
@@ -171,10 +168,6 @@ export function EventList(props: Props) {
       </TouchableOpacity>
     )
   }
-
-  // console.warn(eventsList?.[0]?.patientId);
-  // console.log({eventsList});
-  console.log(eventsList?.[0])
 
   return (
     <>
