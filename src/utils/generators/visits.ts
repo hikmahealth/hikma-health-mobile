@@ -1,12 +1,8 @@
-import {faker} from '@faker-js/faker';
-import {Visit} from '../../types';
+import { faker } from "@faker-js/faker"
+import { Visit } from "../../types"
 
 // generate a random visit using faker
-export const generateVisit = (
-  patientId: string,
-  providerId: string,
-  clinicId: string,
-): Visit => ({
+export const generateVisit = (patientId: string, providerId: string, clinicId: string): Visit => ({
   id: faker.datatype.uuid(),
   checkInTimestamp: new Date().getTime(),
   providerId,
@@ -16,7 +12,7 @@ export const generateVisit = (
   // @ts-ignore
   createdAt: new Date().getTime(),
   updatedAt: new Date().getTime(),
-});
+})
 
 // generate a list of random patients
 export const generateVisits = (
@@ -25,7 +21,5 @@ export const generateVisits = (
   providerId: string,
   clinicId: string,
 ): Visit[] => {
-  return Array.from({length: count}, () =>
-    generateVisit(patientId, providerId, clinicId),
-  );
-};
+  return Array.from({ length: count }, () => generateVisit(patientId, providerId, clinicId))
+}

@@ -1,13 +1,13 @@
-import {Event, Patient, Visit} from '../../types';
-import {generateEvents} from './events';
-import {generatePatient, generatePatients} from './patients';
-import {generateVisit} from './visits';
+import { Event, Patient, Visit } from "../../types"
+import { generateEvents } from "./events"
+import { generatePatient, generatePatients } from "./patients"
+import { generateVisit } from "./visits"
 
 export type BenchmarkingData = {
-  patient: Patient;
-  visit: Visit;
-  events: Event[];
-};
+  patient: Patient
+  visit: Visit
+  events: Event[]
+}
 
 // export function generateBenchmarkingData(
 //   patientsCount: number,

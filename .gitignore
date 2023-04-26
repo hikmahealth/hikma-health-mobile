@@ -63,4 +63,7 @@ yarn-error.log
 .metro-health-check*
 
 
+# Ignore coverage giles
+/coverage/*
+
 .env

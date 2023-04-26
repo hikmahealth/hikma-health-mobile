@@ -13,18 +13,18 @@
 // };
 
 export type Patient = {
-  id: string;
-  givenName: string;
-  surname: string;
-  dateOfBirth: string;
-  country: string;
-  hometown: string;
-  sex: string;
-  phone: string;
-  camp: string;
-  createdAt: Date;
-  updatedAt: Date;
-};
+  id: string
+  givenName: string
+  surname: string
+  dateOfBirth: string
+  country: string
+  hometown: string
+  sex: string
+  phone: string
+  camp: string
+  createdAt: Date
+  updatedAt: Date
+}
 
 // export type NewPatient = {
 //   id: string;

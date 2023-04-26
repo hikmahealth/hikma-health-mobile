@@ -1,23 +1,20 @@
-import {View} from 'react-native';
-import {
-  PhysiotherapyDisplay,
-  PhysiotherapyMetadata,
-} from '../screens/PhysiotherapyForm';
-import {
-  MedicalHistoryDisplay,
-  MedicalHistoryMetadata,
-} from '../screens/MedicalHistoryForm';
-import {MedicineDisplay, MedicineMetadata} from '../screens/Medicine';
-import {ExaminationDisplay} from '../screens/Examination';
-import {VitalsDisplay} from '../screens/VisitList';
-import {Covid19Display, Covid19FormMetadata} from '../screens/Covid19Form';
-import {Text} from './Text';
-import {Event, Examination} from '../types';
-import {translate} from '../i18n';
-import {parseMetadata} from '../utils/parsers';
-import {VitalsMetadata} from '../screens/VitalsForm';
+import * as React from "react"
+import { View } from "react-native"
+import { format } from "date-fns"
+import { upperFirst } from "lodash"
+import { PhysiotherapyDisplay, PhysiotherapyMetadata } from "../screens/PhysiotherapyForm"
+import { MedicalHistoryDisplay, MedicalHistoryMetadata } from "../screens/MedicalHistoryForm"
+import { MedicineDisplay, MedicineMetadata } from "../screens/Medicine"
+import { ExaminationDisplay } from "../screens/Examination"
+import { VitalsDisplay } from "../screens/VisitList"
+import { Covid19Display, Covid19FormMetadata } from "../screens/Covid19Form"
+import { Text } from "./Text"
+import { Event, Examination } from "../types"
+import { translate } from "../i18n"
+import { parseMetadata } from "../utils/parsers"
+import { VitalsMetadata } from "../screens/VitalsForm"
 
-type Props = {};
+type Props = {}
 
 // export function EventFormDisplay (props: Props) {
 //   // const {eventType}
@@ -55,59 +52,158 @@ type Props = {};
 //   )
 // }
 
+const isArray = (a: any): boolean => {
+  return !!a && a.constructor === Array
+}
+
+// check whether the date is valid, it could also be an ISOString passed in
+const isDate = (d: Date | string | number | undefined | null): boolean => {
+  if (d === undefined || d === null) {
+    return false
+  }
+  if (typeof d === "string") {
+    return !isNaN(Date.parse(d))
+  }
+  if (typeof d === "number") {
+    return !isNaN(d)
+  }
+  return d instanceof Date
+}
+
+// Check if array is a collection of objects or collection of strings
+const isArrayOfObjects = (a: any[]): boolean => {
+  return a.length > 0 && typeof a[0] === "object"
+}
+
+const isDiagnosisObj = (obj: any): boolean => {
+  return obj && obj.desc && obj.code
+}
+
+const isMedicineObj = (obj: any): boolean => {
+  return obj && obj.name && obj.dose && obj.frequency
+}
+
 export function getEventDisplay(event: Event) {
-  let display;
+  let display
+  const parsedMetadata = parseMetadata<string>(event.eventMetadata)
+  if (typeof parsedMetadata === "object") {
+    // For each key in the object, show the key and the value
+    display = (
+      <View style={{ paddingVertical: 2 }}>
+        {Object.keys(parsedMetadata).map((key) => {
+          const data = parsedMetadata[key]
+          const isDateField = isDate(data)
+          if (isArray(data)) {
+            const isCollection = isArrayOfObjects(data)
+            if (!isCollection) {
+              return (
+                <View key={key} style={$row}>
+                  <Text text={upperFirst(key)} />
+                  {data.map((item, index) => {
+                    return (
+                      <View key={index}>
+                        <Text>{item}</Text>
+                      </View>
+                    )
+                  })}
+                </View>
+              )
+            } else {
+              return (
+                <View key={key} style={[$row, { flexWrap: "wrap" }]}>
+                  <Text text={upperFirst(key)} />
+                  <Text text=": " />
+                  {data.map((item, index) => {
+                    const isDiagnosis = isDiagnosisObj(item)
+                    const isMedicine = isMedicineObj(item)
+                    if (isDiagnosis) {
+                      return (
+                        <View key={index}>
+                          <Text>{`(${item.code}) ${item.desc}`}</Text>
+                        </View>
+                      )
+                    }
+
+                    if (isMedicine) {
+                      return (
+                        <View key={index}>
+                          <Text>{`${item.name} (${item.dose} ${item.frequency})`}</Text>
+                        </View>
+                      )
+                    }
+
+                    return (
+                      <View key={index}>
+                        <Text>{JSON.stringify(item, null, 2)}</Text>
+                      </View>
+                    )
+                  })}
+                </View>
+              )
+            }
+          }
+          return (
+            <View key={key} style={[$row, { flexWrap: "wrap" }]}>
+              <Text text={upperFirst(key)} />
+              <Text text=": " />
+              <Text>
+                {isDateField ? format(new Date(data), "dd MMMM yyyy") : parsedMetadata[key]}
+              </Text>
+            </View>
+          )
+        })}
+      </View>
+    )
+  } else {
+    display = <Text>{JSON.stringify(parsedMetadata || "")}</Text>
+  }
+  return display
+
+  // TODO: Clean up below
+  // LEFT behind for reference during transition period
 
   switch (event.eventType) {
-    case 'COVID-19 Screening':
+    case "COVID-19 Screening":
       display = (
-        <Covid19Display
-          metadataObj={parseMetadata<Covid19FormMetadata>(event.eventMetadata)}
-        />
-      );
-      break;
-    case 'Vitals':
-      display = (
-        <VitalsDisplay
-          metadataObj={parseMetadata<VitalsMetadata>(event.eventMetadata)}
-        />
-      );
-      break;
-    case 'Examination Full':
-    case 'Examination':
-      display = (
-        <ExaminationDisplay
-          metadataObj={parseMetadata<Examination>(event.eventMetadata)}
-        />
-      );
-      break;
-    case 'Medicine':
-      <MedicineDisplay
-        metadataObj={parseMetadata<MedicineMetadata>(event.eventMetadata)}
-      />;
-      break;
-    case 'Medical History Full':
+        <Covid19Display metadataObj={parseMetadata<Covid19FormMetadata>(event.eventMetadata)} />
+      )
+      break
+    case "Vitals":
+      display = <VitalsDisplay metadataObj={parseMetadata<VitalsMetadata>(event.eventMetadata)} />
+      break
+    case "Examination Full":
+    case "Examination":
+      display = <ExaminationDisplay metadataObj={parseMetadata<Examination>(event.eventMetadata)} />
+      break
+    case "Medicine":
+      ;<MedicineDisplay metadataObj={parseMetadata<MedicineMetadata>(event.eventMetadata)} />
+      break
+    case "Medical History Full":
       display = (
         <MedicalHistoryDisplay
-          metadataObj={parseMetadata<MedicalHistoryMetadata>(
-            event.eventMetadata,
-          )}
+          metadataObj={parseMetadata<MedicalHistoryMetadata>(event.eventMetadata)}
         />
-      );
-      break;
-    case 'Physiotherapy':
+      )
+      break
+    case "Physiotherapy":
       display = (
         <PhysiotherapyDisplay
-          metadataObj={parseMetadata<PhysiotherapyMetadata>(
-            event.eventMetadata,
-          )}
+          metadataObj={parseMetadata<PhysiotherapyMetadata>(event.eventMetadata)}
         />
-      );
-      break;
+      )
+      break
     default:
-      display = <Text>{parseMetadata<string>(event.eventMetadata) || ''}</Text>;
-      break;
+      display = (
+        <Text>{JSON.stringify(parseMetadata<string>(event.eventMetadata) || "", null, 2)}</Text>
+      )
+      break
   }
 
-  return display;
+  return display
+}
+
+export const $row = {
+  flexDirection: "row",
+  alignItems: "center",
+  paddingVertical: 2,
 }

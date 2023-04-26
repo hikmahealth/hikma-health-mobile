@@ -1,68 +1,73 @@
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {FormProvider, SubmitHandler, useForm} from 'react-hook-form';
-import {View, ViewStyle} from 'react-native';
-import {TextInput} from 'react-native-paper';
-import {RootStackParamList} from '../../App';
-import {Button, Text, Screen, ControlledTextField, Row} from '../components';
-import {createEvent} from '../db/api';
-import {translate} from '../i18n';
-import {primaryTheme} from '../styles/buttons';
+import { NativeStackScreenProps } from "@react-navigation/native-stack"
+import { FormProvider, SubmitHandler, useForm } from "react-hook-form"
+import { View, ViewStyle } from "react-native"
+import { TextInput } from "react-native-paper"
+import { RootStackParamList } from "../../App"
+import { Row } from "../components/Row"
+import {Screen} from "../components/Screen"
+import {Text} from "../components/Text"
+import {ControlledTextField} from "../components/ControlledTextField"
+import {ControlledRadioGroup} from "../components/ControlledRadioGroup"
+import {Button} from "../components/Button"
+import { createEvent } from "../db/api"
+import { translate } from "../i18n"
+import { primaryTheme } from "../styles/buttons"
 
-type Props = NativeStackScreenProps<RootStackParamList, 'VitalsForm'>;
+type Props = NativeStackScreenProps<RootStackParamList, "VitalsForm">
 
 export type VitalsMetadata = {
-  doctor: string;
-  heartRate: number;
-  systolic: number;
-  diastolic: number;
-  oxygenSaturation: number;
-  temperature: number;
-  respiratoryRate: number;
-  weight: number;
-  bloodGlucose: number;
-};
+  doctor: string
+  heartRate: number
+  systolic: number
+  diastolic: number
+  oxygenSaturation: number
+  temperature: number
+  respiratoryRate: number
+  weight: number
+  bloodGlucose: number
+}
 
 export function VitalsForm(props: Props) {
-  const {route, navigation} = props;
-  const {patientId, visitId} = route.params;
+  const { route, navigation } = props
+  const { patientId, visitId } = route.params
 
-  const {...formMethods} = useForm<VitalsMetadata>({
+  const { ...formMethods } = useForm<VitalsMetadata>({
     defaultValues: {
-      doctor: 'Dr. Doctor',
+      doctor: "Dr. Doctor",
     },
-  });
+  })
 
-  const onSubmit: SubmitHandler<VitalsMetadata> = data => {
-    console.log({data});
+  const onSubmit: SubmitHandler<VitalsMetadata> = (data) => {
+    console.log({ data })
 
     createEvent({
       patientId: patientId,
       visitId,
       isDeleted: false,
-      eventType: 'Vitals',
+      eventType: "Vitals",
       eventMetadata: JSON.stringify(data),
     })
-      .then(res => {
-        navigation.goBack();
-        console.log(res);
+      .then((res) => {
+        navigation.goBack()
+        console.log(res)
       })
-      .catch(error => console.error(error));
-  };
+      .catch((error) => console.error(error))
+  }
   return (
     <Screen preset="scroll">
       <View style={$formContainer}>
         <FormProvider {...formMethods}>
           <ControlledTextField
-            label={'Heart Rate'}
+            label={"Heart Rate"}
             name="heartRate"
             keyboardType="numeric"
             right={<TextInput.Affix text="BPM" />}
           />
 
           <View style={$row}>
-            <View style={{flex: 1}}>
+            <View style={{ flex: 1 }}>
               <ControlledTextField
-                label={'Systolic'}
+                label={"Systolic"}
                 name="systolic"
                 keyboardType="numeric"
                 right={<TextInput.Affix text="mmHg" />}
@@ -71,9 +76,9 @@ export function VitalsForm(props: Props) {
             <View>
               <Text variant="titleLarge">/</Text>
             </View>
-            <View style={{flex: 1}}>
+            <View style={{ flex: 1 }}>
               <ControlledTextField
-                label={'Diastolic'}
+                label={"Diastolic"}
                 name="diastolic"
                 keyboardType="numeric"
                 right={<TextInput.Affix text="mmHg" />}
@@ -81,34 +86,34 @@ export function VitalsForm(props: Props) {
             </View>
           </View>
           <ControlledTextField
-            label={'Oxygen Saturation'}
+            label={"Oxygen Saturation"}
             name="oxygenSaturation"
             keyboardType="numeric"
             right={<TextInput.Affix text="%" />}
           />
 
           <ControlledTextField
-            label={'Temperature'}
+            label={"Temperature"}
             name="temperature"
             keyboardType="numeric"
             right={<TextInput.Affix text="°C" />}
           />
           <ControlledTextField
-            label={'Respiratory Rate'}
+            label={"Respiratory Rate"}
             name="respiratoryRate"
             keyboardType="numeric"
             right={<TextInput.Affix text="BPM" />}
           />
 
           <ControlledTextField
-            label={'Weight'}
+            label={"Weight"}
             name="weight"
             keyboardType="numeric"
             right={<TextInput.Affix text="kg" />}
           />
 
           <ControlledTextField
-            label={'Blood Glucose'}
+            label={"Blood Glucose"}
             name="bloodGlucose"
             keyboardType="numeric"
             right={<TextInput.Affix text="mmol/L" />}
@@ -117,22 +122,23 @@ export function VitalsForm(props: Props) {
           <Button
             mode="contained"
             theme={primaryTheme}
-            onPress={formMethods.handleSubmit(onSubmit)}>
+            onPress={formMethods.handleSubmit(onSubmit)}
+          >
             Save
           </Button>
         </FormProvider>
       </View>
     </Screen>
-  );
+  )
 }
 
 const $formContainer: ViewStyle = {
   rowGap: 10,
   paddingTop: 20,
-};
+}
 
 const $row: ViewStyle = {
-  flexDirection: 'row',
+  flexDirection: "row",
   columnGap: 18,
-  alignItems: 'center',
-};
+  alignItems: "center",
+}

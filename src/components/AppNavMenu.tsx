@@ -1,9 +1,9 @@
-import * as React from 'react';
-import {Modal, Portal, Text, Button, Provider} from 'react-native-paper';
+import * as React from "react"
+import { Modal, Portal, Text, Button, Provider } from "react-native-paper"
 
 type Props = {
-  children: React.ReactNode;
-};
+  children: React.ReactNode
+}
 
 // export const AppNavMenu = ({children}: Props) => {
 //   const [visible, setVisible] = React.useState(false);

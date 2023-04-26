@@ -1,8 +1,8 @@
 export function parseMetadata<T>(metadata: string): T {
   try {
-    JSON.parse(metadata);
+    JSON.parse(metadata)
   } catch (e) {
-    return metadata as T;
+    return metadata as T
   }
-  return JSON.parse(metadata);
+  return JSON.parse(metadata)
 }

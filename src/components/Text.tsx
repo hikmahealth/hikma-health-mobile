@@ -1,29 +1,29 @@
-import I18n from 'i18n-js';
-import React, {useEffect} from 'react';
+import I18n from "i18n-js"
+import React, { useEffect } from "react"
 // import { StyleProp, Text as RNText, TextProps as RNTextProps, TextStyle } from "react-native"
-import {TextStyle, StyleProp} from 'react-native';
-import {Text as RNPText, TextProps as RNPTextProps} from 'react-native-paper';
-import {isRTL, i18n, translate, TxKeyPath} from '../i18n';
+import { TextStyle, StyleProp } from "react-native"
+import { Text as RNPText, TextProps as RNPTextProps } from "react-native-paper"
+import { isRTL, i18n, translate, TxKeyPath } from "../i18n"
 // import { colors, typography } from "../theme"
 
 // type Sizes = keyof typeof $sizeStyles
 // type Weights = keyof typeof typography.primary
 // type Presets = keyof typeof $presets
 
-export type TextProps = Omit<RNPTextProps, 'children'> & {
+export type TextProps = Omit<RNPTextProps, "children"> & {
   /**
    * Text which is looked up via i18n.
    */
-  tx?: TxKeyPath;
+  tx?: TxKeyPath
   /**
    * The text to display if not using `tx` or nested components.
    */
-  text?: string;
+  text?: string
   /**
    * Optional options to pass to i18n. Useful for interpolation
    * as well as explicitly setting locale or translation fallbacks.
    */
-  txOptions?: I18n.TranslateOptions;
+  txOptions?: I18n.TranslateOptions
   // /**
   //  * An optional style override useful for padding & margin.
   //  */
@@ -43,8 +43,8 @@ export type TextProps = Omit<RNPTextProps, 'children'> & {
   /**
    * Children components.
    */
-  children?: React.ReactNode;
-};
+  children?: React.ReactNode
+}
 
 /**
  * For your text displaying needs.
@@ -62,12 +62,12 @@ export function Text(props: TextProps) {
     children,
     style: $styleOverride,
     ...rest
-  } = props;
+  } = props
 
   // const [v, setV] = React.useState(0);
 
-  const i18nText = tx && translate(tx, txOptions);
-  const content = i18nText || text || children;
+  const i18nText = tx && translate(tx, txOptions)
+  const content = i18nText || text || children
 
   // useEffect(() => {
   //   //   console.warn('I18n has been updated!');
@@ -90,24 +90,24 @@ export function Text(props: TextProps) {
     // $fontWeightStyles[weight],
     // $sizeStyles[size],
     $styleOverride,
-  ];
+  ]
 
   return (
     <RNPText {...rest} style={$styles}>
       {content}
     </RNPText>
-  );
+  )
 }
 
 const $sizeStyles = {
-  xxl: {fontSize: 36, lineHeight: 44} as TextStyle,
-  xl: {fontSize: 24, lineHeight: 34} as TextStyle,
-  lg: {fontSize: 20, lineHeight: 32} as TextStyle,
-  md: {fontSize: 18, lineHeight: 26} as TextStyle,
-  sm: {fontSize: 16, lineHeight: 24} as TextStyle,
-  xs: {fontSize: 14, lineHeight: 21} as TextStyle,
-  xxs: {fontSize: 12, lineHeight: 18} as TextStyle,
-};
+  xxl: { fontSize: 36, lineHeight: 44 } as TextStyle,
+  xl: { fontSize: 24, lineHeight: 34 } as TextStyle,
+  lg: { fontSize: 20, lineHeight: 32 } as TextStyle,
+  md: { fontSize: 18, lineHeight: 26 } as TextStyle,
+  sm: { fontSize: 16, lineHeight: 24 } as TextStyle,
+  xs: { fontSize: 14, lineHeight: 21 } as TextStyle,
+  xxs: { fontSize: 12, lineHeight: 18 } as TextStyle,
+}
 
 // const $fontWeightStyles = Object.entries(typography.primary).reduce(
 //   (acc, [weight, fontFamily]) => {
@@ -146,6 +146,6 @@ const $presets = {
     $sizeStyles.sm,
     // $fontWeightStyles.normal,
   ] as StyleProp<TextStyle>,
-};
+}
 
-const $rtlStyle: TextStyle = isRTL ? {writingDirection: 'rtl'} : {};
+const $rtlStyle: TextStyle = isRTL ? { writingDirection: "rtl" } : {}

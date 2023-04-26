@@ -1,31 +1,28 @@
-import {format} from 'date-fns';
-import {upperFirst} from 'lodash';
-import {useCallback} from 'react';
-import {TouchableOpacity, View, ViewStyle} from 'react-native';
-import {Avatar} from 'react-native-paper';
-import {translate} from '../i18n';
-import {primary} from '../styles/colors';
-import {Patient} from '../types/Patient';
-import {displayName, displayNameAvatar} from '../utils/patient';
-import {Text} from './Text';
+import { format } from "date-fns"
+import { upperFirst } from "lodash"
+import { useCallback } from "react"
+import { TouchableOpacity, View, ViewStyle } from "react-native"
+import { Avatar } from "react-native-paper"
+import { translate } from "../i18n"
+import { primary } from "../styles/colors"
+import { Patient } from "../types/Patient"
+import { displayName, displayNameAvatar } from "../utils/patient"
+import { Text } from "./Text"
 
 type PatientListItemProps = {
-  patient: Patient;
-  language: string;
-  onPatientSelected: (patient: Patient) => void;
-};
+  patient: Patient
+  onPatientSelected: (patient: Patient) => void
+}
 
 export function PatientListItem(props: PatientListItemProps) {
-  const {patient, language, onPatientSelected} = props;
+  const { patient, onPatientSelected } = props
 
   // use callback function to call when the patient is pressed
   const handlePatientSelected = useCallback(() => {
-    onPatientSelected(patient);
-  }, [patient.id]);
+    onPatientSelected(patient)
+  }, [patient.id])
   return (
-    <TouchableOpacity
-      style={$patientItemContainer}
-      onPress={handlePatientSelected}>
+    <TouchableOpacity style={$patientItemContainer} onPress={handlePatientSelected}>
       <View style={$cardContent}>
         <Avatar.Text
           style={{
@@ -34,41 +31,39 @@ export function PatientListItem(props: PatientListItemProps) {
           size={64}
           label={displayNameAvatar(patient)}
         />
-        <View style={{marginLeft: '3%'}}>
+        <View style={{ marginLeft: "3%" }}>
           <Text variant="titleLarge">{displayName(patient)}</Text>
           <View
             style={{
               marginVertical: 2,
               height: 1,
-              backgroundColor: '#eee',
+              backgroundColor: "#eee",
             }}
           />
           <Text
             style={{
-              flexWrap: 'wrap',
-            }}>{`${translate('dob')}:  ${format(
-            new Date(patient.dateOfBirth),
-            'dd MMM yyyy',
-          )}`}</Text>
-          <Text>{`${translate('sex')}:  ${upperFirst(patient.sex)}`}</Text>
-          <Text>{`${translate('camp')}:  ${patient.camp}`}</Text>
+              flexWrap: "wrap",
+            }}
+          >{`${translate("dob")}:  ${format(new Date(patient.dateOfBirth), "dd MMM yyyy")}`}</Text>
+          <Text>{`${translate("sex")}:  ${upperFirst(patient.sex)}`}</Text>
+          <Text>{`${translate("camp")}:  ${patient.camp}`}</Text>
           <Text>{patient.createdAt.toDateString()}</Text>
         </View>
       </View>
     </TouchableOpacity>
-  );
+  )
 }
 
 const $cardContent: ViewStyle = {
   flex: 1,
   marginHorizontal: 10,
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'flex-start',
-};
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "flex-start",
+}
 
 const $patientItemContainer: ViewStyle = {
   flex: 1,
   height: 100,
-  width: '100%',
-};
+  width: "100%",
+}

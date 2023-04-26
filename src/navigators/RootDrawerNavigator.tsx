@@ -1,38 +1,41 @@
-import {createDrawerNavigator} from '@react-navigation/drawer';
-import {View} from 'react-native';
-import {Text, AppBarNav, CustomDrawerContent} from '../components';
-import {Benchmarking} from '../screens/Benchmarking';
-import {PatientFlow} from './PatientFlowNavigator';
+import { createDrawerNavigator } from "@react-navigation/drawer"
+import { View } from "react-native"
+import {Text} from "../components/Text"
+import { AppBarNav } from "../components/AppBarNav"
+import { CustomDrawerContent } from "../components/CustomDrawerContent"
+import { Benchmarking } from "../screens/Benchmarking"
+import { PatientFlow } from "./PatientFlowNavigator"
 
-const Drawer = createDrawerNavigator();
+const Drawer = createDrawerNavigator()
 
 const SettingsScreen = () => {
   return (
     <View>
       <Text>Settings</Text>
     </View>
-  );
-};
+  )
+}
 
 export function RootNavigator() {
   return (
     <Drawer.Navigator
-      drawerContent={props => <CustomDrawerContent {...props} />}
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
-        header: props => <AppBarNav {...props} />,
-      }}>
+        header: (props) => <AppBarNav {...props} />,
+      }}
+    >
       <Drawer.Screen
         name="PatientFlow"
         options={{
           headerShown: false,
-          headerTitle: 'Home',
+          headerTitle: "Home",
         }}
         component={PatientFlow}
       />
       <Drawer.Screen
         name="Settings"
         options={{
-          title: 'Settings',
+          title: "Settings",
         }}
         component={SettingsScreen}
       />
@@ -40,10 +43,10 @@ export function RootNavigator() {
       <Drawer.Screen
         name="Benchmarking"
         options={{
-          title: 'Benchmarking',
+          title: "Benchmarking",
         }}
         component={Benchmarking}
       />
     </Drawer.Navigator>
-  );
+  )
 }

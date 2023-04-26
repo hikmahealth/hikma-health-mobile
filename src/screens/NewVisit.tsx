@@ -1,16 +1,17 @@
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {List} from 'react-native-paper';
-import {View, ViewStyle} from 'react-native';
-import {RootStackParamList} from '../../App';
-import {Text, Screen} from '../components';
-import {translate, TxKeyPath} from '../i18n';
-import {useProviderStore} from '../stores/provider';
-import {
-  PatientFlowParamList,
-  VisitScreensProps,
-} from '../navigators/PatientFlowNavigator';
+import { NativeStackScreenProps } from "@react-navigation/native-stack"
+import { List } from "react-native-paper"
+import { useEffect, useState } from "react"
+import { useDatabase } from "@nozbe/watermelondb/hooks"
+import { View, ViewStyle } from "react-native"
+import { RootStackParamList } from "../../App"
+import { Text } from "../components/Text"
+import { Screen } from "../components/Screen"
+import { translate, TxKeyPath } from "../i18n"
+import { useProviderStore } from "../stores/provider"
+import { PatientFlowParamList, VisitScreensProps } from "../navigators/PatientFlowNavigator"
+import EventFormModel from "../db/model/EventForm"
 
-type Props = NativeStackScreenProps<RootStackParamList, 'NewVisit'>;
+type Props = NativeStackScreenProps<RootStackParamList, "NewVisit">
 
 // medicalHistory, complaint, vitals, examination, medicineDispensed, physiotherapy, dentalTreatment, notes, covid19Screening
 
@@ -20,52 +21,41 @@ const patientVisitLinks = (
   providerId: string,
   patientAge: number,
 ): {
-  labelTx: TxKeyPath;
-  route: keyof PatientFlowParamList;
-  descriptionTx: TxKeyPath;
-  iconName: string;
-  params: VisitScreensProps | (VisitScreensProps & {patientAge: number});
+  labelTx: TxKeyPath
+  route: keyof PatientFlowParamList
+  descriptionTx: TxKeyPath
+  iconName: string
+  params: VisitScreensProps | (VisitScreensProps & { patientAge: number })
 }[] => [
   {
-    labelTx: 'newVisitScreen.medicalHistory',
-    route: 'MedicalHistoryForm',
-    descriptionTx: 'patientFile.medicalHistoryDescription',
-    iconName: 'hospital-building',
+    labelTx: "newVisitScreen.medicalHistory",
+    route: "MedicalHistoryForm",
+    descriptionTx: "patientFile.medicalHistoryDescription",
+    iconName: "hospital-building",
     params: {
-      eventType: 'Medical History Full',
+      eventType: "Medical History Full",
       visitId,
       patientId,
       providerId,
     },
   },
   {
-    labelTx: 'newVisitScreen.complaint',
-    route: 'OpenTextEvent',
-    descriptionTx: 'newVisitScreen.complaintDescription',
-    iconName: 'stethoscope',
+    labelTx: "newVisitScreen.complaint",
+    route: "OpenTextEvent",
+    descriptionTx: "newVisitScreen.complaintDescription",
+    iconName: "stethoscope",
     params: {
-      eventType: 'Medical History Full',
+      eventType: "Medical History Full",
       visitId,
       patientId,
       providerId,
     },
   },
   {
-    labelTx: 'newVisitScreen.vitals',
-    route: 'VitalsForm',
-    descriptionTx: 'newVisitScreen.vitalsDescription',
-    iconName: 'eye-outline',
-    params: {
-      visitId,
-      patientId,
-      providerId,
-    },
-  },
-  {
-    labelTx: 'newVisitScreen.examination',
-    route: 'ExaminationForm',
-    descriptionTx: 'newVisitScreen.examinationDescription',
-    iconName: 'test-tube',
+    labelTx: "newVisitScreen.vitals",
+    route: "VitalsForm",
+    descriptionTx: "newVisitScreen.vitalsDescription",
+    iconName: "eye-outline",
     params: {
       visitId,
       patientId,
@@ -73,10 +63,10 @@ const patientVisitLinks = (
     },
   },
   {
-    labelTx: 'newVisitScreen.medicineDispensed',
-    route: 'MedicineForm',
-    descriptionTx: 'newVisitScreen.medicineDispensedDescription',
-    iconName: 'pill',
+    labelTx: "newVisitScreen.examination",
+    route: "ExaminationForm",
+    descriptionTx: "newVisitScreen.examinationDescription",
+    iconName: "test-tube",
     params: {
       visitId,
       patientId,
@@ -84,10 +74,10 @@ const patientVisitLinks = (
     },
   },
   {
-    labelTx: 'newVisitScreen.physiotherapy',
-    route: 'PhysiotherapyForm',
-    descriptionTx: 'newVisitScreen.physiotherapyDescription',
-    iconName: 'arm-flex-outline',
+    labelTx: "newVisitScreen.medicineDispensed",
+    route: "MedicineForm",
+    descriptionTx: "newVisitScreen.medicineDispensedDescription",
+    iconName: "pill",
     params: {
       visitId,
       patientId,
@@ -95,34 +85,45 @@ const patientVisitLinks = (
     },
   },
   {
-    labelTx: 'newVisitScreen.dentalTreatment',
-    route: 'OpenTextEvent',
-    descriptionTx: 'newVisitScreen.dentalTreatmentDescription',
-    iconName: 'tooth-outline',
+    labelTx: "newVisitScreen.physiotherapy",
+    route: "PhysiotherapyForm",
+    descriptionTx: "newVisitScreen.physiotherapyDescription",
+    iconName: "arm-flex-outline",
     params: {
-      eventType: 'Dental Treatment',
       visitId,
       patientId,
       providerId,
     },
   },
   {
-    labelTx: 'newVisitScreen.notes',
-    route: 'OpenTextEvent',
-    descriptionTx: 'newVisitScreen.notesDescription',
-    iconName: 'file-document-edit-outline',
+    labelTx: "newVisitScreen.dentalTreatment",
+    route: "OpenTextEvent",
+    descriptionTx: "newVisitScreen.dentalTreatmentDescription",
+    iconName: "tooth-outline",
     params: {
-      eventType: 'Notes',
+      eventType: "Dental Treatment",
       visitId,
       patientId,
       providerId,
     },
   },
   {
-    labelTx: 'newVisitScreen.covid19Screening',
-    route: 'Covid19Form',
-    descriptionTx: 'newVisitScreen.covid19ScreeningDescription',
-    iconName: 'virus',
+    labelTx: "newVisitScreen.notes",
+    route: "OpenTextEvent",
+    descriptionTx: "newVisitScreen.notesDescription",
+    iconName: "file-document-edit-outline",
+    params: {
+      eventType: "Notes",
+      visitId,
+      patientId,
+      providerId,
+    },
+  },
+  {
+    labelTx: "newVisitScreen.covid19Screening",
+    route: "Covid19Form",
+    descriptionTx: "newVisitScreen.covid19ScreeningDescription",
+    iconName: "virus",
     params: {
       visitId,
       patientId,
@@ -130,47 +131,76 @@ const patientVisitLinks = (
       providerId,
     },
   },
-];
+]
 
 export function NewVisit(props: Props) {
-  const {navigation, route} = props;
-  const {patientId, visitId, patientAge} = route.params;
-  const provider = useProviderStore(store => store.provider);
+  const { navigation, route } = props
+  const { patientId, visitId, patientAge } = route.params
+  const [forms, setForms] = useState<EventFormModel[]>([])
+  const provider = useProviderStore((store) => store.provider)
+  const database = useDatabase()
 
-  const providerId = provider?.id;
+  useEffect(() => {
+    database.get<EventFormModel>("event_forms").query().fetch().then((forms) => {
+      console.log(forms)
+      setForms(forms)
+    }).catch((err) => {
+      console.log(err)
+    })
+  }, [])
 
-  const goToScreen =
-    (route: keyof RootStackParamList, params: VisitScreensProps) => () =>
-      navigation.navigate(route, params);
+  const providerId = provider?.id
+
+  const goToScreen = (route: keyof RootStackParamList, params: VisitScreensProps) => () =>
+    navigation.navigate(route, params)
 
   // TODO: handle provider not found
-  if (!providerId) return <Text>Provider not found</Text>;
+  if (!providerId) return <Text>Provider not found</Text>
 
-  const links = patientVisitLinks(visitId, patientId, providerId, patientAge);
+  const links = patientVisitLinks(visitId, patientId, providerId, patientAge)
 
   return (
     <Screen preset="scroll" style={$screen}>
       <View style={$linksContainer}>
-        {links.map(link => (
+        {links.map((link) => (
           <List.Item
             key={link.labelTx}
             title={translate(link.labelTx)}
-            right={props => <List.Icon {...props} icon="chevron-right" />}
+            right={(props) => <List.Icon {...props} icon="chevron-right" />}
             onPress={goToScreen(link.route, link.params)}
             description={translate(link.descriptionTx)}
-            left={props => <List.Icon {...props} icon={link.iconName} />}
+            left={(props) => <List.Icon {...props} icon={link.iconName} />}
           />
         ))}
+        {
+          forms.map(form => {
+            return (
+              <List.Item
+                key={form.name}
+                title={form.name}
+                right={(props) => <List.Icon {...props} icon="chevron-right" />}
+                onPress={goToScreen("EventForm", {
+                  visitId,
+                  patientId,
+                  providerId,
+                  formId: form.id,
+                })}
+                description={form.description}
+                left={(props) => <List.Icon {...props} icon="form-select" />}
+              />
+            )
+          })
+        }
       </View>
     </Screen>
-  );
+  )
 }
 
 const $screen: ViewStyle = {
   paddingHorizontal: 24,
-};
+}
 
 const $linksContainer: ViewStyle = {
   paddingTop: 32,
   rowGap: 8,
-};
+}

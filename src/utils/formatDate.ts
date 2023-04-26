@@ -1,11 +1,11 @@
-import {Locale, format, parseISO} from 'date-fns';
-import {i18n} from '../i18n';
+import { Locale, format, parseISO } from "date-fns"
+import { i18n } from "../i18n"
 
-import ar from 'date-fns/locale/ar-SA';
-import ko from 'date-fns/locale/ko';
-import en from 'date-fns/locale/en-US';
+import ar from "date-fns/locale/ar-SA"
+import ko from "date-fns/locale/ko"
+import en from "date-fns/locale/en-US"
 
-type Options = Parameters<typeof format>[2];
+type Options = Parameters<typeof format>[2]
 
 // const getLocale = (): Locale => {
 //   const locale = I18n.currentLocale().split('-')[0];
