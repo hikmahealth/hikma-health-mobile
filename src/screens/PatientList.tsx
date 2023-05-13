@@ -19,6 +19,7 @@ import { FlashList } from "@shopify/flash-list"
 import { primary } from "../styles/colors"
 import { PatientFlowParamList } from "../navigators/PatientFlowNavigator"
 import { patientListMachine } from "../components/state_machines/patientList"
+import { useLanguageStore } from "../stores/language"
 
 type Props = NativeStackScreenProps<PatientFlowParamList, "PatientList">
 
@@ -48,6 +49,7 @@ export default function PatientList(props: Props) {
   const [patients, setPatients] = useState<Patient[]>([])
 
   const database = useDatabase()
+  const isRtl = useLanguageStore(state => state.isRtl)
 
   const openPatientFile = useCallback((patient: Patient) => {
     return navigation.navigate("PatientView", {
@@ -187,19 +189,19 @@ export default function PatientList(props: Props) {
   )
 
 
-
-
   return (
     <>
       <Screen preset="fullScreenFixed">
         <FlashList
           onRefresh={getNextPagePatients}
           refreshing={false}
+          disableAutoLayout={true}
           ItemSeparatorComponent={() => <View style={$separator} />}
           ListHeaderComponent={
             <HeaderSearch cancelSearch={cancelSearch} submitSearch={performSearch} totalPatientsCount={totalPatientsCount} />
           }
           ListFooterComponent={() => <View style={{ height: 40 }} />}
+          horizontal={false}
           data={current.matches("idle") ? patients : current.context.searchResults}
           estimatedItemSize={100}
           onEndReached={getNextPagePatients}
@@ -216,7 +218,7 @@ export default function PatientList(props: Props) {
         icon="plus"
         color="white"
         label={translate("newPatient")}
-        style={$fab}
+        style={[$fab, isRtl ? { left: 4 } : { right: 4 }]}
         onPress={goToNewPatient}
       />
     </If>
@@ -353,7 +355,7 @@ const $fab: ViewStyle = {
   position: "absolute",
   backgroundColor: primary,
   margin: 16,
-  right: 4,
+  // right: 4, // this is overwriten on the screen
   bottom: 10,
 }
 

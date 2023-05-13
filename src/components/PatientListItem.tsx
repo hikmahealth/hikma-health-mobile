@@ -1,9 +1,11 @@
+import React from "react"
 import { format } from "date-fns"
 import { upperFirst } from "lodash"
 import { useCallback } from "react"
 import { TouchableOpacity, View, ViewStyle } from "react-native"
 import { Avatar } from "react-native-paper"
-import { translate } from "../i18n"
+import { i18n, translate } from "../i18n"
+import { useLanguageStore } from "../stores/language"
 import { primary } from "../styles/colors"
 import { Patient } from "../types/Patient"
 import { displayName, displayNameAvatar } from "../utils/patient"
@@ -16,14 +18,16 @@ type PatientListItemProps = {
 
 export function PatientListItem(props: PatientListItemProps) {
   const { patient, onPatientSelected } = props
+  const isRtl = useLanguageStore((state) => state.isRtl)
 
   // use callback function to call when the patient is pressed
   const handlePatientSelected = useCallback(() => {
     onPatientSelected(patient)
   }, [patient.id])
+
   return (
     <TouchableOpacity style={$patientItemContainer} onPress={handlePatientSelected}>
-      <View style={$cardContent}>
+      <View style={[$cardContent,  isRtl ? $rtlView : {}]}>
         <Avatar.Text
           style={{
             backgroundColor: primary,
@@ -31,7 +35,7 @@ export function PatientListItem(props: PatientListItemProps) {
           size={64}
           label={displayNameAvatar(patient)}
         />
-        <View style={{ marginLeft: "3%" }}>
+        <View style={isRtl ? { marginRight: "3%", alignItems: "flex-end" } : { marginLeft: "3%" }}>
           <Text variant="titleLarge">{displayName(patient)}</Text>
           <View
             style={{
@@ -45,7 +49,7 @@ export function PatientListItem(props: PatientListItemProps) {
               flexWrap: "wrap",
             }}
           >{`${translate("dob")}:  ${format(new Date(patient.dateOfBirth), "dd MMM yyyy")}`}</Text>
-          <Text>{`${translate("sex")}:  ${upperFirst(patient.sex)}`}</Text>
+      <Text>{`${translate("sex")}:  ${upperFirst(translate(patient.sex))}`}</Text>
           <Text>{`${translate("camp")}:  ${patient.camp}`}</Text>
           <Text>{patient.createdAt.toDateString()}</Text>
         </View>
@@ -60,6 +64,10 @@ const $cardContent: ViewStyle = {
   flexDirection: "row",
   alignItems: "center",
   justifyContent: "flex-start",
+}
+
+const $rtlView: ViewStyle = {
+  flexDirection: "row-reverse",
 }
 
 const $patientItemContainer: ViewStyle = {

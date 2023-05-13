@@ -1,7 +1,7 @@
 import { StackActions, useNavigation } from "@react-navigation/native"
 import { useContext, useEffect, useState } from "react"
 import { useColorScheme, Image, View, ImageStyle, ViewStyle, Alert } from "react-native"
-import { TextInput } from "react-native-paper"
+import { TextInput, IconButton } from "react-native-paper"
 import { Text } from "../components/Text"
 import { Button } from "../components/Button"
 import { Screen } from "../components/Screen"
@@ -36,9 +36,10 @@ export default function Login() {
   const [email, setEmail] = useState("admin@hikmahealth.org")
   const [password, setPassword] = useState("HikmaAdmin25!")
 
+  console.log(HIKMA_API)
+
   const signIn = async () => {
     setIsLoading(true)
-    console.warn("1")
     const response = await fetch(`${HIKMA_API}/api/login`, {
       method: "POST",
       headers: {
@@ -50,7 +51,6 @@ export default function Login() {
         password: password,
       }),
     })
-    console.warn("2")
     const result = await response.json()
 
     // If there is an error message, then there is no user logged in
@@ -58,8 +58,6 @@ export default function Login() {
       setIsLoading(false)
       return Alert.alert("Login Failed", "Please check your credentials and try again")
     }
-
-    console.warn("3")
 
     setProvider(result)
 
@@ -80,47 +78,60 @@ export default function Login() {
     setSyncStatus(false)
   }
 
+  const openPrivacyPolicy = () => {
+    navigation.navigate("PrivacyPolicy")
+  }
+
   const launchIcon = isDarkmode
     ? require("./../assets/images/logo_no_text.png")
     : require("./../assets/images/launch_icon.png")
 
   return (
-    <Screen preset="fixed">
-      <View style={$brandingContainer}>
-        <Image source={launchIcon} style={$launchIcon} resizeMode="contain" />
-        <Text variant="titleLarge">HIKMA HEALTH</Text>
-      </View>
+    <>
+      <Screen preset="fixed">
+        <View style={$brandingContainer}>
+          <Image source={launchIcon} style={$launchIcon} resizeMode="contain" />
+          <Text variant="titleLarge">HIKMA HEALTH</Text>
+        </View>
 
-      <View style={$formContainer}>
-        <TextInput
-          onChangeText={setEmail}
-          value={email}
-          // label="Email Address"
-          label={translate("login.email")}
-          mode="outlined"
-        />
-        <TextInput
-          value={password}
-          onChangeText={setPassword}
-          label={translate("login.password")}
-          secureTextEntry
-          // label="Password"
-          mode="outlined"
-        />
+        <View style={$formContainer}>
+          <TextInput
+            onChangeText={setEmail}
+            value={email}
+            // label="Email Address"
+            label={translate("login.email")}
+            mode="outlined"
+          />
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            label={translate("login.password")}
+            secureTextEntry
+            // label="Password"
+            mode="outlined"
+          />
 
-        <LanguageToggle />
+          <LanguageToggle />
 
-        <Button
-          loading={isLoading}
-          disabled={isLoading}
-          mode="contained"
-          style={$authButton}
-          onPress={signIn}
-        >
-          {translate("login.signIn")}
-        </Button>
-      </View>
-    </Screen>
+          <Button
+            loading={isLoading}
+            disabled={isLoading}
+            mode="contained"
+            style={$authButton}
+            onPress={signIn}
+          >
+            <Text>{translate("login.signIn")}</Text>
+          </Button>
+        </View>
+      </Screen>
+
+      <IconButton
+        style={{ position: "absolute", bottom: 10, left: 10 }}
+        icon="information-outline"
+        size={28}
+        onPress={openPrivacyPolicy}
+      />
+    </>
   )
 }
 

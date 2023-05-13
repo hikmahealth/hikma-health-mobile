@@ -12,6 +12,8 @@ import database from "../db"
 import { useActor } from "@xstate/react"
 import { GlobalServiceContext } from "./SyncModal"
 import { useContext } from "react"
+import { useLanguageStore } from "../stores/language"
+import { Alert, ToastAndroid } from "react-native"
 
 type Props = {
   options: DrawerNavigationOptions | NativeStackNavigationOptions
@@ -24,16 +26,45 @@ export const AppBarNav = (props: Props) => {
   const canGoBack = navigation.canGoBack()
   const globalServices = useContext(GlobalServiceContext)
   const [state, send] = useActor(globalServices.syncService)
+  const isRtl = useLanguageStore((state) => state.isRtl)
   const { title } = options
 
   const initSync = async () => {
     const hasLocalChangesToPush = await hasUnsyncedChanges({ database })
     try {
       await syncDB({ send }, hasLocalChangesToPush)
+      ToastAndroid.show("✅ Sync Successful!", ToastAndroid.LONG)
     } catch (error) {
+      Alert.alert("Sync Error", "Error syncing your database. Please contact your technical lead to resolve the issue.", [], {
+        cancelable: true
+      })
       console.error("Error syncing: ", error)
     }
   }
+
+  // if the screen name is "PatientList" then do not show the back button
+    // Fixes issue with state  getting mixed up with the upper drawer navigation stack
+  const isPatientListPage = route.name === "PatientList"
+
+
+  const $contentStyle = isRtl ? $reverse : {}
+  if (isRtl) {
+  return (
+    <Appbar.Header elevated>
+      <Appbar.Action icon="refresh" onPress={initSync} />
+      <Appbar.Content style={$contentStyle} title={title} />
+      {canGoBack && !isPatientListPage ? (
+        <Appbar.BackAction style={{transform: [{rotate: '180deg'}]}} onPress={navigation.goBack} />
+      ) : (
+        <Appbar.Action
+          icon="menu"
+          onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
+        />
+      )}
+    </Appbar.Header>
+  )
+  }
+
   return (
     <Appbar.Header elevated>
       {canGoBack ? (
@@ -44,8 +75,13 @@ export const AppBarNav = (props: Props) => {
           onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
         />
       )}
-      <Appbar.Content title={title} />
+      <Appbar.Content style={$contentStyle} title={title} />
       <Appbar.Action icon="refresh" onPress={initSync} />
     </Appbar.Header>
   )
+
+}
+
+const $reverse = {
+  flexDirection: "row-reverse",
 }

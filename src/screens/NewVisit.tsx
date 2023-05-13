@@ -2,6 +2,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack"
 import { List } from "react-native-paper"
 import { useEffect, useState } from "react"
 import { useDatabase } from "@nozbe/watermelondb/hooks"
+import { Q } from "@nozbe/watermelondb"
 import { View, ViewStyle } from "react-native"
 import { RootStackParamList } from "../../App"
 import { Text } from "../components/Text"
@@ -141,7 +142,11 @@ export function NewVisit(props: Props) {
   const database = useDatabase()
 
   useEffect(() => {
-    database.get<EventFormModel>("event_forms").query().fetch().then((forms) => {
+    database.get<EventFormModel>("event_forms").query(
+      // Get only the forms in my language
+      // Q.where("language", Q.oneOf([translate("languageCode"), "en"])), // This option supports rendering both english and arabic forms
+      Q.where("language", translate("languageCode")),
+    ).fetch().then((forms) => {
       console.log(forms)
       setForms(forms)
     }).catch((err) => {
@@ -162,7 +167,7 @@ export function NewVisit(props: Props) {
   return (
     <Screen preset="scroll" style={$screen}>
       <View style={$linksContainer}>
-        {links.map((link) => (
+        {/*{links.map((link) => (
           <List.Item
             key={link.labelTx}
             title={translate(link.labelTx)}
@@ -172,6 +177,7 @@ export function NewVisit(props: Props) {
             left={(props) => <List.Icon {...props} icon={link.iconName} />}
           />
         ))}
+        */}
         {
           forms.map(form => {
             return (
@@ -197,7 +203,7 @@ export function NewVisit(props: Props) {
 }
 
 const $screen: ViewStyle = {
-  paddingHorizontal: 24,
+  paddingHorizontal: 10,
 }
 
 const $linksContainer: ViewStyle = {

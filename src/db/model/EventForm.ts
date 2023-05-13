@@ -14,6 +14,7 @@ export default class EventFormModel extends Model {
 
     @text("name") name
     @text("description") description
+    @text("language") language
     @text("metadata") metadata
     @field("is_deleted") isDeleted
     @readonly @date("created_at") createdAt

@@ -43,6 +43,13 @@ export function EventList(props: Props) {
     }
   }, [updateCount])
 
+
+  // Update the header title when the eventsList array changes
+  useEffect(() => {
+        navigation.setOptions({ title:`Visit Events (${eventsList.length})` })
+  }, [eventsList.length])
+
+
   const onUpdate = () => setUpdateCount((count) => count + 1)
 
   const keyExtractor = (item, index) => {

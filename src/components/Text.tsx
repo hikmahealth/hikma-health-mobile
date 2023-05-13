@@ -4,6 +4,7 @@ import React, { useEffect } from "react"
 import { TextStyle, StyleProp } from "react-native"
 import { Text as RNPText, TextProps as RNPTextProps } from "react-native-paper"
 import { isRTL, i18n, translate, TxKeyPath } from "../i18n"
+import { useLanguageStore } from "../stores/language"
 // import { colors, typography } from "../theme"
 
 // type Sizes = keyof typeof $sizeStyles
@@ -68,6 +69,7 @@ export function Text(props: TextProps) {
 
   const i18nText = tx && translate(tx, txOptions)
   const content = i18nText || text || children
+  const isRtl = useLanguageStore((state) => state.isRtl);
 
   // useEffect(() => {
   //   //   console.warn('I18n has been updated!');
@@ -85,7 +87,7 @@ export function Text(props: TextProps) {
 
   // const preset: Presets = $presets[props.preset] ? props.preset : 'default';
   const $styles = [
-    $rtlStyle,
+    isRtl ? $rtlStyle : {},
     // $presets[preset],
     // $fontWeightStyles[weight],
     // $sizeStyles[size],
@@ -148,4 +150,4 @@ const $presets = {
   ] as StyleProp<TextStyle>,
 }
 
-const $rtlStyle: TextStyle = isRTL ? { writingDirection: "rtl" } : {}
+const $rtlStyle: TextStyle = { writingDirection: "rtl" }

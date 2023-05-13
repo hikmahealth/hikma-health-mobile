@@ -52,6 +52,8 @@ import { Text } from "./src/components"
 import { useActor } from "@xstate/react"
 import { CustomDrawerContent } from "./src/components/CustomDrawerContent"
 import { RootNavigator } from "./src/navigators/RootDrawerNavigator"
+import { useLanguageStore } from "./src/stores/language"
+import { PrivacyPolicy } from "./src/screens/PrivacyPolicy"
 
 const { LightTheme, DarkTheme } = adaptNavigationTheme({
   reactNavigationLight: NavigationDefaultTheme,
@@ -64,6 +66,7 @@ const CombinedDarkTheme = merge(MD3DarkTheme, DarkTheme)
 // FIXME: This stack has moved!!
 export type RootStackParamList = {
   Login: undefined
+  PrivacyPolicy: undefined
   PatientList: undefined
   RootNavigator: undefined
   NewPatient: {
@@ -96,7 +99,6 @@ const Stack = createNativeStackNavigator<RootStackParamList>()
 
 function App(): JSX.Element {
   const isDarkMode = useColorScheme() === "dark"
-  const [_, setLanguage] = useState(i18n.locale)
   const [provider, setClinic] = useProviderStore((state) => [state.provider, state.setClinic])
 
   const [isSignedIn, setIsSignedIn] = useState(false)
@@ -109,12 +111,7 @@ function App(): JSX.Element {
   useEffect(() => {
     fetchAndSetClinic()
     setIsSignedIn(provider !== null)
-    console.warn("Provider changed: ", provider)
   }, [provider])
-
-  useEffect(() => {
-    i18n.onChange((change) => setLanguage(change.locale))
-  }, [])
 
   const theme = isDarkMode ? CombinedDarkTheme : CombinedDefaultTheme
   const myTheme = {
@@ -143,13 +140,24 @@ function App(): JSX.Element {
               />
               <Stack.Navigator>
                 {!isSignedIn ? (
-                  <Stack.Screen
-                    options={{
-                      headerShown: false,
-                    }}
-                    name="Login"
-                    component={Login}
-                  />
+                  <Stack.Group>
+                    <Stack.Screen
+                      options={{
+                        headerShown: false,
+                      }}
+                      name="Login"
+                      component={Login}
+                    />
+                    <Stack.Group screenOptions={{ presentation: "modal" }}>
+                      <Stack.Screen
+                        options={{
+                          title: "Privacy Policy"
+                        }}
+                        name="PrivacyPolicy"
+                        component={PrivacyPolicy}
+                      />
+                    </Stack.Group>
+                  </Stack.Group>
                 ) : (
                   <Stack.Screen
                     name="RootNavigator"

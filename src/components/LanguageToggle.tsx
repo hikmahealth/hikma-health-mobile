@@ -1,16 +1,20 @@
 import React, { useEffect } from "react"
 import { Picker } from "@react-native-picker/picker"
 import { i18n } from "../i18n"
+import { useLanguageStore } from "../stores/language"
 import { useColorScheme } from "react-native"
 
 const LanguageToggle = () => {
   const isDarkMode = useColorScheme() === "dark"
   const [selectedLanguage, setSelectedLanguage] = React.useState(i18n.locale)
-  useEffect(() => {
-    i18n.onChange((change) => {
-      setSelectedLanguage(change.locale)
-    })
-  }, [])
+  const {language, setLanguage: setGlobalLanguage} = useLanguageStore()
+
+  // useEffect(() => {
+  //   i18n.onChange((change) => {
+  //     console.warn("Language has been changed")
+  //     setSelectedLanguage(change.locale)
+  //   })
+  // }, [])
   const style = isDarkMode
     ? {
         color: "#fff",
@@ -19,6 +23,7 @@ const LanguageToggle = () => {
         color: "#000",
       }
   const setLanguage = (value: string) => {
+    setGlobalLanguage(value)
     if (value === "en-US") {
       // return i18n.defaultLocale
     }
@@ -27,7 +32,7 @@ const LanguageToggle = () => {
 
   return (
     <Picker
-      selectedValue={selectedLanguage}
+      selectedValue={language}
       onValueChange={setLanguage}
       itemStyle={{
         color: "red",

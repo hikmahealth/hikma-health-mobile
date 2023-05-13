@@ -1,6 +1,6 @@
 import { useController, UseControllerProps, useFormContext } from "react-hook-form"
-import { TextInputProps, TextInput } from "react-native-paper"
 import { Text } from "./Text"
+import { TextInput, TextInputProps } from "./TextInput"
 
 export type ControlledTextFieldProps = TextInputProps & UseControllerProps
 
@@ -32,3 +32,5 @@ export const ControlledTextField = (props: ControlledTextFieldProps) => {
     </>
   )
 }
+
+// TextInput supports a label <Text /> component

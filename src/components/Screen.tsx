@@ -11,6 +11,7 @@ import {
   StyleProp,
   View,
   ViewStyle,
+  I18nManager
 } from "react-native"
 import { useTheme } from "react-native-paper"
 import { ExtendedEdge, useSafeAreaInsetsStyle } from "../utils/useSafeAreaInsetsStyle"
@@ -52,6 +53,11 @@ interface BaseScreenProps {
    * Pass any additional props directly to the KeyboardAvoidingView component.
    */
   KeyboardAvoidingViewProps?: KeyboardAvoidingViewProps
+
+  /**
+   * Right to left layout. Defaults to false.
+   */
+  rtl?: boolean
 }
 
 interface FixedScreenProps extends BaseScreenProps {
@@ -71,6 +77,7 @@ interface ScrollScreenProps extends BaseScreenProps {
    * Pass any additional props directly to the ScrollView component.
    */
   ScrollViewProps?: ScrollViewProps
+
 }
 
 interface AutoScreenProps extends Omit<ScrollScreenProps, "preset"> {
@@ -213,6 +220,7 @@ export function Screen(props: ScreenProps) {
     safeAreaEdges,
     StatusBarProps,
     statusBarStyle = "dark",
+    rtl = false,
   } = props
 
   const $containerInsets = useSafeAreaInsetsStyle(safeAreaEdges)
@@ -246,6 +254,8 @@ const $containerStyle: ViewStyle = {
   paddingHorizontal: 8,
   height: "100%",
   width: "100%",
+  // rtl support
+  transform: [{ scaleX: I18nManager.isRTL ? -1 : 1 }],
 }
 
 const $keyboardAvoidingViewStyle: ViewStyle = {

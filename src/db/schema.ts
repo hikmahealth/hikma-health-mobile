@@ -88,6 +88,7 @@ const eventSchema = tableSchema({
             id uuid PRIMARY KEY,
             name TEXT,
             description TEXT,
+            language TEXT NOT NULL default 'en',
             metadata JSONB NOT NULL DEFAULT '{}',
             created_at timestamp with time zone default now(),
             updated_at timestamp with time zone default now()
@@ -98,6 +99,7 @@ const eventFormSchema = tableSchema({
   columns: [
     { name: "name", type: "string" },
     { name: "description", type: "string" },
+    { name: "language", type: "string" },
     { name: "metadata", type: "string" },
     { name: "is_deleted", type: "boolean" },
     { name: "created_at", type: "number" },

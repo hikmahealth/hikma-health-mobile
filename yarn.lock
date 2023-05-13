@@ -3463,6 +3463,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/i18n-js@npm:3.8.2":
+  version: 3.8.2
+  resolution: "@types/i18n-js@npm:3.8.2"
+  checksum: a78c769c936c5ba1dd8192dcd1c8e2635fd5d7211c2d22729988af62881e522e1dd9927f7b323691bd1b668fe532268d181435d6e7d0f2b046922c2741ec8091
+  languageName: node
+  linkType: hard
+
 "@types/istanbul-lib-coverage@npm:*, @types/istanbul-lib-coverage@npm:^2.0.0, @types/istanbul-lib-coverage@npm:^2.0.1":
   version: 2.0.4
   resolution: "@types/istanbul-lib-coverage@npm:2.0.4"
@@ -3853,6 +3860,7 @@ __metadata:
     "@testing-library/react-native": ^11.0.0
     "@tsconfig/react-native": ^2.0.2
     "@types/deepmerge": ^2.2.0
+    "@types/i18n-js": 3.8.2
     "@types/jest": 26.0.19
     "@types/lodash": ^4.14.191
     "@types/react": ^18.0.24
@@ -3877,7 +3885,7 @@ __metadata:
     expo-localization: ~14.0.0
     expo-modules-autolinking: ~1.0.0
     expo-status-bar: ~1.4.2
-    i18n-js: ^4.2.2
+    i18n-js: 3.9.2
     jest: ^26.6.3
     jest-expo: ^47.0.0
     lodash: ^4.17.21
@@ -4609,13 +4617,6 @@ __metadata:
   version: 1.6.51
   resolution: "big-integer@npm:1.6.51"
   checksum: 3d444173d1b2e20747e2c175568bedeebd8315b0637ea95d75fd27830d3b8e8ba36c6af40374f36bdaea7b5de376dcada1b07587cb2a79a928fccdb6e6e3c518
-  languageName: node
-  linkType: hard
-
-"bignumber.js@npm:*":
-  version: 9.1.1
-  resolution: "bignumber.js@npm:9.1.1"
-  checksum: ad243b7e2f9120b112d670bb3d674128f0bd2ca1745b0a6c9df0433bd2c0252c43e6315d944c2ac07b4c639e7496b425e46842773cf89c6a2dcd4f31e5c4b11e
   languageName: node
   linkType: hard
 
@@ -7743,13 +7744,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"i18n-js@npm:^4.2.2":
-  version: 4.2.2
-  resolution: "i18n-js@npm:4.2.2"
-  dependencies:
-    bignumber.js: "*"
-    lodash: "*"
-  checksum: 288968783c4455caa4f1041e41be521731a04fb0b7e02c4b5fddd7538baa5621ae96ec4ee0f6151d417593a95f502ea5809165880c9ea5d246f228b79c2872ca
+"i18n-js@npm:3.9.2":
+  version: 3.9.2
+  resolution: "i18n-js@npm:3.9.2"
+  checksum: b405ad0861dbd57a8757811dcee791e8526a705d67c4a4353e27c924fa2c3422130fba16a21875bd89be871c86ef82f26212b002ba527c09956ff230c47e5026
   languageName: node
   linkType: hard
 
@@ -9530,7 +9528,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:*, lodash@npm:4.x, lodash@npm:^4.17.13, lodash@npm:^4.17.19, lodash@npm:^4.17.21, lodash@npm:^4.17.4, lodash@npm:^4.7.0":
+"lodash@npm:4.x, lodash@npm:^4.17.13, lodash@npm:^4.17.19, lodash@npm:^4.17.21, lodash@npm:^4.17.4, lodash@npm:^4.7.0":
   version: 4.17.21
   resolution: "lodash@npm:4.17.21"
   checksum: eb835a2e51d381e561e508ce932ea50a8e5a68f4ebdd771ea240d3048244a8d13658acbd502cd4829768c56f2e16bdd4340b9ea141297d472517b83868e677f7

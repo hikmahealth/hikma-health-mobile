@@ -2,14 +2,14 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack"
 import { RadioButton } from "react-native-paper"
 import { Alert, View } from "react-native"
 import { SubmitHandler, useForm, FormProvider } from "react-hook-form"
-import {Screen} from "../components/Screen"
-import {Text} from "../components/Text"
-import {ControlledTextField} from "../components/ControlledTextField"
-import {ControlledRadioGroup} from "../components/ControlledRadioGroup"
-import {Button} from "../components/Button"
+import { Screen } from "../components/Screen"
+import { Text } from "../components/Text"
+import { ControlledTextField } from "../components/ControlledTextField"
+import { Button } from "../components/Button"
 import { RootStackParamList } from "../../App"
 import { format } from "date-fns"
 import { translate } from "../i18n"
+import { useLanguageStore } from "../stores/language"
 import { ViewStyle } from "react-native/types"
 import { ControlledDatePickerButton } from "../components/DatePicker"
 import Patient from "../db/model/Patient"
@@ -33,6 +33,7 @@ type NewPatientForm = Omit<Patient, "dateOfBirth"> & {
 export default function NewPatientScreen(props: Props) {
   const { navigation, route } = props
   const { patient: patientToEdit } = route.params
+  const isRtl = useLanguageStore((state) => state.isRtl)
 
   const { ...formMethods } = useForm<NewPatientForm>({
     defaultValues: patientToEdit
@@ -58,7 +59,7 @@ export default function NewPatientScreen(props: Props) {
       ...data,
       dateOfBirth: format(data.dateOfBirth, "yyyy-MM-dd"),
     }
-    console.log({ patient })
+    // console.log({ patient })
 
     try {
       let res: any
@@ -76,6 +77,8 @@ export default function NewPatientScreen(props: Props) {
       Alert.alert("Error", "An error occurred while saving the patient")
     }
   }
+
+  const $rtl = isRtl ? $rtlStyle : {}
 
   return (
     <Screen preset="scroll">
@@ -124,19 +127,27 @@ export default function NewPatientScreen(props: Props) {
           />
 
           <View>
+            <View style={$rtl}>
             <Text tx="dob" variant="labelLarge" />
+          </View>
+            <View style={$rtl}>
             <ControlledDatePickerButton name="dateOfBirth" />
+      </View>
           </View>
 
           <View>
-            <Text tx="sex" variant="labelLarge" />
-            <RadioButton.Group
-              onValueChange={(val) => formMethods.setValue("sex", val)}
-              value={formMethods.watch("sex")}
-            >
-              <RadioButton.Item color={primary} label="Male" value="male" />
-              <RadioButton.Item color={primary} label="Female" value="female" />
-            </RadioButton.Group>
+            <View style={$rtl}>
+              <Text tx="sex" variant="labelLarge" />
+            </View>
+            <View style={$rtl}>
+              <RadioButton.Group
+                onValueChange={(val) => formMethods.setValue("sex", val)}
+                value={formMethods.watch("sex")}
+              >
+                <RadioButton.Item style={$rtl} color={primary} label={translate("male")} value="male" />
+                <RadioButton.Item style={$rtl} color={primary} label={translate("female")} value="female" />
+              </RadioButton.Group>
+            </View>
           </View>
           <Button mode="contained" onPress={formMethods.handleSubmit(onSubmit)}>
             {translate("save")}
@@ -146,6 +157,9 @@ export default function NewPatientScreen(props: Props) {
     </Screen>
   )
 }
+
+// const $rtl = { transform: [{ scaleX: -1 }] }
+const $rtlStyle: ViewStyle = { flexDirection: "row-reverse" }
 
 const $formContainer: ViewStyle = {
   rowGap: 16,

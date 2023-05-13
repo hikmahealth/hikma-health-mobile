@@ -1,7 +1,7 @@
 import { useContext } from "react"
 import { ImageStyle, useColorScheme, ViewStyle, Image, TextStyle } from "react-native"
 import { hasUnsyncedChanges } from "@nozbe/watermelondb/sync"
-import { View } from "react-native"
+import { View, Alert, ToastAndroid } from "react-native"
 import {
   DrawerContentScrollView,
   DrawerItem,
@@ -40,7 +40,11 @@ export function CustomDrawerContent(props: Props) {
     try {
       // @ts-ignore
       await syncDB({ send }, hasLocalChangesToPush)
+      ToastAndroid.show("✅ Sync Successful!", ToastAndroid.LONG)
     } catch (error) {
+      Alert.alert("Sync Error", "Error syncing your database. Please contact your technical lead to resolve the issue.", [], {
+        cancelable: true
+      })
       console.error("Error syncing: ", error)
     }
   }
@@ -64,7 +68,7 @@ export function CustomDrawerContent(props: Props) {
           onPress={() => navigation.navigate("PatientFlow")}
         />
 
-               <DrawerItem
+        <DrawerItem
           label="Summary Stats"
           icon={({ focused, color, size }) => <Icon color={color} size={size} name={"chart-bar"} />}
           onPress={() => navigation.navigate("SummaryStats")}
@@ -79,7 +83,7 @@ export function CustomDrawerContent(props: Props) {
         />
 
         <DrawerItem
-          label={translate("sync")}
+          label={({ color, focused }) => <Text tx="sync" />}
           icon={({ focused, color, size }) => <Icon color={color} size={size} name={"refresh"} />}
           onPress={initSync}
         />
@@ -87,7 +91,7 @@ export function CustomDrawerContent(props: Props) {
           icon={({ focused, color, size }) => (
             <Icon color={color} size={size} name={"location-exit"} />
           )}
-          label={translate("signOut")}
+          label={({ color, focused }) => <Text tx="signOut" />}
           onPress={signOut}
         />
       </DrawerContentScrollView>
@@ -98,7 +102,7 @@ export function CustomDrawerContent(props: Props) {
         </View>
       </View>
       <Text variant="bodySmall" style={$versionText}>
-        Version RC-2.0.1
+        Version RC-2.2.1
       </Text>
     </>
   )

@@ -124,7 +124,6 @@ export function PatientView(props: Props) {
     <>
       <Screen preset="fixed" style={$screen}>
         <PatientFileSummary patient={patient} goToEditPatient={goToEditPatient} />
-        <Text>{format(new Date(patient.createdAt), "yyyy MM dd hh:mm aa")}</Text>
 
         <FlatList
           data={links}
@@ -180,8 +179,8 @@ const PatientFileSummary = ({
             Edit
           </Button>
         </View>
-        <Text>{`${translate("dob")}:  ${patient.dateOfBirth}`}</Text>
-        <Text>{`${translate("sex")}:  ${patient.sex}`}</Text>
+      <Text>{`${translate("dob")}:  ${format(new Date(patient.dateOfBirth), "yyyy MMM dd")}`}</Text>
+      <Text>{`${translate("sex")}:  ${translate(patient.sex)}`}</Text>
         <Text>{`${translate("camp")}:  ${patient.camp || ""}`}</Text>
         <PatientSummary patientId={patient.id} />
       </View>

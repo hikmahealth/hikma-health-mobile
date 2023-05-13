@@ -12,6 +12,7 @@ import { PatientFlowParamList } from "../navigators/PatientFlowNavigator"
 import { Visit } from "../types"
 import { displayName } from "../utils/patient"
 import { VitalsMetadata } from "./VitalsForm"
+import UserModel from "../db/model/User"
 
 type Props = NativeStackScreenProps<PatientFlowParamList, "VisitList">
 
@@ -22,6 +23,7 @@ export function VisitList(props: Props) {
   const database = useDatabase()
 
   const [patientVisits, setPatientVisits] = useState<Visit[]>([])
+  const [providersList, setProvidersList] = useState<UserModel[]>([])
 
   const fetchPatientData = () => {
     database
@@ -41,7 +43,13 @@ export function VisitList(props: Props) {
     setTimeout(() => {
       fetchPatientData()
     }, 100)
+
   }, [])
+
+  // Update the header title when the patientVisits array changes
+  useEffect(() => {
+        navigation.setOptions({ title:`Patient Visits (${patientVisits.length})` })
+  }, [patientVisits.length])
 
   const keyExtractor = (item: any, index: number) => index.toString()
 

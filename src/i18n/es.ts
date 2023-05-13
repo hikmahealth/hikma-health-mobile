@@ -36,7 +36,9 @@ const es = {
     covid19Screening: "Preguntas de detección de COVID-19",
     covid19ScreeningDescription: "Preguntas de detección de COVID-19",
   },
-
+  languageCode: "es",
+  male: "Masculino",
+  female: "Femenino",
   signOut: "Desconectar",
   patients: "Pacientes",
   PATIENTS: "PACIENTES",

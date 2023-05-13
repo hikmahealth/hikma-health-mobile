@@ -22,6 +22,7 @@ export async function syncDB(syncService: typeof syncServiceT, hasLocalChangesTo
       syncService.send("FETCH")
       const response = await fetch(`${SYNC_API}?${urlParams}`)
       if (!response.ok) {
+        syncService.send("COMPLETED")
         throw new Error(await response.text())
       }
 
@@ -99,7 +100,7 @@ export async function syncDB(syncService: typeof syncServiceT, hasLocalChangesTo
         )
       }
 
-      console.log({FORMS: JSON.stringify(changes.event_forms.created, null, 2)})
+      // console.log({FORMS: JSON.stringify(changes.event_forms.created, null, 2)})
 
       // Remove the last
 

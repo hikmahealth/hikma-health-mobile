@@ -6,6 +6,7 @@ import { CustomDrawerContent } from "../components/CustomDrawerContent"
 import { Benchmarking } from "../screens/Benchmarking"
 import { PatientFlow } from "./PatientFlowNavigator"
 import { SummaryStats } from "../screens/SummaryStats"
+import { useLanguageStore } from "../stores/language"
 
 const Drawer = createDrawerNavigator()
 
@@ -18,10 +19,12 @@ const SettingsScreen = () => {
 }
 
 export function RootNavigator() {
+  const isRtl = useLanguageStore((state) => state.isRtl)
   return (
     <Drawer.Navigator
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
+        drawerPosition: isRtl ? "right" : "left",
         header: (props) => <AppBarNav {...props} />,
       }}
     >
