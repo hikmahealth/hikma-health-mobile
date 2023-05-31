@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import { User } from "../types/User"
 import { persist, createJSONStorage } from "zustand/middleware"
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import EncryptedStorage from 'react-native-encrypted-storage';
 import { Clinic } from "../types/Clinic"
 
 type ProviderState = {
@@ -24,7 +24,8 @@ export const useProviderStore = create<ProviderState>()(
     }),
     {
       name: "provider-storage",
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => EncryptedStorage),
     },
   ),
 )
+

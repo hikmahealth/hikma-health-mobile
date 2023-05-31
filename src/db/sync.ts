@@ -9,7 +9,13 @@ const SYNC_API = `${HIKMA_API}/api/v2/sync`
 
 const syncServiceT = interpret(syncMachine)
 
-export async function syncDB(syncService: typeof syncServiceT, hasLocalChangesToPush: boolean) {
+export async function syncDB(syncService: typeof syncServiceT, hasLocalChangesToPush: boolean, email: string, password: string) {
+  const buffer = Buffer.from(`${email}:${password}`);
+  const encodedUsernameAndPassword = buffer.toString('base64');
+
+  const headers = new Headers();
+  headers.append('Authorization', 'Basic ' + encodedUsernameAndPassword);
+
   await synchronize({
     database,
     sendCreatedAsUpdated: false,
@@ -19,8 +25,16 @@ export async function syncDB(syncService: typeof syncServiceT, hasLocalChangesTo
       const urlParams = `last_pulled_at=${lastPulledAt}&schema_version=${schemaVersion}&migration=${encodeURIComponent(
         JSON.stringify(migration),
       )}`
+
+      // Update the global state tracking sync progression
       syncService.send("FETCH")
-      const response = await fetch(`${SYNC_API}?${urlParams}`)
+
+      const response = await fetch(`${SYNC_API}?${urlParams}`, {
+        // Headers include the username and password in base64 encoded string
+        headers: headers
+      })
+
+      console.log({ response: response.statusText })
       if (!response.ok) {
         syncService.send("COMPLETED")
         throw new Error(await response.text())
@@ -110,7 +124,7 @@ export async function syncDB(syncService: typeof syncServiceT, hasLocalChangesTo
     },
     pushChanges: async ({ changes, lastPulledAt }) => {
       // record timestamp at begining of push
-      const timestamp = Date.now()
+      // const timestamp = Date.now()
       syncService.send({
         type: "UPLOAD",
         uploadedRecords: countRecordsInChanges(changes),
@@ -120,11 +134,12 @@ export async function syncDB(syncService: typeof syncServiceT, hasLocalChangesTo
         body: JSON.stringify(changes),
         headers: {
           "Content-Type": "application/json",
+          'Authorization': 'Basic ' + encodedUsernameAndPassword
         },
       })
 
       // calculate how long it took to push
-      const timeToPush = (Date.now() - timestamp) / 1000
+      // const timeToPush = (Date.now() - timestamp) / 1000
       syncService.send({ type: "COMPLETED" })
       if (!response.ok) {
         throw new Error(await response.text())

@@ -33,6 +33,7 @@
     "react-hook-form": "^7.43.1",
     "react-native": "0.71.2",
     "react-native-date-picker": "^4.2.8",
+    "react-native-encrypted-storage": "^4.0.3",
     "react-native-gesture-handler": "^2.9.0",
     "react-native-get-random-values": "^1.8.0",
     "react-native-paper": "^5.2.0",

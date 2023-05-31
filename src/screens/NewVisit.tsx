@@ -11,6 +11,7 @@ import { translate, TxKeyPath } from "../i18n"
 import { useProviderStore } from "../stores/provider"
 import { PatientFlowParamList, VisitScreensProps } from "../navigators/PatientFlowNavigator"
 import EventFormModel from "../db/model/EventForm"
+import { DatePickerButton } from "../components/DatePicker"
 
 type Props = NativeStackScreenProps<RootStackParamList, "NewVisit">
 
@@ -178,6 +179,8 @@ export function NewVisit(props: Props) {
           />
         ))}
         */}
+
+        <DatePickerButton date={new Date()} onChange={console.log} />
         {
           forms.map(form => {
             return (
@@ -207,6 +210,6 @@ const $screen: ViewStyle = {
 }
 
 const $linksContainer: ViewStyle = {
-  paddingTop: 32,
+  paddingTop: 14,
   rowGap: 8,
 }

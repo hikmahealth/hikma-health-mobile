@@ -35,9 +35,10 @@ export const AppBarNav = (props: Props) => {
       await syncDB({ send }, hasLocalChangesToPush)
       ToastAndroid.show("✅ Sync Successful!", ToastAndroid.LONG)
     } catch (error) {
-      Alert.alert("Sync Error", "Error syncing your database. Please contact your technical lead to resolve the issue.", [], {
+      Alert.alert("Sync Error", "Error syncing your database. Make sure you have an internet connection or contact your technical lead to resolve the issue.", [], {
         cancelable: true
       })
+      send("COMPLETED")
       console.error("Error syncing: ", error)
     }
   }

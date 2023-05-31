@@ -1,6 +1,6 @@
 import { StackActions, useNavigation } from "@react-navigation/native"
 import { useContext, useEffect, useState } from "react"
-import { useColorScheme, Image, View, ImageStyle, ViewStyle, Alert } from "react-native"
+import { useColorScheme, Image, View, ImageStyle, ViewStyle, Alert, ToastAndroid } from "react-native"
 import { TextInput, IconButton } from "react-native-paper"
 import { Text } from "../components/Text"
 import { Button } from "../components/Button"
@@ -51,6 +51,7 @@ export default function Login() {
         password: password,
       }),
     })
+    console.log(response)
     const result = await response.json()
 
     // If there is an error message, then there is no user logged in
@@ -68,9 +69,14 @@ export default function Login() {
       await syncDB({ send }, hasLocalChangesToPush)
       const clinic = (await getClinic())[0]
       clinic && setClinic({ id: clinic.id, name: clinic.name })
+      ToastAndroid.show("✅ Sync Successful!", ToastAndroid.LONG)
     } catch (error) {
       // setSyncStatus(false);
+      Alert.alert("Sync Error", "Error syncing your database. Make sure you have an internet connection or contact your technical lead to resolve the issue.", [], {
+        cancelable: true
+      })
       setIsLoading(false)
+      send("COMPLETED")
       console.error("Sync failed", error)
       return
     }
@@ -120,7 +126,7 @@ export default function Login() {
             style={$authButton}
             onPress={signIn}
           >
-            <Text>{translate("login.signIn")}</Text>
+            {translate("login.signIn")}
           </Button>
         </View>
       </Screen>

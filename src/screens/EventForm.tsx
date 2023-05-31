@@ -151,6 +151,7 @@ export function EventFormScreen(props: Props) {
           formObj.metadata.map((f) => f.fields),
         )
         setEventForm(formObj)
+        navigation.setOptions({ title: form.name })
       })
       .catch((err) => {
         console.error("error", err)

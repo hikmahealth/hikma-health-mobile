@@ -13,6 +13,7 @@ import { Visit } from "../types"
 import { displayName } from "../utils/patient"
 import { VitalsMetadata } from "./VitalsForm"
 import UserModel from "../db/model/User"
+import { format } from "date-fns"
 
 type Props = NativeStackScreenProps<PatientFlowParamList, "VisitList">
 
@@ -23,7 +24,6 @@ export function VisitList(props: Props) {
   const database = useDatabase()
 
   const [patientVisits, setPatientVisits] = useState<Visit[]>([])
-  const [providersList, setProvidersList] = useState<UserModel[]>([])
 
   const fetchPatientData = () => {
     database
@@ -82,18 +82,18 @@ export function VisitList(props: Props) {
     >
       <View style={{}}>
         <View style={{ margin: 10 }}>
-          <Text>{displayName(patient)}</Text>
+          <Text style={{ fontSize: 18 }}>{displayName(patient)}</Text>
           <View
             style={{
               marginVertical: 5,
-              borderBottomColor: "black",
+              borderBottomColor: "#ccc",
               borderBottomWidth: 1,
             }}
           />
-          <Text>
+          {/*<Text>
             {translate("provider")} {item.providerId}
-          </Text>
-          <Text>{`${translate("visitDate")}: ${item.checkInTimestamp}`}</Text>
+          </Text>*/}
+          <Text>{`${translate("visitDate")}: ${format(item.checkInTimestamp, "dd MMM yyyy")}`}</Text>
         </View>
       </View>
     </TouchableOpacity>
