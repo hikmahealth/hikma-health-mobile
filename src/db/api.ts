@@ -2,7 +2,6 @@
 import { Q } from "@nozbe/watermelondb"
 import database from "."
 import { Patient, Event, Visit, EventTypes } from "../types"
-import { BenchmarkingData } from "../utils/generators/utils"
 import ClinicModel from "./model/Clinic"
 import EventModel from "./model/Event"
 import PatientModel from "./model/Patient"
@@ -64,7 +63,9 @@ export async function createVisit(visit: Omit<Visit, "id">) {
       newVisit.patientId = visit.patientId
       newVisit.clinicId = visit.clinicId
       newVisit.providerId = visit.providerId
+      newVisit.providerName = visit.providerName
       newVisit.checkInTimestamp = visit.checkInTimestamp
+      newVisit.metadata = visit.metadata
     })
     return visitRes
   })

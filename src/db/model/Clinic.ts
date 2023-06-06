@@ -7,6 +7,7 @@ export default class ClinicModel extends Model {
 
   @text("name") name
   @field("is_deleted") isDeleted
+  @date("deleted_at") deletedAt
   @readonly @date("created_at") createdAt
   @readonly @date("updated_at") updatedAt
 }

@@ -2,6 +2,7 @@ import { StackActions, useNavigation } from "@react-navigation/native"
 import { useContext, useEffect, useState } from "react"
 import { useColorScheme, Image, View, ImageStyle, ViewStyle, Alert, ToastAndroid } from "react-native"
 import { TextInput, IconButton } from "react-native-paper"
+import EncryptedStorage from 'react-native-encrypted-storage';
 import { Text } from "../components/Text"
 import { Button } from "../components/Button"
 import { Screen } from "../components/Screen"
@@ -61,6 +62,10 @@ export default function Login() {
     }
 
     setProvider(result)
+
+    // Wish there was another way, API backend requires password, so we store it to use during syncs
+    EncryptedStorage.setItem("provider_password", password)
+    EncryptedStorage.setItem("provider_email", email);
 
     const hasLocalChangesToPush = await hasUnsyncedChanges({ database })
 
@@ -125,6 +130,7 @@ export default function Login() {
             mode="contained"
             style={$authButton}
             onPress={signIn}
+            labelStyle={{ color: "#fff" }}
           >
             {translate("login.signIn")}
           </Button>

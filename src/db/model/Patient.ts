@@ -39,6 +39,7 @@ export default class PatientModel extends Model {
   @text("camp") camp
   @date("image_timestamp") imageTimestamp
   @field("is_deleted") isDeleted
+  @date("deleted_at") deletedAt
   @readonly @date("created_at") createdAt
   @readonly @date("updated_at") updatedAt
 }

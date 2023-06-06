@@ -5,6 +5,7 @@ const en = {
     password: "Password",
   },
   patientFile: {
+    patientView: "Patient View",
     visitHistory: "Visit History",
     visitHistoryDescription: "Patient's recent visits with a healthcare provider",
     medicalHistory: "Medical History",
@@ -16,6 +17,7 @@ const en = {
     medicine: "Medicine",
     medicineDescription: "Medicine prescribed to the patient",
   },
+  // Should be ignored!
   newVisitScreen: {
     medicalHistory: "Medical History",
     medicalHistoryDescription: "Patient's medical history",
@@ -35,6 +37,42 @@ const en = {
     notesDescription: "Notes on the patient",
     covid19Screening: "COVID-19 Screening",
     covid19ScreeningDescription: "COVID-19 screening questionnaire",
+  },
+  patientList: {
+    patients: "Patients",
+    search: "Search",
+    clear: "Clear",
+    newPatient: "New Patient"
+  },
+  patientView: {
+    newVisit: "New Visit"
+  },
+  newVisit: {
+    newVisit: "New Visit"
+  },
+  newPatient: {
+    newPatient: "New Patient"
+  },
+  summaryStats: {
+    summaryStats: "Summary Stats",
+    ageSexBreakdown: "Age & Sex Breakdown"
+  },
+  drawer: {
+    patientsList: "Patients List",
+    summaryStats: "Summary Stats",
+    benchmarking: "Benchmarking",
+    sync: "Sync",
+    signOut: "Sign Out"
+  },
+  eventList: {
+    visitEvents: "Visit Events",
+    newEntry: "New Entry",
+    eventOptions: "Event Options",
+    eventOptionsDescription: "What do you want to do?",
+    edit: "edit",
+    delete: "delete",
+    eventDeleted: "Event Deleted",
+    errorDeletingEvent: "Error deleting event"
   },
   languageCode: "en",
   male: "male",
@@ -68,11 +106,9 @@ const en = {
   search: "Search",
   minAge: "Min Age",
   maxAge: "Max Age",
-  advancedFilters: "Advanced Filters ▼",
+  advancedFilters: "Advanced Filters",
   hideFilters: "Hide Filters",
   clearFilters: "Clear All Filters",
-  newPatient: "New Patient",
-  newVisit: "New Visit",
   newEntry: "New Entry",
   camp: "Camp",
   vitals: "Vitals",

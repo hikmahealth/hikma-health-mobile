@@ -6,9 +6,11 @@ export const generateVisit = (patientId: string, providerId: string, clinicId: s
   id: faker.datatype.uuid(),
   checkInTimestamp: new Date().getTime(),
   providerId,
+  providerName: "Dr. " + faker.name.lastName(),
   clinicId,
   patientId,
   isDeleted: false,
+  metadata: {},
   // @ts-ignore
   createdAt: new Date().getTime(),
   updatedAt: new Date().getTime(),

@@ -3,10 +3,9 @@ import { Associations } from "@nozbe/watermelondb/Model"
 import {
   field,
   text,
-  immutableRelation,
   date,
   readonly,
-  writer,
+  json,
 } from "@nozbe/watermelondb/decorators"
 
 // 'CREATE TABLE IF NOT EXISTS events (id varchar(32) PRIMARY KEY, patient_id varchar(32) REFERENCES patients(id) ON DELETE CASCADE, visit_id varchar(32) REFERENCES visits(id) ON DELETE CASCADE, event_type text, event_timestamp text, edited_at text, event_metadata text, deleted integer DEFAULT 0);',
@@ -22,8 +21,22 @@ export default class EventModel extends Model {
   @text("patient_id") patientId
   @text("visit_id") visitId
   @text("event_type") eventType
-  @text("event_metadata") eventMetadata
+  @json("event_metadata", sanitizeMetadata) eventMetadata
   @field("is_deleted") isDeleted
+  @date("deleted_at") deletedAt
   @readonly @date("created_at") createdAt
   @readonly @date("updated_at") updatedAt
+}
+
+
+function sanitizeMetadata(data) {
+  if (data) {
+    return data
+  } else {
+    return {}
+  }
+  // if (data) {
+  // return JSON.stringify(data)
+  // }
+  // return JSON.stringify({})
 }

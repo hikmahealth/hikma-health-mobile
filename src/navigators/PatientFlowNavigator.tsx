@@ -81,14 +81,14 @@ export const PatientFlow = () => {
       <Stack.Screen
         name="PatientList"
         options={{
-          title: "Patients",
+          title: translate("patients"),
         }}
         component={PatientList}
       />
       <Stack.Screen
         name="NewPatient"
         options={{
-          title: "New Patient",
+          title: translate("newPatient.newPatient"),
         }}
         component={NewPatient}
       />
@@ -96,7 +96,7 @@ export const PatientFlow = () => {
         name="PatientView"
         options={{
           // TODO: Page title should be patients name??
-          title: "Patient View",
+          title: translate("patientFile.patientView"),
         }}
         component={PatientView}
       />
@@ -110,14 +110,14 @@ export const PatientFlow = () => {
       <Stack.Screen
         name="EventList"
         options={{
-          title: "Visits Events",
+          title: translate("eventList.visitEvents"),
         }}
         component={EventList}
       />
       <Stack.Screen
         name="NewVisit"
         options={{
-          title: "New Visit",
+          title: translate("newVisit.newVisit"),
         }}
         component={NewVisit}
       />

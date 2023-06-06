@@ -36,6 +36,9 @@ const es = {
     covid19Screening: "Preguntas de detección de COVID-19",
     covid19ScreeningDescription: "Preguntas de detección de COVID-19",
   },
+  patientList: {
+    patients: "Pacientes",
+  },
   languageCode: "es",
   male: "Masculino",
   female: "Femenino",
@@ -68,7 +71,7 @@ const es = {
   search: "Buscar",
   minAge: "Edad Mínima",
   maxAge: "Edad Máxima",
-  advancedFilters: "Filtros Avanzados ▼",
+  advancedFilters: "Filtros Avanzados",
   hideFilters: "Ocultar Filtros",
   clearFilters: "Restablecer Filtros",
   camp: "Nombre del campo de refugiados",

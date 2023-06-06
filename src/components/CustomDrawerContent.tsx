@@ -62,7 +62,8 @@ export function CustomDrawerContent(props: Props) {
         </View>
 
         <DrawerItem
-          label="Patients List"
+          // label="Patients List"
+          label={({ color, focused }) => <Text tx="drawer.patientsList" />}
           icon={({ focused, color, size }) => (
             <Icon color={color} size={size} name={"format-list-bulleted"} />
           )}
@@ -70,13 +71,15 @@ export function CustomDrawerContent(props: Props) {
         />
 
         <DrawerItem
-          label="Summary Stats"
+          // label="Summary Stats"
+          label={({ color, focused }) => <Text tx="drawer.summaryStats" />}
           icon={({ focused, color, size }) => <Icon color={color} size={size} name={"chart-bar"} />}
           onPress={() => navigation.navigate("SummaryStats")}
         />
 
         <DrawerItem
-          label="Benchmarking"
+          // label="Benchmarking"
+          label={({ color, focused }) => <Text tx="drawer.benchmarking" />}
           icon={({ focused, color, size }) => (
             <Icon color={color} size={size} name={"car-speed-limiter"} />
           )}
@@ -84,7 +87,7 @@ export function CustomDrawerContent(props: Props) {
         />
 
         <DrawerItem
-          label={({ color, focused }) => <Text tx="sync" />}
+          label={({ color, focused }) => <Text tx="drawer.sync" />}
           icon={({ focused, color, size }) => <Icon color={color} size={size} name={"refresh"} />}
           onPress={initSync}
         />
@@ -92,7 +95,7 @@ export function CustomDrawerContent(props: Props) {
           icon={({ focused, color, size }) => (
             <Icon color={color} size={size} name={"location-exit"} />
           )}
-          label={({ color, focused }) => <Text tx="signOut" />}
+          label={({ color, focused }) => <Text tx="drawer.signOut" />}
           onPress={signOut}
         />
       </DrawerContentScrollView>
@@ -103,7 +106,7 @@ export function CustomDrawerContent(props: Props) {
         </View>
       </View>
       <Text variant="bodySmall" style={$versionText}>
-        Version RC-2.2.1
+        V RC-2.3.1
       </Text>
     </>
   )

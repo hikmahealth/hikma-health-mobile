@@ -2,7 +2,7 @@ import { Model } from "@nozbe/watermelondb"
 import {
   field,
   text,
-  immutableRelation,
+  json,
   date,
   readonly,
   writer,
@@ -10,13 +10,25 @@ import {
 
 
 export default class EventFormModel extends Model {
-    static table = "event_forms"
+  static table = "event_forms"
 
-    @text("name") name
-    @text("description") description
-    @text("language") language
-    @text("metadata") metadata
-    @field("is_deleted") isDeleted
-    @readonly @date("created_at") createdAt
-    @readonly @date("updated_at") updatedAt
+  @text("name") name;
+  @text("description") description;
+  @text("language") language
+  @field("is_editable") isEditable
+  @field("is_snapshopt_form") isSnapshotForm
+  @json("metadata", sanitizeMetadata) metadata
+  @field("is_deleted") isDeleted
+  @date("deleted_at") deletedAt
+  @readonly @date("created_at") createdAt
+  @readonly @date("updated_at") updatedAt
+}
+
+
+// NOTE: can add sanitization logic if needed
+function sanitizeMetadata(data) {
+  if (data) {
+    return JSON.stringify(data)
+  }
+  return JSON.stringify({})
 }

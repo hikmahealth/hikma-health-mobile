@@ -87,6 +87,7 @@ const isMedicineObj = (obj: any): boolean => {
 export function getEventDisplay(event: Event) {
   let display
   const parsedMetadata = parseMetadata<string>(event.eventMetadata)
+  console.warn(typeof parsedMetadata)
   if (typeof parsedMetadata === "object") {
     // For each key in the object, show the key and the value
     display = (

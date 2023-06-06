@@ -90,9 +90,9 @@ export function VisitList(props: Props) {
               borderBottomWidth: 1,
             }}
           />
-          {/*<Text>
-            {translate("provider")} {item.providerId}
-          </Text>*/}
+          <Text>
+            {translate("provider")}: {item.providerName}
+          </Text>
           <Text>{`${translate("visitDate")}: ${format(item.checkInTimestamp, "dd MMM yyyy")}`}</Text>
         </View>
       </View>

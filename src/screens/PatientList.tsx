@@ -203,7 +203,7 @@ export default function PatientList(props: Props) {
           ListFooterComponent={() => <View style={{ height: 40 }} />}
           horizontal={false}
           data={current.matches("idle") ? patients : current.context.searchResults}
-          estimatedItemSize={100}
+          estimatedItemSize={120}
           onEndReached={getNextPagePatients}
           renderItem={({ item }: { item: Patient }) => (
             <PatientListItem
@@ -217,7 +217,7 @@ export default function PatientList(props: Props) {
       <FAB
         icon="plus"
         color="white"
-        label={translate("newPatient")}
+        label={translate("patientList.newPatient")}
         style={[$fab, isRtl ? { left: 4 } : { right: 4 }]}
         onPress={goToNewPatient}
       />
@@ -278,10 +278,10 @@ const HeaderSearch = ({ submitSearch, totalPatientsCount, cancelSearch }) => {
         value={form.searchQuery}
       />
       <View style={$subSearchRow}>
-        <Text variant="bodyLarge">{totalPatientsCount.toLocaleString()} Patients</Text>
+        <Text variant="bodyLarge">{totalPatientsCount.toLocaleString()} {translate("patients")}</Text>
 
         <TouchableOpacity style={$row} onPress={toggleAdvancedSearch}>
-          <Text variant="bodyLarge">Advanced Search</Text>
+          <Text variant="bodyLarge">{translate("advancedFilters")}</Text>
           <Icon name={isAdvancedSearch ? "chevron-up" : "chevron-down"} size={20} />
         </TouchableOpacity>
       </View>
@@ -290,13 +290,13 @@ const HeaderSearch = ({ submitSearch, totalPatientsCount, cancelSearch }) => {
       <If condition={isAdvancedSearch}>
       <View style={{rowGap: 12}}>
         <View style={{ display: "flex", flexDirection: "row", columnGap: 8 }}>
-          <TextInput mode="outlined" onChangeText={setFormField("country")} value={form.country} style={$searchInput} label="Country" />
-          <TextInput mode="outlined" onChangeText={setFormField("hometown")} value={form.hometown} style={$searchInput} label="Hometown" />
+          <TextInput mode="outlined" onChangeText={setFormField("country")} value={form.country} style={$searchInput} label={translate("country")} />
+          <TextInput mode="outlined" onChangeText={setFormField("hometown")} value={form.hometown} style={$searchInput} label={translate("hometown")} />
         </View>
 
         <View style={{ display: "flex", flexDirection: "row", columnGap: 8 }}>
-          <TextInput mode="outlined" onChangeText={setFormField("camp")} value={form.camp} style={$searchInput} label="Camp" />
-          <TextInput mode="outlined" onChangeText={setFormField("phone")} value={form.phone} style={$searchInput} label="Phone" />
+          <TextInput mode="outlined" onChangeText={setFormField("camp")} value={form.camp} style={$searchInput} label={translate("camp")} />
+          <TextInput mode="outlined" onChangeText={setFormField("phone")} value={form.phone} style={$searchInput} label={translate("phone")} />
         </View>
 
     {/* <View style={{ display: "flex", flexDirection: "row", columnGap: 8 }}>
@@ -306,15 +306,15 @@ const HeaderSearch = ({ submitSearch, totalPatientsCount, cancelSearch }) => {
 
         <View style={{ display: "flex", flexDirection: "row", columnGap: 8, paddingHorizontal: 8 }}>
           <HorizontalRadioGroup 
-            options={[{ label: "Male", value: "male" }, { label: "Female", value: "female" }]} 
+            options={[{ label: translate("male"), value: "male" }, { label: translate("female"), value: "female" }]} 
             value={form.sex}
             onChange={setFormField("sex")}
             label={translate("sex")} />
       </View>
 
         <View style={{ display: "flex", flexDirection: "row", columnGap: 8 }}>
-          <Button mode="contained" onPress={() => submitSearch(form)} style={$flex1}>Search</Button>
-          <Button mode="outlined" onPress={clearForm} style={$flex1}>Clear</Button>
+          <Button mode="contained" onPress={() => submitSearch(form)} labelStyle={{ color: "#fff" }} style={$flex1}>{translate("patientList.search")}</Button>
+          <Button mode="outlined" onPress={clearForm} style={$flex1}>{translate("patientList.clear")}</Button>
           
         </View>
 

@@ -149,7 +149,7 @@ export default function NewPatientScreen(props: Props) {
               </RadioButton.Group>
             </View>
           </View>
-          <Button mode="contained" onPress={formMethods.handleSubmit(onSubmit)}>
+          <Button mode="contained" labelStyle={{ color: "#fff" }} onPress={formMethods.handleSubmit(onSubmit)}>
             {translate("save")}
           </Button>
         </FormProvider>

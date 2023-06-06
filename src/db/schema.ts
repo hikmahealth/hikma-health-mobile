@@ -38,7 +38,8 @@ const patientSchema = tableSchema({
     { name: "sex", type: "string" },
     { name: "camp", type: "string", isOptional: true },
     { name: "image_timestamp", type: "number" },
-    { name: "is_deleted", type: "boolean" }, // is stored as integer in other deployment
+    { name: "is_deleted", type: "boolean" }, // is stored as integer in old deployment
+    { name: "deleted_at", type: "number" },
     { name: "created_at", type: "number" },
     { name: "updated_at", type: "number" },
   ],
@@ -51,11 +52,12 @@ const userSchema = tableSchema({
     { name: "name", type: "string" },
     { name: "role", type: "string" },
     { name: "email", type: "string" },
-    { name: "hashed_password", type: "string" },
+    { name: "hashed_password", type: "string" }, // not used
     { name: "instance_url", type: "string" },
     { name: "created_at", type: "number" },
     { name: "updated_at", type: "number" },
     { name: "is_deleted", type: "boolean" },
+    { name: "deleted_at", type: "number" },
   ],
 })
 
@@ -66,6 +68,7 @@ const clinicSchema = tableSchema({
     { name: "updated_at", type: "number" },
     { name: "created_at", type: "number" },
     { name: "is_deleted", type: "boolean" },
+    { name: "deleted_at", type: "number" },
   ],
 })
 
@@ -78,6 +81,7 @@ const eventSchema = tableSchema({
     { name: "event_type", type: "string" },
     { name: "event_metadata", type: "string" },
     { name: "is_deleted", type: "boolean" },
+    { name: "deleted_at", type: "number" },
     { name: "created_at", type: "number" },
     { name: "updated_at", type: "number" },
   ],
@@ -100,8 +104,11 @@ const eventFormSchema = tableSchema({
     { name: "name", type: "string" },
     { name: "description", type: "string" },
     { name: "language", type: "string" },
+    { name: "is_editable", type: "boolean" },
+    { name: "is_snapshot_form", type: "boolean" },
     { name: "metadata", type: "string" },
     { name: "is_deleted", type: "boolean" },
+    { name: "deleted_at", type: "number" },
     { name: "created_at", type: "number" },
     { name: "updated_at", type: "number" },
   ]
@@ -115,8 +122,11 @@ const visitSchema = tableSchema({
     { name: "patient_id", type: "string" },
     { name: "clinic_id", type: "string" },
     { name: "provider_id", type: "string" },
+    { name: "provider_name", type: "string" },
     { name: "check_in_timestamp", type: "number" },
+    { name: "metadata", type: "string" },
     { name: "is_deleted", type: "boolean" },
+    { name: "deleted_at", type: "number" },
     { name: "created_at", type: "number" },
     { name: "updated_at", type: "number" },
   ],

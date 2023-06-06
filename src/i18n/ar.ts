@@ -37,6 +37,9 @@ const ar = {
     covid19Screening: "فحص COVID-19",
     covid19ScreeningDescription: "استبيان فحص COVID-19",
   },
+  patientList: {
+    newPatient: "مريض جديد"
+  },
   languageCode: "ar",
   male: "ذكر",
   female: "أنثى",

@@ -9,7 +9,9 @@ import { useLanguageStore } from "../stores/language"
 import { primary } from "../styles/colors"
 import { Patient } from "../types/Patient"
 import { displayName, displayNameAvatar } from "../utils/patient"
+import { ar, enUS, es } from 'date-fns/locale'
 import { Text } from "./Text"
+import { localeDate } from "../utils/formatDate"
 
 type PatientListItemProps = {
   patient: Patient
@@ -27,7 +29,7 @@ export function PatientListItem(props: PatientListItemProps) {
 
   return (
     <TouchableOpacity style={$patientItemContainer} onPress={handlePatientSelected}>
-      <View style={[$cardContent,  isRtl ? $rtlView : {}]}>
+      <View style={[$cardContent, isRtl ? $rtlView : {}]}>
         <Avatar.Text
           style={{
             backgroundColor: primary,
@@ -49,9 +51,9 @@ export function PatientListItem(props: PatientListItemProps) {
               flexWrap: "wrap",
             }}
           >{`${translate("dob")}:  ${format(new Date(patient.dateOfBirth), "dd MMM yyyy")}`}</Text>
-      <Text>{`${translate("sex")}:  ${upperFirst(translate(patient.sex))}`}</Text>
-          <Text>{`${translate("camp")}:  ${patient.camp}`}</Text>
-          <Text>{patient.createdAt.toDateString()}</Text>
+          <Text>{`${translate("sex")}:  ${upperFirst(translate(patient.sex))}`}</Text>
+          <Text style={{ flexWrap: "wrap" }} >{`${translate("camp")}:  ${patient.camp}`}</Text>
+          <Text>{localeDate(patient.createdAt, "MMM dd, yyyy", {})}</Text>
         </View>
       </View>
     </TouchableOpacity>

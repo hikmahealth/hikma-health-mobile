@@ -13,6 +13,7 @@ import { Q } from "@nozbe/watermelondb"
 import { getEventDisplay } from "../components/EventFormDisplay"
 import { calculateAgeInYears } from "../utils/dateUtils"
 import { deleteEvent } from "../db/api"
+import { primary } from "../styles/colors"
 
 type Props = NativeStackScreenProps<RootStackParamList, "EventList">
 
@@ -52,7 +53,7 @@ export function EventList(props: Props) {
 
   const onUpdate = () => setUpdateCount((count) => count + 1)
 
-  const keyExtractor = (item, index) => {
+  const keyExtractor = (item: Event) => {
     // combile the item id and the item updatedAt to  create a unique key
     return `${item.id}-${item.updatedAt}`
   }
@@ -71,40 +72,40 @@ export function EventList(props: Props) {
       formData: JSON.stringify(event._raw),
       onUpdate
     })
-    switch (event.eventType) {
-      case "Vitals":
-        props.navigation.navigate("EditVitals", { event, userName })
-        break
-      case "Examination Full":
-        props.navigation.navigate("EditExamination", {
-          event,
-          language,
-          userName,
-        })
-        break
-      case "Medicine":
-        props.navigation.navigate("EditMedicine", { event, language, userName })
-        break
-      case "Medical History Full":
-        props.navigation.navigate("EditMedicalHistory", {
-          event,
-          language,
-          userName,
-        })
-        break
-      case "Physiotherapy":
-        props.navigation.navigate("EditPhysiotherapy", {
-          event,
-          userName,
-        })
-        break
-      case "Complaint":
-      case "Dental Treatment":
-      case "Notes":
-        props.navigation.navigate("EditOpenTextEvent", { event })
-      default:
-        break
-    }
+    // switch (event.eventType) {
+    //   case "Vitals":
+    //     props.navigation.navigate("EditVitals", { event, userName })
+    //     break
+    //   case "Examination Full":
+    //     props.navigation.navigate("EditExamination", {
+    //       event,
+    //       language,
+    //       userName,
+    //     })
+    //     break
+    //   case "Medicine":
+    //     props.navigation.navigate("EditMedicine", { event, language, userName })
+    //     break
+    //   case "Medical History Full":
+    //     props.navigation.navigate("EditMedicalHistory", {
+    //       event,
+    //       language,
+    //       userName,
+    //     })
+    //     break
+    //   case "Physiotherapy":
+    //     props.navigation.navigate("EditPhysiotherapy", {
+    //       event,
+    //       userName,
+    //     })
+    //     break
+    //   case "Complaint":
+    //   case "Dental Treatment":
+    //   case "Notes":
+    //     props.navigation.navigate("EditOpenTextEvent", { event })
+    //   default:
+    //     break
+    // }
   }
 
   const confirmDeleteEvent = (event: Event) => {
@@ -118,11 +119,11 @@ export function EventList(props: Props) {
           deleteEvent(event.id)
             .then((res) => {
               setEventsList(eventsList.filter((e) => e.id !== event.id))
-              ToastAndroid.show("Event deleted", ToastAndroid.SHORT)
+              ToastAndroid.show(translate("eventList.eventDeleted"), ToastAndroid.SHORT)
             })
             .catch((error) => {
               console.error(error)
-              ToastAndroid.show("Error deleting event", ToastAndroid.SHORT)
+              ToastAndroid.show(translate("eventList.errorDeletingEvent"), ToastAndroid.SHORT)
             })
         },
       },
@@ -131,15 +132,15 @@ export function EventList(props: Props) {
 
   const openEventOptions = (event: Event, onUpdate: () => void) => {
     Alert.alert(
-      "Event Options",
-      "What do you want to do?",
+      translate("eventList.eventOptions"),
+      translate("eventList.eventOptionsDescription"),
       [
         {
-          text: "Edit",
+          text: translate("eventList.edit"),
           onPress: () => editEvent(event, onUpdate),
         },
         {
-          text: "Delete",
+          text: translate("eventList.delete"),
           onPress: () => confirmDeleteEvent(event),
         },
       ],
@@ -186,7 +187,7 @@ export function EventList(props: Props) {
         />
       </Screen>
 
-      <FAB icon="plus" label={translate("newEntry")} style={$fab} onPress={goToNewPatientVisit} />
+      <FAB icon="plus" label={translate("eventList.newEntry")} color="white" style={$fab} onPress={goToNewPatientVisit} />
     </>
   )
 }
@@ -196,6 +197,7 @@ const $screen: ViewStyle = {}
 const $fab: ViewStyle = {
   position: "absolute",
   margin: 16,
+  backgroundColor: primary,
   right: 4,
   bottom: 10,
 }

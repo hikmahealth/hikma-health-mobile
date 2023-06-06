@@ -17,6 +17,7 @@ import { useProviderStore } from "../stores/provider"
 import { displayName, displayNameAvatar } from "../utils/patient"
 import { calculateAgeInYears } from "../utils/dateUtils"
 import { primary } from "../styles/colors"
+import { localeDate } from "../utils/formatDate"
 
 type Props = NativeStackScreenProps<RootStackParamList, "PatientView">
 
@@ -96,9 +97,11 @@ export function PatientView(props: Props) {
     }
     createVisit({
       providerId: provider.id,
+      providerName: provider.name,
       patientId: patient.id,
       clinicId: clinic.id,
       isDeleted: false,
+      metadata: {},
       checkInTimestamp: new Date().getTime(),
     })
       .then((res) => {
@@ -132,7 +135,7 @@ export function PatientView(props: Props) {
           keyExtractor={(item) => item.labelTx}
         />
       </Screen>
-      <FAB icon="plus" label={translate("newVisit")} style={$fab} onPress={goToNewPatientVisit} />
+      <FAB icon="plus" color="white" label={translate("patientView.newVisit")} style={$fab} onPress={goToNewPatientVisit} />
     </>
   )
 }
@@ -176,12 +179,12 @@ const PatientFileSummary = ({
         <View style={$nameRow}>
           <Text variant="titleLarge">{displayName(patient)}</Text>
           <Button icon="pencil" mode="text" onPress={goToEditPatient}>
-            Edit
+            {translate("edit")}
           </Button>
         </View>
-      <Text>{`${translate("dob")}:  ${format(new Date(patient.dateOfBirth), "yyyy MMM dd")}`}</Text>
-      <Text>{`${translate("sex")}:  ${translate(patient.sex)}`}</Text>
-        <Text>{`${translate("camp")}:  ${patient.camp || ""}`}</Text>
+      <Text>{`${translate("dob")}: ${localeDate(new Date(patient.dateOfBirth), "yyyy MMM dd", {})}`}</Text>
+      <Text>{`${translate("sex")}: ${translate(patient.sex)}`}</Text>
+        <Text>{`${translate("camp")}: ${patient.camp || ""}`}</Text>
         <PatientSummary patientId={patient.id} />
       </View>
     </View>
@@ -223,6 +226,7 @@ const $linksContainer: ViewStyle = {
 
 const $fab: ViewStyle = {
   position: "absolute",
+  backgroundColor: primary,
   margin: 16,
   right: 4,
   bottom: 10,

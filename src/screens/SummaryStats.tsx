@@ -9,6 +9,7 @@ import { Button } from "../components/Button"
 import { Screen } from "../components/Screen"
 import PatientModel from "../db/model/Patient"
 import { differenceInYears } from "date-fns"
+import { translate } from "../i18n"
 
 type AgeGroup =
   | "0-1"
@@ -167,7 +168,7 @@ export function SummaryStats() {
 
   return (
     <Screen preset="scroll" style={$screen}>
-      <Text variant="titleLarge">Age & Sex Breakdown</Text>
+      <Text variant="titleLarge">{translate("summaryStats.ageSexBreakdown")}</Text>
 
       <View style={{ flexDirection: "row", gap: 20, marginVertical: 15 }}>
         <View style={{ flexDirection: "row" }}>
@@ -193,14 +194,18 @@ export function SummaryStats() {
             <View style={{ flex: 6 }}>
               <GroupedChartBar
                 bars={[
-                  { label: "test", value: ageGroup.female, total: 20, color: femaleColor },
-                  { label: "test", value: ageGroup.male, total: 10, color: maleColor },
+                  { label: "female", value: ageGroup.female, total: 20, color: femaleColor },
+                  { label: "male", value: ageGroup.male, total: 10, color: maleColor },
                 ]}
               />
             </View>
           </View>
         )
       })}
+
+
+      <View style={{ height: 20 }} />
+
     </Screen>
   )
 }
@@ -237,7 +242,7 @@ const GroupedChartBar = (props: { bars: ChartBarProps[] }) => {
   return (
     <View style={{ flexDirection: "column", paddingVertical: 2 }}>
       {props.bars.map((bar) => (
-        <ChartBar {...bar} total={total} />
+        <ChartBar {...bar} key={bar.label} total={total} />
       ))}
     </View>
   )
