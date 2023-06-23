@@ -189,6 +189,10 @@ function updateDates(changes) {
           if (record.metadata) {
             record.metadata = JSON.stringify(record.metadata)
           }
+          /** visits have a checkin timestamp */
+          if (record.check_in_timestamp) {
+            record.check_in_timestamp = new Date(record.check_in_timestamp || defaultDate).getTime();
+          }
           // if (record.image_timestamp && record.image_timestamp === null) {
           record.image_timestamp = 0
           // }
