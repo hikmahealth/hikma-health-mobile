@@ -5,11 +5,11 @@ import { View, ViewStyle, FlatList } from "react-native"
 import { Avatar, List, FAB } from "react-native-paper"
 import { RootStackParamList } from "../../App"
 import { PatientSummary } from "../components/PatientSummary"
-import {Screen} from "../components/Screen"
-import {Text} from "../components/Text"
-import {ControlledTextField} from "../components/ControlledTextField"
-import {ControlledRadioGroup} from "../components/ControlledRadioGroup"
-import {Button} from "../components/Button"
+import { Screen } from "../components/Screen"
+import { Text } from "../components/Text"
+import { ControlledTextField } from "../components/ControlledTextField"
+import { ControlledRadioGroup } from "../components/ControlledRadioGroup"
+import { Button } from "../components/Button"
 import { createVisit, getLatestPatientEventByType } from "../db/api"
 import { translate, TxKeyPath } from "../i18n"
 import { Event, Patient } from "../types"
@@ -18,6 +18,9 @@ import { displayName, displayNameAvatar } from "../utils/patient"
 import { calculateAgeInYears } from "../utils/dateUtils"
 import { primary } from "../styles/colors"
 import { localeDate } from "../utils/formatDate"
+import EventFormModel from "../db/model/EventForm"
+import { useDatabase } from "@nozbe/watermelondb/hooks"
+import { Q } from "@nozbe/watermelondb"
 
 type Props = NativeStackScreenProps<RootStackParamList, "PatientView">
 
@@ -40,52 +43,65 @@ const patientLinks = (patientId: string, patient: Patient, visitId: string): Pat
       patient,
     },
   },
-  {
-    labelTx: "patientFile.medicalHistory",
-    route: "SnapshotList",
-    descriptionTx: "patientFile.medicalHistoryDescription",
-    iconName: "stethoscope",
-    params: {
-      patientId,
-      eventType: "Medical History Full",
-    },
-  },
-  {
-    labelTx: "patientFile.complaint",
-    route: "SnapshotList",
-    descriptionTx: "patientFile.complaintDescription",
-    iconName: "chat-question-outline",
-    params: {
-      patientId,
-      eventType: "Complaint",
-    },
-  },
-  {
-    labelTx: "patientFile.examination",
-    route: "SnapshotList",
-    descriptionTx: "patientFile.examinationDescription",
-    iconName: "test-tube",
-    params: {
-      patientId,
-      eventType: "Examination",
-    },
-  },
-  {
-    labelTx: "patientFile.medicine",
-    route: "SnapshotList",
-    descriptionTx: "patientFile.medicineDescription",
-    iconName: "pill",
-    params: {
-      patientId,
-      eventType: "Medicine",
-    },
-  },
+  // {
+  //   labelTx: "patientFile.medicalHistory",
+  //   route: "SnapshotList",
+  //   descriptionTx: "patientFile.medicalHistoryDescription",
+  //   iconName: "stethoscope",
+  //   params: {
+  //     patientId,
+  //     eventType: "Medical History Full",
+  //   },
+  // },
+  // {
+  //   labelTx: "patientFile.complaint",
+  //   route: "SnapshotList",
+  //   descriptionTx: "patientFile.complaintDescription",
+  //   iconName: "chat-question-outline",
+  //   params: {
+  //     patientId,
+  //     eventType: "Complaint",
+  //   },
+  // },
+  // {
+  //   labelTx: "patientFile.examination",
+  //   route: "SnapshotList",
+  //   descriptionTx: "patientFile.examinationDescription",
+  //   iconName: "test-tube",
+  //   params: {
+  //     patientId,
+  //     eventType: "Examination",
+  //   },
+  // },
+  // {
+  //   labelTx: "patientFile.medicine",
+  //   route: "SnapshotList",
+  //   descriptionTx: "patientFile.medicineDescription",
+  //   iconName: "pill",
+  //   params: {
+  //     patientId,
+  //     eventType: "Medicine",
+  //   },
+  // },
 ]
 
 export function PatientView(props: Props) {
   const { route, navigation } = props
   const { patient } = route.params
   const [clinic, provider] = useProviderStore((store) => [store.clinic, store.provider])
+  const [snapshotForms, setSnapshotForms] = useState<EventFormModel[]>([])
+  const database = useDatabase()
+
+  useEffect(() => {
+    database.get<EventFormModel>("event_forms")
+      .query(
+        Q.where("language", translate("languageCode")),
+        Q.where("is_snapshot_form", true)
+      ).fetch().then((forms) => {
+        setSnapshotForms(forms)
+      })
+
+  }, [])
 
   const goToEditPatient = () => {
     navigation.navigate("NewPatient", { patient })
@@ -125,7 +141,7 @@ export function PatientView(props: Props) {
 
   return (
     <>
-      <Screen preset="fixed" style={$screen}>
+      <Screen preset="scroll" style={$screen}>
         <PatientFileSummary patient={patient} goToEditPatient={goToEditPatient} />
 
         <FlatList
@@ -134,6 +150,20 @@ export function PatientView(props: Props) {
           renderItem={renderItem}
           keyExtractor={(item) => item.labelTx}
         />
+        {
+          snapshotForms.map(form => (
+            <List.Item
+              key={form.id}
+              title={form.name}
+              right={(props) => <List.Icon {...props} icon="chevron-right" />}
+              onPress={() => navigation.navigate("SnapshotList", {
+                patientId: patient.id, eventType: form.name
+              })}
+              description={form.description}
+              left={(props) => <List.Icon {...props} icon={"form-select"} />}
+            />
+          ))
+        }
       </Screen>
       <FAB icon="plus" color="white" label={translate("patientView.newVisit")} style={$fab} onPress={goToNewPatientVisit} />
     </>
@@ -182,8 +212,8 @@ const PatientFileSummary = ({
             {translate("edit")}
           </Button>
         </View>
-      <Text>{`${translate("dob")}: ${localeDate(new Date(patient.dateOfBirth), "yyyy MMM dd", {})}`}</Text>
-      <Text>{`${translate("sex")}: ${translate(patient.sex)}`}</Text>
+        <Text>{`${translate("dob")}: ${localeDate(new Date(patient.dateOfBirth), "yyyy MMM dd", {})}`}</Text>
+        <Text>{`${translate("sex")}: ${translate(patient.sex)}`}</Text>
         <Text>{`${translate("camp")}: ${patient.camp || ""}`}</Text>
         <PatientSummary patientId={patient.id} />
       </View>

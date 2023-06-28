@@ -118,13 +118,6 @@ export function EventFormScreen(props: Props) {
   }, [formData, formId])
 
 
-
-  useEffect(() => {
-    if (!formId) {
-      return
-    }
-  }, [formId])
-
   // if route has diagnoses, set diagnoses to route diagnoses
   useEffect(() => {
     if (selectedDiagnoses && selectedDiagnoses.length > 0) {

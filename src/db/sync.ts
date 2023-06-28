@@ -165,14 +165,6 @@ export async function syncDB(syncService: typeof syncServiceT, hasLocalChangesTo
 }
 
 
-const formatRecordDateToTime = (item: { [key: string]: string }) => {
-  return {
-    ...item,
-    created_at: new Date(item.created_at).getTime(),
-    updated_at: new Date(item.updated_at).getTime()
-  }
-}
-
 
 function updateDates(changes) {
   const defaultDate = new Date()
@@ -187,7 +179,7 @@ function updateDates(changes) {
           }
           // set up metadata
           if (record.metadata) {
-            record.metadata = JSON.stringify(record.metadata)
+            record.metadata = record.metadata
           }
           /** visits have a checkin timestamp */
           if (record.check_in_timestamp) {
@@ -199,29 +191,6 @@ function updateDates(changes) {
         });
       }
     }
-  }
-}
-
-
-function processChanges(createdItems, updatedItems, deletedItems) {
-  const processItem = (item) => {
-    item.created_at = new Date(item.created_at).getTime();
-    item.updated_at = new Date(item.updated_at).getTime();
-    if (item.deleted_at) {
-      item.deleted_at = new Date(item.deleted_at).getTime();
-    }
-  };
-
-  if (createdItems) {
-    createdItems.forEach(processItem);
-  }
-
-  if (updatedItems) {
-    updatedItems.forEach(processItem);
-  }
-
-  if (deletedItems) {
-    deletedItems.forEach(processItem)
   }
 }
 
