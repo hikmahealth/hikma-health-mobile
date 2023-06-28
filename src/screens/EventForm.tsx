@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { NativeStackScreenProps } from "@react-navigation/native-stack"
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form"
 import { useDatabase } from "@nozbe/watermelondb/hooks"
@@ -53,9 +53,11 @@ export function EventFormScreen(props: Props) {
 
   // On page load, if there is formData in the props, set the data from the form data and set the eventForm from the event_type
   useEffect(() => {
+    console.log({ formData })
     if (formData) {
       const metadata = formatDates(parseMetadata(JSON.parse(formData)?.event_metadata));
       // if there is a date field in the metadata, ensure that the date is a Date object
+      console.log({ event_metadata: JSON.parse(formData)?.event_metadata, metadata })
 
       if (metadata?.date) {
         metadata.date = new Date(metadata.date)
@@ -64,24 +66,64 @@ export function EventFormScreen(props: Props) {
         // set the diagnosis and medications from the formData
         setDiagnoses(metadata.diagnosis)
         setMedications(metadata.medications)
-      formMethods.reset(metadata)
+        formMethods.reset(metadata)
       }
 
       // Query the database for the event form with the name equal to the formData.event_type
+      console.log("Query db for forms")
       database.get<EventFormModel>("event_forms").query(Q.where("name", JSON.parse(formData).event_type)).fetch().then((form) => {
         // if there are forms returned, get the first form from the database
+        console.log("Found forms:", form.length)
         if (form.length > 0) {
-          const formObj = {
+          const formObj: EventFormModel = {
             name: form[0].name,
             description: form[0].description,
             id: form[0].id,
-            metadata: JSON.parse(form[0].metadata),
+            isEditable: form[0].isEditable,
+            isSnapshotForm: form[0].isSnapshotForm,
+            language: form[0].language,
+            metadata: form[0].metadata,
           }
+          console.log({ formObj, metadata: formObj.metadata })
           setEventForm(formObj)
         }
       })
+    } else if (formId) {
+
+      database
+        .get<EventFormModel>("event_forms")
+        .find(formId)
+        .then((form) => {
+          const formObj = {
+            name: form.name,
+            description: form.description,
+            id: form.id,
+            isEditable: form.isEditable,
+            isSnapshotForm: form.isSnapshotForm,
+            language: form.language,
+            metadata: form.metadata,
+          }
+          console.log(
+            "form",
+            formObj.metadata.map((f) => f.fields),
+          )
+          setEventForm(formObj)
+          navigation.setOptions({ title: form.name })
+        })
+        .catch((err) => {
+          console.error("error", err)
+          setEventForm(null)
+        })
     }
-  }, [formData])
+  }, [formData, formId])
+
+
+
+  useEffect(() => {
+    if (!formId) {
+      return
+    }
+  }, [formId])
 
   // if route has diagnoses, set diagnoses to route diagnoses
   useEffect(() => {
@@ -112,14 +154,14 @@ export function EventFormScreen(props: Props) {
     if (formData && JSON.parse(formData).id) {
       return updateEvent(JSON.parse(formData).id, {
         eventMetadata: JSON.stringify(data)
-      }).then(res => navigation.goBack({refresh: true})).catch(err => console.error(err)).finally(() => {setLoading(false); onUpdate && onUpdate()})
+      }).then(res => navigation.goBack({ refresh: true })).catch(err => console.error(err)).finally(() => { setLoading(false); onUpdate && onUpdate() })
     }
     createEvent({
       eventType: eventForm.name,
       patientId,
       visitId,
       isDeleted: false,
-      eventMetadata: JSON.stringify(data),
+      eventMetadata: data,
     })
       .then((res) => {
         navigation.goBack({
@@ -132,36 +174,16 @@ export function EventFormScreen(props: Props) {
       }).finally(() => setLoading(false))
   }
 
-  useEffect(() => {
-    if (!formId) {
-      return
-    }
-    database
-      .get<EventFormModel>("event_forms")
-      .find(formId)
-      .then((form) => {
-        const formObj = {
-          name: form.name,
-          description: form.description,
-          id: form.id,
-          metadata: JSON.parse(form.metadata),
-        }
-        console.log(
-          "form",
-          formObj.metadata.map((f) => f.fields),
-        )
-        setEventForm(formObj)
-        navigation.setOptions({ title: form.name })
-      })
-      .catch((err) => {
-        console.error("error", err)
-        setEventForm(null)
-      })
-  }, [formId])
-
   const deleteMedication = (id: string) => {
     setMedications((s) => s.filter((m) => m.id !== id))
   }
+
+  const canSaveForm = useMemo(() => {
+    if (loading || (formData && eventForm?.isEditable === false)) {
+      return false
+    }
+    return true
+  }, [formData, eventForm, loading])
 
   return (
     <Screen preset="scroll">
@@ -253,10 +275,10 @@ export function EventFormScreen(props: Props) {
                 return <Text>Not implemented yet</Text>
               }
             })}
-          <Button mode="contained" loading={loading} onPress={formMethods.handleSubmit(onSubmit)}>
+          <Button mode="contained" disabled={!canSaveForm} loading={loading} onPress={formMethods.handleSubmit(onSubmit)}>
             {translate("save")}
           </Button>
-      <View style={{ height: 40 }} />
+          <View style={{ height: 40 }} />
         </View>
       </FormProvider>
     </Screen>

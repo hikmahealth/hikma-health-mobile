@@ -40,7 +40,7 @@ export default class VisitModel extends Model {
 
 function sanitizeMetadata(data) {
   if (data) {
-    return JSON.stringify(data)
+    return data
   }
-  return JSON.stringify({})
+  return {}
 }

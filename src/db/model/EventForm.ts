@@ -27,8 +27,5 @@ export default class EventFormModel extends Model {
 
 // NOTE: can add sanitization logic if needed
 function sanitizeMetadata(data) {
-  if (data) {
-    return JSON.stringify(data)
-  }
-  return JSON.stringify({})
+  return data
 }
