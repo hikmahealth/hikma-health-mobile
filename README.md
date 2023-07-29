@@ -29,6 +29,10 @@ See `contributing.md` for ways to get started.
 Please adhere to this project's `code of conduct`.
 
 
+### Environment Secrets
+Convert the file `env` into a secrets file by renaming it to `.env` and update the `HIKMA_API` URL path to point to your backend. This could be on your local machine or in the cloud.
+
+
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
