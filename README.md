@@ -13,11 +13,11 @@ This app is built using React Native and can be compiled for either iOS or Andro
 
 ## Roadmap
 
-- [ ]  Advanced search
-- [ ]  Better support for styleing
-- [ ]  Improved data entry experience for accurate and structured data
+- [x]  Advanced search
+- [x]  Better support for styling
+- [x]  Improved data entry experience for accurate and structured data
 - [ ]  80% test coverage
-- [ ]  Documentation
+- [x]  Documentation
 
 
 ## Contributing
