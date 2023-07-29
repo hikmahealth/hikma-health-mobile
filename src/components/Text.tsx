@@ -71,19 +71,6 @@ export function Text(props: TextProps) {
   const content = i18nText || text || children
   const isRtl = useLanguageStore((state) => state.isRtl);
 
-  // useEffect(() => {
-  //   //   console.warn('I18n has been updated!');
-  //   const sub = i18n.onChange(ab => {
-  //     console.warn('Language Change', ab);
-  //     setV(i18n.version);
-  //   });
-
-  //   return () => {
-  //     sub();
-  //   };
-  // }, []);
-
-  // console.log('text render');
 
   // const preset: Presets = $presets[props.preset] ? props.preset : 'default';
   const $styles = [

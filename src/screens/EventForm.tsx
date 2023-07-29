@@ -5,8 +5,6 @@ import { useDatabase } from "@nozbe/watermelondb/hooks"
 import { isValid } from "date-fns"
 import { Q } from "@nozbe/watermelondb"
 import { View, ViewStyle } from "react-native"
-import Icon from "react-native-vector-icons/MaterialCommunityIcons"
-import SectionedMultiSelect from "react-native-sectioned-multi-select"
 import { Screen } from "../components/Screen"
 import { Text } from "../components/Text"
 import { ControlledTextField } from "../components/ControlledTextField"
@@ -103,6 +101,7 @@ export function EventFormScreen(props: Props) {
             language: form.language,
             metadata: form.metadata,
           }
+          console.log(formId, formObj.metadata, form);
           console.log(
             "form",
             formObj.metadata.map((f) => f.fields),

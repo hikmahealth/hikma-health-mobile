@@ -12,8 +12,8 @@ import {
 export default class EventFormModel extends Model {
   static table = "event_forms"
 
-  @text("name") name;
-  @text("description") description;
+  @text("name") name: string;
+  @text("description") description: string;
   @text("language") language
   @field("is_editable") isEditable
   @field("is_snapshopt_form") isSnapshotForm
@@ -26,6 +26,6 @@ export default class EventFormModel extends Model {
 
 
 // NOTE: can add sanitization logic if needed
-function sanitizeMetadata(data) {
-  return data
+function sanitizeMetadata(data: any) {
+  return Array.isArray(data) ? data : []
 }

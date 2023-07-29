@@ -20,22 +20,22 @@ export default class VisitModel extends Model {
   static associations: Associations = {
     patients: { type: "belongs_to", key: "patient_id" },
     events: { type: "has_many", foreignKey: "visit_id" },
-  }
+  } as const
 
   @relation("patients", "patient_id") patient
   @children("events") events
   // @relation("events", 'visitId') event
 
-  @text("patient_id") patientId
-  @text("clinic_id") clinicId
-  @text("provider_id") providerId
-  @text("provider_name") providerName
-  @date("check_in_timestamp") checkInTimestamp
-  @field("is_deleted") isDeleted
-  @date("deleted_at") deletedAt
-  @json("metadata", sanitizeMetadata) metadata
-  @readonly @date("created_at") createdAt
-  @readonly @date("updated_at") updatedAt
+  @text("patient_id") patientId: string
+  @text("clinic_id") clinicId: string
+  @text("provider_id") providerId: string
+  @text("provider_name") providerName: string
+  @date("check_in_timestamp") checkInTimestamp: Date
+  @field("is_deleted") isDeleted: boolean
+  @date("deleted_at") deletedAt: Date
+  @json("metadata", sanitizeMetadata) metadata: Object
+  @readonly @date("created_at") createdAt: Date
+  @readonly @date("updated_at") updatedAt: Date
 }
 
 function sanitizeMetadata(data) {

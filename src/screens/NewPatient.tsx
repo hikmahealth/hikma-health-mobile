@@ -26,6 +26,7 @@ const DEFAULT_DOB = (() => {
   return d
 })()
 
+
 type NewPatientForm = Omit<Patient, "dateOfBirth"> & {
   dateOfBirth: Date
 }
@@ -39,16 +40,16 @@ export default function NewPatientScreen(props: Props) {
     defaultValues: patientToEdit
       ? { ...patientToEdit, dateOfBirth: new Date(patientToEdit.dateOfBirth) }
       : {
-          id: "",
-          givenName: "",
-          surname: "",
-          sex: "male",
-          camp: "",
-          phone: "",
-          country: "",
-          hometown: "",
-          dateOfBirth: DEFAULT_DOB,
-        },
+        id: "",
+        givenName: "",
+        surname: "",
+        sex: "male",
+        camp: "",
+        phone: "",
+        country: "",
+        hometown: "",
+        dateOfBirth: DEFAULT_DOB,
+      },
   })
 
   const onSubmit: SubmitHandler<NewPatientForm> = async (data) => {
@@ -85,28 +86,24 @@ export default function NewPatientScreen(props: Props) {
       <View style={$formContainer}>
         <FormProvider {...formMethods}>
           <ControlledTextField
-            // style={{backgroundColor: 'rgba(0,0,0, 0.05)'}}
             mode="outlined"
             label={translate("firstName")}
             name="givenName"
           />
 
           <ControlledTextField
-            // style={{backgroundColor: 'rgba(0,0,0, 0.05)'}}
             mode="outlined"
             label={translate("surname")}
             name="surname"
           />
 
           <ControlledTextField
-            // style={{backgroundColor: 'rgba(0,0,0, 0.05)'}}
             mode="outlined"
             label={translate("phone")}
             name="phone"
           />
 
           <ControlledTextField
-            // style={{backgroundColor: 'rgba(0,0,0, 0.05)'}}
             mode="outlined"
             label={translate("country")}
             name="country"
@@ -114,25 +111,23 @@ export default function NewPatientScreen(props: Props) {
 
           <ControlledTextField
             mode="outlined"
-            // style={{backgroundColor: 'rgba(0,0,0, 0.05)'}}
             label={translate("hometown")}
             name="hometown"
           />
 
           <ControlledTextField
             mode="outlined"
-            // style={{backgroundColor: 'rgba(0,0,0, 0.05)'}}
             label={translate("camp")}
             name="camp"
           />
 
           <View>
             <View style={$rtl}>
-            <Text tx="dob" variant="labelLarge" />
-          </View>
+              <Text tx="dob" variant="labelLarge" />
+            </View>
             <View style={$rtl}>
-            <ControlledDatePickerButton name="dateOfBirth" />
-      </View>
+              <ControlledDatePickerButton name="dateOfBirth" />
+            </View>
           </View>
 
           <View>

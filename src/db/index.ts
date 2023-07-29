@@ -15,11 +15,12 @@ import VisitModel from "./model/Visit"
 import { setGenerator } from "@nozbe/watermelondb/utils/common/randomId"
 import ClinicModel from "./model/Clinic"
 import EventFormModel from "./model/EventForm"
+import mockDBAdapter from "../../test/mockDBAdapter"
 
 // set the unique identifier to be uuid1
 setGenerator(() => uuidv1())
 
-const adapter = new SQLiteAdapter({
+const adapter = __TEST__ ? mockDBAdapter : new SQLiteAdapter({
   schema,
   // (You might want to comment it out for development purposes -- see Migrations documentation)
   migrations,

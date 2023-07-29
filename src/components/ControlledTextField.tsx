@@ -22,6 +22,7 @@ export const ControlledTextField = (props: ControlledTextFieldProps) => {
   return (
     <>
       <TextInput
+        testID="ControlledTextField"
         label={label}
         onBlur={field.onBlur}
         onChangeText={field.onChange}

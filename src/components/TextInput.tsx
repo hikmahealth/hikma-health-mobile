@@ -10,7 +10,7 @@ export function TextInput(props) {
     const isRTL = language === 'ar';
     const $styles = [style, isRTL ? rtlInput : ltrInput];
 
-    return <RNTextInput {...otherProps} direction="rtl" style={$styles}  theme={primaryTheme} />;
+    return <RNTextInput testID="TextInput" {...otherProps} direction="rtl" style={$styles}  theme={primaryTheme} />;
 }
 
 

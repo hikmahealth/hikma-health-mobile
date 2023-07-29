@@ -1,5 +1,5 @@
 import { format } from "date-fns"
-import React, { useState } from "react"
+import React, { Fragment, useState } from "react"
 import { useController, UseControllerProps, useFormContext } from "react-hook-form"
 import { Pressable, Text, ViewStyle } from "react-native"
 import DatePicker, { DatePickerProps } from "react-native-date-picker"
@@ -14,6 +14,7 @@ export const DatePickerButton = ({ date, onDateChange, ...rest }: CustomDatePick
       <Pressable
         // style={[Style.datePicker, {justifyContent: 'center'}]}
         style={$datePicker}
+        testID="DatePickerButton"
         onPress={() => setOpen((open) => !open)}
       >
         <Text>{format(date, "do MMMM yyyy")}</Text>

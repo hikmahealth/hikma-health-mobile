@@ -37,6 +37,10 @@ jest.mock('i18n-js', () => ({
   },
 }));
 
+
+jest.mock('@nozbe/watermelondb/utils/common/randomId/randomId', () => { });
+
+
 // @ts-ignore
 declare const tron; // eslint-disable-line @typescript-eslint/no-unused-vars
 

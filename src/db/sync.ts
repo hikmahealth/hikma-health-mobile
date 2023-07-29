@@ -1,10 +1,11 @@
-import { hasUnsyncedChanges, synchronize } from "@nozbe/watermelondb/sync"
+import { hasUnsyncedChanges, SyncDatabaseChangeSet, synchronize, SyncTableChangeSet } from "@nozbe/watermelondb/sync"
 import database from "."
 import { HIKMA_API } from "@env"
 import { Alert } from "react-native"
 import { interpret } from "xstate"
 import { syncMachine } from "../components/state_machines/sync"
 import EncryptedStorage from "react-native-encrypted-storage"
+import { cloneDeep } from "lodash"
 
 global.Buffer = require('buffer').Buffer;
 
@@ -24,7 +25,6 @@ export async function syncDB(syncService: typeof syncServiceT, hasLocalChangesTo
 
   const headers = new Headers();
   headers.append('Authorization', 'Basic ' + encodedUsernameAndPassword);
-  console.log('Basic ' + encodedUsernameAndPassword);
 
   await synchronize({
     database,
@@ -166,10 +166,11 @@ export async function syncDB(syncService: typeof syncServiceT, hasLocalChangesTo
 
 
 
-function updateDates(changes) {
+function updateDates(changes: SyncDatabaseChangeSet) {
   const defaultDate = new Date()
+  const changeType = ['created', 'updated', 'deleted'] as unknown as (keyof SyncTableChangeSet)[]
   for (const type of Object.keys(changes)) {
-    for (const action of ['created', 'updated', 'deleted']) {
+    for (const action of changeType) {
       if (changes[type][action]) {
         changes[type][action].forEach(record => {
           record.created_at = new Date(record.created_at || defaultDate).getTime();
@@ -178,8 +179,8 @@ function updateDates(changes) {
             record.deleted_at = new Date(record.deleted_at || defaultDate).getTime();
           }
           // set up metadata
-          if (record.metadata) {
-            record.metadata = record.metadata
+          if (record.metadata && typeof record.metadata !== "string") {
+            record.metadata = JSON.stringify(record.metadata)
           }
           /** visits have a checkin timestamp */
           if (record.check_in_timestamp) {

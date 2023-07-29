@@ -35,7 +35,7 @@ export default function Login() {
   const [state, send] = useActor(globalServices.syncService)
 
   const [email, setEmail] = useState("admin@hikmahealth.org")
-  const [password, setPassword] = useState("HikmaAdmin25!")
+  const [password, setPassword] = useState("")
 
   console.log(HIKMA_API)
 

@@ -18,14 +18,14 @@ export default class EventModel extends Model {
     visits: { type: "belongs_to", key: "visit_id" },
   }
 
-  @text("patient_id") patientId
-  @text("visit_id") visitId
+  @text("patient_id") patientId: string
+  @text("visit_id") visitId: string
   @text("event_type") eventType
-  @json("event_metadata", sanitizeMetadata) eventMetadata
-  @field("is_deleted") isDeleted
-  @date("deleted_at") deletedAt
-  @readonly @date("created_at") createdAt
-  @readonly @date("updated_at") updatedAt
+  @json("event_metadata", sanitizeMetadata) eventMetadata: Object
+  @field("is_deleted") isDeleted: boolean
+  @date("deleted_at") deletedAt: Date
+  @readonly @date("created_at") createdAt: Date
+  @readonly @date("updated_at") updatedAt: Date
 }
 
 
