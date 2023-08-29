@@ -40,13 +40,17 @@ const updateMedications = (medications: MedicationEntry[], newMedication: Medica
 
 export function EventFormScreen(props: Props) {
   const { navigation, route } = props
-  const { patientId, formId, visitId, diagnoses: selectedDiagnoses, medication, formData, onUpdate } = route.params
+  const { patientId, formId, visitId, diagnoses: selectedDiagnoses, medication, formData, onUpdate, eventDate } = route.params
   const [eventForm, setEventForm] = useState<EventFormModel | null>(null)
   const [diagnoses, setDiagnoses] = useState<ICD10Entry[]>([])
   const [medications, setMedications] = useState<MedicationEntry[]>([])
   const [loading, setLoading] = useState(false)
 
-  const { ...formMethods } = useForm()
+  const { ...formMethods } = useForm({
+    defaultValues: {
+
+    }
+  })
   const database = useDatabase()
 
   // On page load, if there is formData in the props, set the data from the form data and set the eventForm from the event_type
@@ -153,7 +157,10 @@ export function EventFormScreen(props: Props) {
       patientId,
       visitId,
       isDeleted: false,
-      eventMetadata: data,
+      eventMetadata: {
+        ...data,
+        visitDate: eventDate || new Date().getTime()
+      }
     })
       .then((res) => {
         navigation.goBack({

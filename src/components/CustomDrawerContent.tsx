@@ -62,7 +62,6 @@ export function CustomDrawerContent(props: Props) {
         </View>
 
         <DrawerItem
-          // label="Patients List"
           label={({ color, focused }) => <Text tx="drawer.patientsList" />}
           icon={({ focused, color, size }) => (
             <Icon color={color} size={size} name={"format-list-bulleted"} />
@@ -71,20 +70,20 @@ export function CustomDrawerContent(props: Props) {
         />
 
         <DrawerItem
-          // label="Summary Stats"
           label={({ color, focused }) => <Text tx="drawer.summaryStats" />}
           icon={({ focused, color, size }) => <Icon color={color} size={size} name={"chart-bar"} />}
           onPress={() => navigation.navigate("SummaryStats")}
         />
 
-        <DrawerItem
-          // label="Benchmarking"
-          label={({ color, focused }) => <Text tx="drawer.benchmarking" />}
-          icon={({ focused, color, size }) => (
-            <Icon color={color} size={size} name={"car-speed-limiter"} />
-          )}
-          onPress={() => navigation.navigate("Benchmarking")}
-        />
+
+        {__DEV__ &&
+          <DrawerItem
+            label={({ color, focused }) => <Text tx="drawer.benchmarking" />}
+            icon={({ focused, color, size }) => (
+              <Icon color={color} size={size} name={"car-speed-limiter"} />
+            )}
+            onPress={() => navigation.navigate("Benchmarking")}
+          />}
 
         <DrawerItem
           label={({ color, focused }) => <Text tx="drawer.sync" />}
@@ -106,7 +105,7 @@ export function CustomDrawerContent(props: Props) {
         </View>
       </View>
       <Text variant="bodySmall" style={$versionText}>
-        V RC-2.3.1
+        V 2.3.5
       </Text>
     </>
   )

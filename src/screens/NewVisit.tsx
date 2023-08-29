@@ -137,8 +137,9 @@ const patientVisitLinks = (
 
 export function NewVisit(props: Props) {
   const { navigation, route } = props
-  const { patientId, visitId, patientAge } = route.params
+  const { patientId, visitId, patientAge, visitDate } = route.params
   const [forms, setForms] = useState<EventFormModel[]>([])
+  const [eventDate, setEventDate] = useState<number>(visitDate || new Date().getTime())
   const provider = useProviderStore((store) => store.provider)
   const database = useDatabase()
 
@@ -180,7 +181,7 @@ export function NewVisit(props: Props) {
         ))}
         */}
 
-        <DatePickerButton date={new Date()} onChange={console.log} />
+        <DatePickerButton date={new Date(eventDate)} onDateChange={d => setEventDate(d.getTime())} />
         {
           forms.map(form => {
             return (
@@ -193,6 +194,7 @@ export function NewVisit(props: Props) {
                   patientId,
                   providerId,
                   formId: form.id,
+                  date: eventDate
                 })}
                 description={form.description}
                 left={(props) => <List.Icon {...props} icon="form-select" />}

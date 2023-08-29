@@ -20,7 +20,10 @@ import mockDBAdapter from "../../test/mockDBAdapter"
 // set the unique identifier to be uuid1
 setGenerator(() => uuidv1())
 
-const adapter = __TEST__ ? mockDBAdapter : new SQLiteAdapter({
+
+const isTest = process.env.JEST_WORKER_ID !== undefined || process.env.NODE_ENV === 'test'
+
+const adapter = isTest ? mockDBAdapter : new SQLiteAdapter({
   schema,
   // (You might want to comment it out for development purposes -- see Migrations documentation)
   migrations,

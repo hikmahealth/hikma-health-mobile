@@ -1,6 +1,6 @@
 import * as React from "react"
 import { View } from "react-native"
-import { format } from "date-fns"
+import { format, isValid } from "date-fns"
 import { upperFirst } from "lodash"
 import { PhysiotherapyDisplay, PhysiotherapyMetadata } from "../screens/PhysiotherapyForm"
 import { MedicalHistoryDisplay, MedicalHistoryMetadata } from "../screens/MedicalHistoryForm"
@@ -62,13 +62,13 @@ const isDate = (d: Date | string | number | undefined | null): boolean => {
     return false
   }
   if (typeof d === "string") {
-    return !isNaN(Date.parse(d))
+    return !isNaN(Date.parse(d)) && d.length > 12 // because millisecond time is 13 chars long
   }
   // Issue with this is that it will return true for numbers like 1234567890 or just 123 😱
   // if (typeof d === "number") {
   //   return !isNaN(d)
   // }
-  return d instanceof Date
+  return d instanceof Date || isValid(new Date(d))
 }
 
 // Check if array is a collection of objects or collection of strings
@@ -127,9 +127,10 @@ export function getEventDisplay(event: Event) {
                     }
 
                     if (isMedicine) {
+                      console.warn(item.frequency)
                       return (
                         <View key={index}>
-                          <Text>{`${item.name} (${item.dose} ${item.frequency})`}</Text>
+                          <Text>{`${item.name} (${item.dose}${item.doseUnits} ${String(item.frequency)})`}</Text>
                         </View>
                       )
                     }
@@ -162,7 +163,7 @@ export function getEventDisplay(event: Event) {
   return display
 
   // TODO: Clean up below
-    // Tombstonee: April 25 2023
+  // Tombstonee: April 25 2023
   // LEFT behind for reference during transition period
 
   switch (event.eventType) {
@@ -179,7 +180,7 @@ export function getEventDisplay(event: Event) {
       display = <ExaminationDisplay metadataObj={parseMetadata<Examination>(event.eventMetadata)} />
       break
     case "Medicine":
-      ;<MedicineDisplay metadataObj={parseMetadata<MedicineMetadata>(event.eventMetadata)} />
+      ; <MedicineDisplay metadataObj={parseMetadata<MedicineMetadata>(event.eventMetadata)} />
       break
     case "Medical History Full":
       display = (
@@ -204,6 +205,93 @@ export function getEventDisplay(event: Event) {
 
   return display
 }
+
+
+export function getEventDisplayPrint(event: Event) {
+  let display
+  const parsedMetadata = parseMetadata<string>(event.eventMetadata)
+  console.warn(typeof parsedMetadata)
+  if (typeof parsedMetadata === "object") {
+    // For each key in the object, show the key and the value
+    display = (
+      // <div style={{ paddingVertical: 2 }}>
+      Object.keys(parsedMetadata).map((key) => {
+        const data = parsedMetadata[key]
+        const isDateField = isDate(data)
+        if (isArray(data)) {
+          const isCollection = isArrayOfObjects(data)
+          if (!isCollection) {
+            return ` 
+                <div key={key} style="flex-direction: row; align-items: center; paddingpvertical: 2;">
+                  <span>
+                    ${upperFirst(key)}
+                  </span>
+                  ${data.map((item, index) => {
+              return `
+                      <div >
+                        <span>${item}</span>
+                      </div>
+                    `
+            })}
+                </div>
+              `
+          } else {
+            return `
+                <div style="flex-direction: row; align-items: center; paddingpvertical: 2;">
+                  <span>
+                    ${upperFirst(key)}
+                  </span>
+                  <span>: </span>
+                  ${data.map((item, index) => {
+              const isDiagnosis = isDiagnosisObj(item)
+              const isMedicine = isMedicineObj(item)
+              if (isDiagnosis) {
+                return (
+                  <div>
+                    <span>${`(${item.code}) ${item.desc}`}</span>
+                  </div>
+                )
+              }
+
+              if (isMedicine) {
+                return (
+                  `<div>
+                          <span>${`${item.name} (${item.dose}${item.doseUnits}, ${String(item.frequency)})`}</span>
+                        </div>`
+                )
+              }
+
+              return (
+                <div>
+                  <span>{JSON.stringify(item, null, 2)}</span>
+                </div>
+              )
+            })}
+                </div>
+              `
+          }
+        }
+        return `
+            <div key={key} style="flex-direction: row; align-items: center; paddingpvertical: 2;">
+              <span>
+                ${upperFirst(key)}
+              </span>
+              <span>: </span>
+              <span>
+                ${isDateField ? format(new Date(data), "dd MMMM yyyy") : data}
+              </span>
+            </div>
+          `
+      }).join("")
+      // </div>
+    )
+  } else {
+    display = JSON.stringify(parsedMetadata || "")
+  }
+  return display
+}
+
+
 
 export const $row = {
   flexDirection: "row",

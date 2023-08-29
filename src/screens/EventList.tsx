@@ -34,10 +34,10 @@ export function EventList(props: Props) {
         // sort by created at
         Q.sortBy("created_at", Q.desc),
       ).observe()
-        .subscribe((events) => {
-          console.log("EVENTS RERENDER")
-          setEventsList(events)
-        })
+      .subscribe((events) => {
+        console.log("EVENTS RERENDER")
+        setEventsList(events)
+      })
     return () => {
       console.log("EVENTS UNSUBSCRIBE")
       eventSub?.unsubscribe()
@@ -47,7 +47,7 @@ export function EventList(props: Props) {
 
   // Update the header title when the eventsList array changes
   useEffect(() => {
-        navigation.setOptions({ title:`Visit Events (${eventsList.length})` })
+    navigation.setOptions({ title: `Visit Events (${eventsList.length})` })
   }, [eventsList.length])
 
 
@@ -64,6 +64,7 @@ export function EventList(props: Props) {
       patientAge: calculateAgeInYears(new Date(patient.dateOfBirth)),
       providerId,
       visitId: visit.id,
+      visitDate: new Date(visit.checkInTimestamp)
     })
   }
 

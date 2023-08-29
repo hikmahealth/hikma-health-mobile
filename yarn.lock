@@ -2474,6 +2474,8 @@ babel-plugin-syntax-trailing-function-commas@^7.0.0-beta.0:
 
 babel-plugin-transform-remove-console@^6.9.4:
   version "6.9.4"
+  resolved "https://registry.npmjs.org/babel-plugin-transform-remove-console/-/babel-plugin-transform-remove-console-6.9.4.tgz"
+  integrity sha512-88blrUrMX3SPiGkT1GnvVY8E/7A+k6oj3MNvUtTIxJflFzXTw1bHkuJ/y039ouhFMp2prRn5cQGzokViYi1dsg==
 
 babel-preset-current-node-syntax@^1.0.0:
   version "1.0.1"
@@ -6567,12 +6569,22 @@ react-native-get-random-values@^1.8.0:
 react-native-gradle-plugin@^0.71.14:
   version "0.71.18"
 
+react-native-html-to-pdf@^0.12.0:
+  version "0.12.0"
+  resolved "https://registry.npmjs.org/react-native-html-to-pdf/-/react-native-html-to-pdf-0.12.0.tgz"
+  integrity sha512-Yb5WO9SfF86s5Yv9PqXQ7fZDr9zZOJ+6jtweT9zFLraPNHWX7pSxe2dSkeg3cGiNrib65ZXGN6ksHymfYLFSSg==
+
 react-native-paper@^5.2.0:
   version "5.8.0"
   dependencies:
     "@callstack/react-theme-provider" "^3.0.8"
     color "^3.1.2"
     use-latest-callback "^0.1.5"
+
+react-native-print@^0.11.0:
+  version "0.11.0"
+  resolved "https://registry.npmjs.org/react-native-print/-/react-native-print-0.11.0.tgz"
+  integrity sha512-hFDzb9dVJVT8c3VHNNWgkPfLF3Jfyw0WVJ3o7wUmSMmi5hJx6b++veNJ3J95d3lW3Y0sZUpGbn9+yzXrLANnJQ==
 
 react-native-reanimated@^2.14.4:
   version "2.17.0"

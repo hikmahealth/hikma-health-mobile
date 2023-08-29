@@ -32,7 +32,9 @@ const vanillaConfig = {
 const expoConfig = {
   presets: ['babel-preset-expo'],
   env: {
-    production: {},
+    production: {
+      plugins: ['transform-remove-console', { exclude: ['error'] }]
+    },
   },
   plugins,
 };

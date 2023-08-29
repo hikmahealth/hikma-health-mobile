@@ -130,6 +130,9 @@ export default function PatientList(props: Props) {
       form.phone.length > 0 && Q.where("phone", Q.like(`${Q.sanitizeLikeString(form.phone)}%`)),
     ].filter(Boolean);
 
+
+    console.log({ queries, searchQuery: form.searchQuery })
+
     // Perform search on database
     database.get<PatientModel>("patients")
       .query(

@@ -49,6 +49,7 @@ export type PatientFlowParamList = {
     providerId: string
     visitId: string
     patientAge: number
+    visitDate: number
   }
   VisitList: { patientId: string; patient: Patient }
   EventList: { patient: Patient; visit: Visit }
@@ -64,7 +65,7 @@ export type PatientFlowParamList = {
   Covid19Form: VisitScreensProps & { patientAge: number }
   OpenTextEvent: VisitScreensProps
   VitalsForm: VisitScreensProps
-  EventForm: VisitScreensProps & { formId: string, formData: JSONString | undefined }
+  EventForm: VisitScreensProps & { formId: string, formData: JSONString | undefined, eventDate: number }
   DiagnosisPicker: undefined
   MedicationEditor: { medication: MedicationEntry }
 }

@@ -82,6 +82,7 @@ export type RootStackParamList = {
     providerId: string
     visitId: string
     patientAge: number
+    visitDate: number
   }
   VisitList: { patientId: string; patient: Patient }
   EventList: { patient: Patient; visit: Visit }

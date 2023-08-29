@@ -15,6 +15,7 @@ import { ControlledDatePickerButton } from "../components/DatePicker"
 import Patient from "../db/model/Patient"
 import { registerNewPatient, updatePatientWithId } from "../db/api"
 import { primary } from "../styles/colors"
+import { upperFirst } from "lodash"
 
 type Props = NativeStackScreenProps<RootStackParamList, "NewPatient">
 
@@ -139,8 +140,8 @@ export default function NewPatientScreen(props: Props) {
                 onValueChange={(val) => formMethods.setValue("sex", val)}
                 value={formMethods.watch("sex")}
               >
-                <RadioButton.Item style={$rtl} color={primary} label={translate("male")} value="male" />
-                <RadioButton.Item style={$rtl} color={primary} label={translate("female")} value="female" />
+                <RadioButton.Item style={$rtl} color={primary} label={upperFirst(translate("male"))} value="male" />
+                <RadioButton.Item style={$rtl} color={primary} label={upperFirst(translate("female"))} value="female" />
               </RadioButton.Group>
             </View>
           </View>
@@ -158,5 +159,5 @@ const $rtlStyle: ViewStyle = { flexDirection: "row-reverse" }
 
 const $formContainer: ViewStyle = {
   rowGap: 16,
-  paddingTop: 20,
+  paddingVertical: 20,
 }

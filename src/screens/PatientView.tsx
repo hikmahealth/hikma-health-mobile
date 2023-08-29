@@ -1,7 +1,9 @@
 import { NativeStackNavigationProp, NativeStackScreenProps } from "@react-navigation/native-stack"
 import { format } from "date-fns"
 import { useCallback, useEffect, useState } from "react"
-import { View, ViewStyle, FlatList } from "react-native"
+import { View, ViewStyle, FlatList, Pressable, Alert } from "react-native"
+import RNHTMLtoPDF from 'react-native-html-to-pdf';
+import RNPrint from 'react-native-print';
 import { Avatar, List, FAB } from "react-native-paper"
 import { RootStackParamList } from "../../App"
 import { PatientSummary } from "../components/PatientSummary"
@@ -21,6 +23,9 @@ import { localeDate } from "../utils/formatDate"
 import EventFormModel from "../db/model/EventForm"
 import { useDatabase } from "@nozbe/watermelondb/hooks"
 import { Q } from "@nozbe/watermelondb"
+import VisitModel from "../db/model/Visit";
+import EventModel from "../db/model/Event";
+import { getEventDisplayPrint } from "../components/EventFormDisplay";
 
 type Props = NativeStackScreenProps<RootStackParamList, "PatientView">
 
@@ -103,6 +108,103 @@ export function PatientView(props: Props) {
 
   }, [])
 
+
+
+  const fetchPatientData = async (patientId: string, ignoreEmptyVisits: boolean): Promise<{ visit: VisitModel, events: EventModel[] }[]> => {
+    const visits = await database
+      .get<VisitModel>("visits")
+      .query(Q.and(Q.where("patient_id", patientId), Q.where("is_deleted", false)))
+      .fetch()
+
+    const events = await database.get<EventModel>("events")
+      .query(Q.and(Q.where("patient_id", patientId), Q.where("is_deleted", false)))
+      .fetch()
+
+
+    const results = visits.map(visit => {
+      return {
+        visit,
+        events: events.filter(ev => ev.visitId === visit.id)
+      }
+    })
+
+    if (ignoreEmptyVisits) {
+      return results.filter(res => res.events.length > 0)
+    }
+    return results;
+  }
+
+
+  const downloadFile = async () => {
+    let options = {
+      html: '<h1>Patient Report</h1>',
+      fileName: 'test',
+      directory: 'Documents',
+    };
+    printHTML()
+
+    // let file = await RNHTMLtoPDF.convert(options)
+    // console.log(file.filePath);
+    // Alert.alert(file.filePath);
+  }
+
+
+  async function printHTML() {
+    fetchPatientData(patient.id, true).then(async (result) => {
+      const visitsList = result.map(({ events, visit }) => {
+        const eventRows = events.map(ev => {
+          const evs = getEventDisplayPrint(ev);
+          console.log(evs)
+          return `
+          <tr style="padding-bottom: 10px;">
+            <td style="vertical-align: top;">${ev.eventType}</td>
+            <td style="vertical-align: top;">${visit.providerName}</td>
+            <td colspan={4}>${evs}</td>
+          </tr>
+              
+            `
+        }).join("")
+        return `
+            <div>
+              ${format(visit.checkInTimestamp, "dd MMM yyyy")}
+              <br />
+              <table style="border-collapse: separate; border-spacing: 15px 15px;">
+                <tr>
+                  <th>Name</th>
+                  <th>Provider</th>
+                  <th colspan="4">Data</th>
+                </tr>
+          
+                ${eventRows}
+              </table>
+            </div>
+          `
+      }).join("")
+      // const visitsList_ = result.map(visit =>
+      //   `${visit.providerName} \n
+      //     ${translate("visitDate")}: ${format(visit.checkInTimestamp, "dd MMM yyyy")}`
+      // )
+
+
+      console.log(visitsList)
+      await RNPrint.print({
+        html: `
+      <div>
+        <h1>${patient.givenName} ${patient.surname}</h1>
+        <h2>${translate("dob")}: ${localeDate(new Date(patient.dateOfBirth), "yyyy MMM dd", {})}</h2>
+        <h2>${translate("sex")}: ${translate(patient.sex)}</h2>
+
+      <br />
+      <div>
+        <h3>Visits</h3>
+        
+        ${visitsList}
+      </div>
+      </div>`
+      })
+    })
+  }
+
   const goToEditPatient = () => {
     navigation.navigate("NewPatient", { patient })
   }
@@ -126,6 +228,7 @@ export function PatientView(props: Props) {
           patientAge: calculateAgeInYears(new Date(patient.dateOfBirth)),
           providerId: provider.id,
           visitId: res.id,
+          visitDate: new Date().getTime()
         })
         console.log(res)
       })
@@ -142,7 +245,7 @@ export function PatientView(props: Props) {
   return (
     <>
       <Screen preset="scroll" style={$screen}>
-        <PatientFileSummary patient={patient} goToEditPatient={goToEditPatient} />
+        <PatientFileSummary patient={patient} goToEditPatient={goToEditPatient} downloadFile={downloadFile} />
 
         <FlatList
           data={links}
@@ -192,9 +295,11 @@ const LinkItem = ({
 const PatientFileSummary = ({
   patient,
   goToEditPatient,
+  downloadFile,
 }: {
   patient: Patient
   goToEditPatient: () => void
+  downloadFile: () => void
 }) => {
   return (
     <View style={$summaryContainer}>
@@ -216,6 +321,10 @@ const PatientFileSummary = ({
         <Text>{`${translate("sex")}: ${translate(patient.sex)}`}</Text>
         <Text>{`${translate("camp")}: ${patient.camp || ""}`}</Text>
         <PatientSummary patientId={patient.id} />
+
+        <Button icon="download" mode="text" onPress={downloadFile}>
+          {`Download Patient History`}
+        </Button>
       </View>
     </View>
   )
