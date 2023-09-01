@@ -12,7 +12,6 @@ import { translate } from "../i18n"
 import { PatientListItem } from "../components/PatientListItem"
 import { Patient } from "../types/Patient"
 import { NativeStackScreenProps } from "@react-navigation/native-stack"
-import { useDatabase } from "@nozbe/watermelondb/hooks"
 import PatientModel from "../db/model/Patient"
 import { Q } from "@nozbe/watermelondb"
 import { FlashList } from "@shopify/flash-list"
@@ -20,6 +19,7 @@ import { primary } from "../styles/colors"
 import { PatientFlowParamList } from "../navigators/PatientFlowNavigator"
 import { patientListMachine } from "../components/state_machines/patientList"
 import { useLanguageStore } from "../stores/language"
+import database from "../db"
 
 type Props = NativeStackScreenProps<PatientFlowParamList, "PatientList">
 
@@ -48,7 +48,6 @@ export default function PatientList(props: Props) {
   const [totalPatientsCount, setTotalPatientsCount] = useState(0)
   const [patients, setPatients] = useState<Patient[]>([])
 
-  const database = useDatabase()
   const isRtl = useLanguageStore(state => state.isRtl)
 
   const openPatientFile = useCallback((patient: Patient) => {

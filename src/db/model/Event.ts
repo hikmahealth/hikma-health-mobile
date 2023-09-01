@@ -18,25 +18,27 @@ export default class EventModel extends Model {
     visits: { type: "belongs_to", key: "visit_id" },
   }
 
-  @text("patient_id") patientId: string
-  @text("visit_id") visitId: string
-  @text("event_type") eventType
-  @json("event_metadata", sanitizeMetadata) eventMetadata: Object
-  @field("is_deleted") isDeleted: boolean
-  @date("deleted_at") deletedAt: Date
-  @readonly @date("created_at") createdAt: Date
-  @readonly @date("updated_at") updatedAt: Date
+  @text("patient_id") patientId!: string
+  @text("visit_id") visitId!: string
+  @text("event_type") eventType!: string
+  @json("event_metadata", sanitizeMetadata) eventMetadata!: Object
+  @field("is_deleted") isDeleted!: boolean
+  @date("deleted_at") deletedAt!: Date
+  @readonly @date("created_at") createdAt!: Date
+  @readonly @date("updated_at") updatedAt!: Date
 }
 
 
-function sanitizeMetadata(data) {
+// The sanitizer might also receive null if the column is nullable, or undefined if the field doesn't contain valid JSON.
+/**
+Sanitize the raw data returned by a `JSON.parse()` operation over the stored "string" type
+
+@param {null | undefined | object} data: null if the field is nullable, undefined if the JSON is invalid or the data object stored in its place
+*/
+function sanitizeMetadata(data: any) {
   if (data) {
     return data
   } else {
     return {}
   }
-  // if (data) {
-  // return JSON.stringify(data)
-  // }
-  // return JSON.stringify({})
 }

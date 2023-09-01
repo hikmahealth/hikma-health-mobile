@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { NativeStackScreenProps } from "@react-navigation/native-stack"
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form"
-import { useDatabase } from "@nozbe/watermelondb/hooks"
 import { isValid } from "date-fns"
 import { Q } from "@nozbe/watermelondb"
 import { View, ViewStyle } from "react-native"
@@ -19,6 +18,7 @@ import { createEvent, updateEvent } from "../db/api"
 import { parseMetadata } from "../utils/parsers"
 import { DiagnosisPickerButton, ICD10Entry } from "./DiagnosisPicker"
 import { MedicationEntry, MedicationsFormItem } from "./MedicationEditor"
+import database from "../db"
 
 type Props = NativeStackScreenProps<PatientFlowParamList, "EventForm">
 
@@ -51,13 +51,19 @@ export function EventFormScreen(props: Props) {
 
     }
   })
-  const database = useDatabase()
 
   // On page load, if there is formData in the props, set the data from the form data and set the eventForm from the event_type
+  // FIXME: REFACTOR
   useEffect(() => {
     console.log({ formData })
     if (formData) {
-      const metadata = formatDates(parseMetadata(JSON.parse(formData)?.event_metadata));
+      const {result: parsedMetadata, error} = parseMetadata(JSON.parse(formData)?.event_metadata)
+      if (error) {
+        // the metadata could not be parsed
+        console.error(error)
+      }
+      console.warn(parsedMetadata)
+      const metadata = formatDates(parsedMetadata);
       // if there is a date field in the metadata, ensure that the date is a Date object
       console.log({ event_metadata: JSON.parse(formData)?.event_metadata, metadata })
 
@@ -284,21 +290,6 @@ export function EventFormScreen(props: Props) {
   )
 }
 
-// Function takes an object, if any of the values are a valid date or string that could be a dete, format them into a Date object
-const formatDates = (obj: any) => {
-  const newObj = { ...obj }
-  Object.keys(newObj).forEach((key) => {
-    if (newObj[key] && (newObj[key].includes("/") || newObj[key].includes("-"))) {
-      newObj[key] = isValid(new Date(newObj[key])) ? new Date(newObj[key]) : newObj[key]
-    }
-  })
-  return newObj
-}
-
-
-const $flex1: ViewStyle = {
-  flex: 1,
-}
 
 const $formContainer: ViewStyle = {
   rowGap: 10,

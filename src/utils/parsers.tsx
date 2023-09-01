@@ -1,8 +1,20 @@
-export function parseMetadata<T>(metadata: string): T {
+/**
+Parse Metadata strings and return the type T expected
+
+@param {string} metadata
+@returns {{result: T | string, error: Error | null}}
+*/
+export function parseMetadata<T>(metadata: string): { result: string, error: Error } | { result: T, error: null } {
   try {
-    JSON.parse(metadata)
+    const result = JSON.parse(metadata)
+    return {
+      result,
+      error: null
+    }
   } catch (e) {
-    return metadata as T
+    return {
+      result: metadata,
+      error: e as Error
+    }
   }
-  return JSON.parse(metadata)
 }

@@ -1,7 +1,6 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack"
 import { List } from "react-native-paper"
 import { useEffect, useState } from "react"
-import { useDatabase } from "@nozbe/watermelondb/hooks"
 import { Q } from "@nozbe/watermelondb"
 import { View, ViewStyle } from "react-native"
 import { RootStackParamList } from "../../App"
@@ -12,6 +11,7 @@ import { useProviderStore } from "../stores/provider"
 import { PatientFlowParamList, VisitScreensProps } from "../navigators/PatientFlowNavigator"
 import EventFormModel from "../db/model/EventForm"
 import { DatePickerButton } from "../components/DatePicker"
+import database from "../db"
 
 type Props = NativeStackScreenProps<RootStackParamList, "NewVisit">
 
@@ -141,7 +141,6 @@ export function NewVisit(props: Props) {
   const [forms, setForms] = useState<EventFormModel[]>([])
   const [eventDate, setEventDate] = useState<number>(visitDate || new Date().getTime())
   const provider = useProviderStore((store) => store.provider)
-  const database = useDatabase()
 
   useEffect(() => {
     database.get<EventFormModel>("event_forms").query(

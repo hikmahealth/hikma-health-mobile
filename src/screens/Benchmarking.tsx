@@ -1,4 +1,3 @@
-import { useDatabase } from "@nozbe/watermelondb/hooks"
 import { omit } from "lodash"
 import { useState } from "react"
 import { Alert, View, ViewStyle } from "react-native"
@@ -14,9 +13,9 @@ import { Patient } from "../types"
 import { generateEvent } from "../utils/generators/events"
 import { generatePatient } from "../utils/generators/patients"
 import { generateVisit } from "../utils/generators/visits"
+import database from "../db"
 
 export function Benchmarking() {
-  const database = useDatabase()
   const [patientsCount, setPatientsCount] = useState(2_500)
   const [eventsPerPatient, setEventsPerPatient] = useState(0)
   const [provider, clinic] = useProviderStore((store) => [store.provider, store.clinic])
@@ -72,14 +71,14 @@ export function Benchmarking() {
       eventsPerPatient === 0
         ? []
         : batchPatientRegistrations.map((patient) => {
-            const visit = generateVisit(patient.id, providerId, clinicId)
-            return database.get<VisitModel>("visits").prepareCreate((newVisit) => {
-              newVisit.patientId = visit.patientId
-              newVisit.clinicId = visit.clinicId
-              newVisit.providerId = visit.providerId
-              newVisit.checkInTimestamp = visit.checkInTimestamp
-            })
+          const visit = generateVisit(patient.id, providerId, clinicId)
+          return database.get<VisitModel>("visits").prepareCreate((newVisit) => {
+            newVisit.patientId = visit.patientId
+            newVisit.clinicId = visit.clinicId
+            newVisit.providerId = visit.providerId
+            newVisit.checkInTimestamp = visit.checkInTimestamp
           })
+        })
 
     let batchEvents = batchVisits.flatMap((visit) => {
       const eventsList = Array.from({ length: eventsPerPatient }, () =>

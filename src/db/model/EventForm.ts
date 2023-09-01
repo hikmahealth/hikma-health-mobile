@@ -12,20 +12,25 @@ import {
 export default class EventFormModel extends Model {
   static table = "event_forms"
 
-  @text("name") name: string;
-  @text("description") description: string;
-  @text("language") language
-  @field("is_editable") isEditable
-  @field("is_snapshopt_form") isSnapshotForm
-  @json("metadata", sanitizeMetadata) metadata
-  @field("is_deleted") isDeleted
-  @date("deleted_at") deletedAt
-  @readonly @date("created_at") createdAt
-  @readonly @date("updated_at") updatedAt
+  @text("name") name!: string;
+  @text("description") description!: string;
+  @text("language") language!: string
+  @field("is_editable") isEditable!: boolean
+  @field("is_snapshopt_form") isSnapshotForm!: boolean
+  @json("metadata", sanitizeMetadata) metadata: any
+  @field("is_deleted") isDeleted!: boolean
+  @date("deleted_at") deletedAt?: number | Date
+  @readonly @date("created_at") createdAt!: number | Date
+  @readonly @date("updated_at") updatedAt!: number | Date
 }
 
 
-// NOTE: can add sanitization logic if needed
+/**
+Sanitize EventForm metadata which is an array of field inputs that need to be rendered in the user interface
+
+@param {null | undefined | object} data
+@returns {any[]} result: fields of the form
+*/
 function sanitizeMetadata(data: any) {
   return Array.isArray(data) ? data : []
 }

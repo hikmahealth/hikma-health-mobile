@@ -1,5 +1,4 @@
 import { Q } from "@nozbe/watermelondb"
-import { useDatabase } from "@nozbe/watermelondb/hooks"
 import { NativeStackScreenProps } from "@react-navigation/native-stack"
 import { useEffect, useState } from "react"
 import { View, Alert, FlatList, TouchableOpacity } from "react-native"
@@ -14,6 +13,7 @@ import { displayName } from "../utils/patient"
 import { VitalsMetadata } from "./VitalsForm"
 import UserModel from "../db/model/User"
 import { format } from "date-fns"
+import database from "../db"
 
 type Props = NativeStackScreenProps<PatientFlowParamList, "VisitList">
 
@@ -21,7 +21,6 @@ export function VisitList(props: Props) {
   const { route, navigation } = props
   const { patientId, patient } = route.params
 
-  const database = useDatabase()
 
   const [patientVisits, setPatientVisits] = useState<Visit[]>([])
 

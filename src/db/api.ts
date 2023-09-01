@@ -113,7 +113,12 @@ export async function updateEvent(eventId: string, event: Event) {
   })
 }
 
-// Get latest event by type
+/**
+* Get latest event by type
+* @param {string} patientId
+* @param {EventTypes} eventType
+* @todo  //TODO: Support returning an error as a value
+*/
 export async function getLatestPatientEventByType(
   patientId: string,
   eventType: EventTypes,

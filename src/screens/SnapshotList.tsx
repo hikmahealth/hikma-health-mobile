@@ -31,9 +31,13 @@ export function SnapshotList(props: Props) {
 
   const renderItem = ({ item }: { item: Event }) => {
     const { eventType, eventMetadata } = item
-    const { doctor } = parseMetadata<{ doctor: string }>(eventMetadata) || {
+
+    const { result: parsedMetadata, error } = parseMetadata<{ doctor: string }>(eventMetadata)
+    if (error) console.error(error)
+
+    const { doctor } = error ? {
       doctor: "",
-    }
+    } : parsedMetadata
     const display = getEventDisplay(item)
 
     const time = new Date(item.updatedAt).toLocaleString([], {
@@ -48,7 +52,7 @@ export function SnapshotList(props: Props) {
     return (
       <TouchableOpacity
         style={$card}
-        // onLongPress={() => editEvent(item)}
+      // onLongPress={() => editEvent(item)}
       >
         <View style={$cardContent}>
           <View style={{ margin: 10 }}>

@@ -26,19 +26,19 @@ export default class VisitModel extends Model {
   @children("events") events
   // @relation("events", 'visitId') event
 
-  @text("patient_id") patientId: string
-  @text("clinic_id") clinicId: string
-  @text("provider_id") providerId: string
-  @text("provider_name") providerName: string
-  @date("check_in_timestamp") checkInTimestamp: Date
-  @field("is_deleted") isDeleted: boolean
-  @date("deleted_at") deletedAt: Date
-  @json("metadata", sanitizeMetadata) metadata: Object
-  @readonly @date("created_at") createdAt: Date
-  @readonly @date("updated_at") updatedAt: Date
+  @text("patient_id") patientId!: string
+  @text("clinic_id") clinicId!: string
+  @text("provider_id") providerId!: string
+  @text("provider_name") providerName!: string
+  @date("check_in_timestamp") checkInTimestamp!: Date
+  @field("is_deleted") isDeleted!: boolean
+  @date("deleted_at") deletedAt!: Date
+  @json("metadata", sanitizeMetadata) metadata!: Object | null | undefined
+  @readonly @date("created_at") createdAt!: number | Date
+  @readonly @date("updated_at") updatedAt!: number | Date
 }
 
-function sanitizeMetadata(data) {
+function sanitizeMetadata(data: any) {
   if (data) {
     return data
   }

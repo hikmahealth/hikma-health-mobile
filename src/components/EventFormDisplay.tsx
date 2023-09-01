@@ -86,7 +86,9 @@ const isMedicineObj = (obj: any): boolean => {
 
 export function getEventDisplay(event: Event) {
   let display
-  const parsedMetadata = parseMetadata<string>(event.eventMetadata)
+  // const parsedMetadata = parseMetadata<string>(event.eventMetadata)
+  const { result: parsedMetadata, error } = parseMetadata<string>(event.eventMetadata)
+  if (error) console.error(error)
   console.warn(typeof parsedMetadata)
   if (typeof parsedMetadata === "object") {
     // For each key in the object, show the key and the value
@@ -169,36 +171,36 @@ export function getEventDisplay(event: Event) {
   switch (event.eventType) {
     case "COVID-19 Screening":
       display = (
-        <Covid19Display metadataObj={parseMetadata<Covid19FormMetadata>(event.eventMetadata)} />
+        <Covid19Display metadataObj={parseMetadata<Covid19FormMetadata>(event.eventMetadata).result} />
       )
       break
     case "Vitals":
-      display = <VitalsDisplay metadataObj={parseMetadata<VitalsMetadata>(event.eventMetadata)} />
+      display = <VitalsDisplay metadataObj={parseMetadata<VitalsMetadata>(event.eventMetadata).result} />
       break
     case "Examination Full":
     case "Examination":
-      display = <ExaminationDisplay metadataObj={parseMetadata<Examination>(event.eventMetadata)} />
+      display = <ExaminationDisplay metadataObj={parseMetadata<Examination>(event.eventMetadata).result} />
       break
     case "Medicine":
-      ; <MedicineDisplay metadataObj={parseMetadata<MedicineMetadata>(event.eventMetadata)} />
+      ; <MedicineDisplay metadataObj={parseMetadata<MedicineMetadata>(event.eventMetadata).result} />
       break
     case "Medical History Full":
       display = (
         <MedicalHistoryDisplay
-          metadataObj={parseMetadata<MedicalHistoryMetadata>(event.eventMetadata)}
+          metadataObj={parseMetadata<MedicalHistoryMetadata>(event.eventMetadata).result}
         />
       )
       break
     case "Physiotherapy":
       display = (
         <PhysiotherapyDisplay
-          metadataObj={parseMetadata<PhysiotherapyMetadata>(event.eventMetadata)}
+          metadataObj={parseMetadata<PhysiotherapyMetadata>(event.eventMetadata).result}
         />
       )
       break
     default:
       display = (
-        <Text>{JSON.stringify(parseMetadata<string>(event.eventMetadata) || "", null, 2)}</Text>
+        <Text>{JSON.stringify(parseMetadata<string>(event.eventMetadata).result || "", null, 2)}</Text>
       )
       break
   }
@@ -209,7 +211,8 @@ export function getEventDisplay(event: Event) {
 
 export function getEventDisplayPrint(event: Event) {
   let display
-  const parsedMetadata = parseMetadata<string>(event.eventMetadata)
+  const { result: parsedMetadata, error } = parseMetadata<string>(event.eventMetadata)
+  if (error) console.error(error)
   console.warn(typeof parsedMetadata)
   if (typeof parsedMetadata === "object") {
     // For each key in the object, show the key and the value
@@ -233,8 +236,8 @@ export function getEventDisplayPrint(event: Event) {
                       </div>
                     `
             })}
-                </div>
-              `
+                    </div>
+                  `
           } else {
             return `
                 <div style="flex-direction: row; align-items: center; paddingpvertical: 2;">

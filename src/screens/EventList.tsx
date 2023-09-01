@@ -7,24 +7,28 @@ import { RootStackParamList } from "../../App"
 import { Text } from "../components/Text"
 import { Screen } from "../components/Screen"
 import EventModel from "../db/model/Event"
+import withObservables from '@nozbe/with-observables'
 import { translate } from "../i18n"
+import { compose } from 'recompose';
 import { Event, EventTypes } from "../types"
-import { Q } from "@nozbe/watermelondb"
+import { Database, Q } from "@nozbe/watermelondb"
 import { getEventDisplay } from "../components/EventFormDisplay"
 import { calculateAgeInYears } from "../utils/dateUtils"
 import { deleteEvent } from "../db/api"
 import { primary } from "../styles/colors"
+import { withDatabase } from "@nozbe/watermelondb/DatabaseProvider"
+import VisitModel from "../db/model/Visit"
+import database from "../db"
 
 type Props = NativeStackScreenProps<RootStackParamList, "EventList">
 
-export function EventList(props: Props) {
+
+export const EventList = function(props: Props & { events: Event[] }) {
   const { navigation, route } = props
   const { visit, patient, providerId } = route.params
   const [updateCount, setUpdateCount] = useState(0)
 
   const [eventsList, setEventsList] = useState<Event[]>([])
-
-  const database = useDatabase()
 
   useEffect(() => {
     const eventSub = database
@@ -159,23 +163,14 @@ export function EventList(props: Props) {
       hour12: true,
     })
 
-    return (
-      <TouchableOpacity style={{ paddingVertical: 8 }} onLongPress={() => openEventOptions(item, onUpdate)}>
-        <View style={{}}>
-          <View style={{ margin: 10 }}>
-            <Text variant="bodyLarge">{`${item.eventType}, ${time}`}</Text>
-            <View
-              style={{
-                marginVertical: 5,
-                borderBottomColor: "black",
-                borderBottomWidth: 1,
-              }}
-            />
-            {display}
-          </View>
-        </View>
-      </TouchableOpacity>
-    )
+
+    return <EventListItem
+      display={display}
+      event={item}
+      time={time}
+      openEventOptions={openEventOptions}
+      onUpdate={onUpdate}
+    />
   }
 
   return (
@@ -192,6 +187,39 @@ export function EventList(props: Props) {
     </>
   )
 }
+
+
+const enhanceEvent = withObservables(['event'], ({ event }) => ({
+  event// shortcut syntax for `event: event.observe()`
+}))
+
+type EventListItemProps = {
+  display: string,
+  event: Event,
+  time: string,
+  openEventOptions: (event: Event, onUpdate: () => void) => void,
+  onUpdate: () => void
+}
+
+const EventListItem = enhanceEvent(({ display, event, time, openEventOptions, onUpdate }: EventListItemProps) => {
+  return (
+    <TouchableOpacity style={{ paddingVertical: 8 }} onLongPress={() => openEventOptions(event, onUpdate)}>
+      <View style={{}}>
+        <View style={{ margin: 10 }}>
+          <Text variant="bodyLarge">{`${event.eventType}, ${time}`}</Text>
+          <View
+            style={{
+              marginVertical: 5,
+              borderBottomColor: "black",
+              borderBottomWidth: 1,
+            }}
+          />
+          {display}
+        </View>
+      </View>
+    </TouchableOpacity>
+  )
+})
 
 const $screen: ViewStyle = {}
 

@@ -39,7 +39,7 @@ const patientSchema = tableSchema({
     { name: "camp", type: "string", isOptional: true },
     { name: "image_timestamp", type: "number" },
     { name: "is_deleted", type: "boolean" }, // is stored as integer in old deployment
-    { name: "deleted_at", type: "number" },
+    { name: "deleted_at", type: "number", isOptional: true },
     { name: "created_at", type: "number" },
     { name: "updated_at", type: "number" },
   ],
@@ -57,7 +57,7 @@ const userSchema = tableSchema({
     { name: "created_at", type: "number" },
     { name: "updated_at", type: "number" },
     { name: "is_deleted", type: "boolean" },
-    { name: "deleted_at", type: "number" },
+    { name: "deleted_at", type: "number", isOptional: true },
   ],
 })
 
@@ -68,11 +68,11 @@ const clinicSchema = tableSchema({
     { name: "updated_at", type: "number" },
     { name: "created_at", type: "number" },
     { name: "is_deleted", type: "boolean" },
-    { name: "deleted_at", type: "number" },
+    { name: "deleted_at", type: "number", isOptional: true },
   ],
 })
 
-// 'CREATE TABLE IF NOT EXISTS events (id varchar(32) PRIMARY KEY, patient_id varchar(32) REFERENCES patients(id) ON DELETE CASCADE, visit_id varchar(32) REFERENCES visits(id) ON DELETE CASCADE, event_type text, event_timestamp text, updated_at text, event_metadata text, deleted integer DEFAULT 0);',
+
 const eventSchema = tableSchema({
   name: "events",
   columns: [
@@ -81,23 +81,13 @@ const eventSchema = tableSchema({
     { name: "event_type", type: "string" },
     { name: "event_metadata", type: "string" },
     { name: "is_deleted", type: "boolean" },
-    { name: "deleted_at", type: "number" },
+    { name: "deleted_at", type: "number", isOptional: true },
     { name: "created_at", type: "number" },
     { name: "updated_at", type: "number" },
   ],
 })
 
 
-/* CREATE TABLE event_forms (
-            id uuid PRIMARY KEY,
-            name TEXT,
-            description TEXT,
-            language TEXT NOT NULL default 'en',
-            metadata JSONB NOT NULL DEFAULT '{}',
-            created_at timestamp with time zone default now(),
-            updated_at timestamp with time zone default now()
-        );
-*/
 const eventFormSchema = tableSchema({
   name: "event_forms",
   columns: [
@@ -108,7 +98,7 @@ const eventFormSchema = tableSchema({
     { name: "is_snapshot_form", type: "boolean" },
     { name: "metadata", type: "string" },
     { name: "is_deleted", type: "boolean" },
-    { name: "deleted_at", type: "number" },
+    { name: "deleted_at", type: "number", isOptional: true },
     { name: "created_at", type: "number" },
     { name: "updated_at", type: "number" },
   ]
@@ -126,7 +116,7 @@ const visitSchema = tableSchema({
     { name: "check_in_timestamp", type: "number" },
     { name: "metadata", type: "string" },
     { name: "is_deleted", type: "boolean" },
-    { name: "deleted_at", type: "number" },
+    { name: "deleted_at", type: "number", isOptional: true },
     { name: "created_at", type: "number" },
     { name: "updated_at", type: "number" },
   ],

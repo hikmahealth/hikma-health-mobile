@@ -1,15 +1,12 @@
 import { useState, useEffect } from "react"
-import { useDatabase } from "@nozbe/watermelondb/hooks"
-import { omit } from "lodash"
-import { Alert, View, ViewStyle } from "react-native"
+import { View } from "react-native"
 import { useNavigation } from "@react-navigation/native"
-import { TextInput } from "react-native-paper"
 import { Text } from "../components/Text"
-import { Button } from "../components/Button"
 import { Screen } from "../components/Screen"
 import PatientModel from "../db/model/Patient"
 import { differenceInYears } from "date-fns"
 import { translate } from "../i18n"
+import database from "../db"
 
 type AgeGroup =
   | "0-1"
@@ -143,7 +140,6 @@ export function SummaryStats() {
   const [report, setReport] = useState<Report>(initializeReport())
   const [loadingReport, setLoadingReport] = useState(true)
 
-  const database = useDatabase()
 
   console.log(navigation.isFocused())
 
@@ -158,7 +154,7 @@ export function SummaryStats() {
             initializeReport(),
           )
 
-          setReport({...result})
+          setReport({ ...result })
           setLoadingReport(false)
         })
       })
