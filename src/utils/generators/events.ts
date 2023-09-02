@@ -94,7 +94,7 @@ export const generateEvent = (patientId: string, visitId: string, doctor?: strin
     patientId,
     visitId,
     eventType,
-    eventMetadata: JSON.stringify(eventMetadata),
+    eventMetadata: eventMetadata,
     isDeleted: false,
     createdAt: new Date(),
     updatedAt: new Date(),

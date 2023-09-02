@@ -36,12 +36,12 @@ export function ExaminationForm(props: Props) {
       patientId: patientId,
       visitId,
       eventType: "Examination",
-      eventMetadata: JSON.stringify({
+      eventMetadata: {
         ...data,
         // The radio options work with string versions of the booleans so we are convertin into appropriate format
         covid19: JSON.parse(data.covid19 as unknown as string),
         referral: JSON.parse(data.referral as unknown as string),
-      }),
+      },
     } as unknown as Event)
       .then((res) => {
         navigation.goBack()

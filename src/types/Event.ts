@@ -27,7 +27,7 @@ export type Event = {
   patientId: string
   visitId: string
   eventType: EventTypes
-  eventMetadata: string
+  eventMetadata: Record<any, any>// string
   isDeleted: boolean
   createdAt: Date
   updatedAt: Date

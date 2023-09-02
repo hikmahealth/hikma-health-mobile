@@ -148,13 +148,13 @@ export function Covid19Form(props: Props) {
       visitId,
       isDeleted: false,
       eventType: "COVID-19 Screening",
-      eventMetadata: JSON.stringify({
+      eventMetadata: {
         ...Object.fromEntries(syMap),
         ...Object.fromEntries(rfMap),
         age: patientAge,
         seekCare: emergencyResult,
         testAndIsolate: testAndIsolate,
-      }),
+      },
     })
       .then((res) => {
         navigation.goBack()

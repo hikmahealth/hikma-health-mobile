@@ -9,7 +9,8 @@
     "start": "react-native start",
     "format": "prettier --write \"src/**/*.{js,jsx,json,md,ts,tsx}\"",
     "test": "jest",
-    "export-translation-csv": "npx ts-node scripts/convertEnToCSV.ts"
+    "export-translation-csv": "npx ts-node scripts/convertEnToCSV.ts",
+    "type-check": "tsc"
   },
   "dependencies": {
     "@nozbe/watermelondb": "^0.26.0",

@@ -18,17 +18,9 @@ const stringContentSchema = tableSchema({
   ],
 })
 
-// TODO: There is an index??
-// 'CREATE UNIQUE INDEX IF NOT EXISTS string_content_id_language_udx ON string_content (id, language);'
-
-//  'CREATE TABLE IF NOT EXISTS patients (id varchar(32) PRIMARY KEY, given_name varchar(32) REFERENCES string_ids(id) ON DELETE CASCADE, surname varchar(32) REFERENCES string_ids(id) ON DELETE CASCADE, date_of_birth varchar(10), country varchar(32) REFERENCES string_ids(id), hometown varchar(32) REFERENCES string_ids(id) ON DELETE CASCADE, section varchar(32) REFERENCES string_ids(id) ON DELETE CASCADE, serial_number text, registered_by_provider_id text, phone text, sex varchar(1), image_timestamp text, updated_at text, deleted integer DEFAULT 0);',
 const patientSchema = tableSchema({
   name: "patients",
   columns: [
-    // {
-    //   name: 'id',
-    //   type: 'string',
-    // },
     { name: "given_name", type: "string" },
     { name: "surname", type: "string" },
     { name: "date_of_birth", type: "string" }, // this is left as a string to better support the YYYY-MM-DD format
@@ -45,7 +37,6 @@ const patientSchema = tableSchema({
   ],
 })
 
-// 'CREATE TABLE IF NOT EXISTS users (id varchar(32) PRIMARY KEY, name varchar(32) REFERENCES string_ids(id) ON DELETE CASCADE, role text not null, email text not null, hashed_password text not null, instance_url text, updated_at text, deleted integer DEFAULT 0);',
 const userSchema = tableSchema({
   name: "users",
   columns: [
@@ -105,7 +96,6 @@ const eventFormSchema = tableSchema({
 })
 
 
-// 'CREATE TABLE IF NOT EXISTS visits (id varchar(32) PRIMARY KEY, patient_id varchar(32) REFERENCES patients(id) ON DELETE CASCADE, clinic_id varchar(32) REFERENCES clinics(id) ON DELETE CASCADE, provider_id varchar(32) REFERENCES users(id) ON DELETE CASCADE, check_in_timestamp text, updated_at text, deleted integer DEFAULT 0);',
 const visitSchema = tableSchema({
   name: "visits",
   columns: [
@@ -123,7 +113,7 @@ const visitSchema = tableSchema({
 })
 
 export default appSchema({
-  version: 1,
+  version: 1, // 🔥 when migrating dont forget to change this number
   tables: [
     stringIdSchema,
     stringContentSchema,
@@ -136,9 +126,7 @@ export default appSchema({
   ],
 })
 
-// TODO: Verify whether or not it is possible to create a new record with an id in the schema
-
-// CHANGES:
+// CHANGES: FOR USERS MIGRATING FROM V1 to V2
 // 1. deleted field changed to is_deleted and its datatype from integet to boolean
 // 2. all dates, other than date of birth, have changed to type number
 // 2.a the dates that were in ISO format are now UNIX timestamps

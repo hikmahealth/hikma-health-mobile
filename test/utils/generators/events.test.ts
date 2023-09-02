@@ -1,5 +1,5 @@
-import {generateEvents} from '../../../src/utils/generators/events';
-import {Event} from '../../../src/types';
+import { generateEvents } from '../../../src/utils/generators/events';
+import { Event } from '../../../src/types';
 
 describe('generateEvents', () => {
   it('should generate an array of events', () => {
@@ -10,7 +10,7 @@ describe('generateEvents', () => {
       visitId: 'visitId',
       id: expect.any(String),
       eventType: expect.any(String),
-      eventMetadata: expect.any(String),
+      eventMetadata: expect.any(Object),
       isDeleted: false,
       createdAt: expect.any(Date),
       updatedAt: expect.any(Date),

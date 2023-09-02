@@ -1,7 +1,6 @@
 import { useContext } from "react"
-import { ImageStyle, useColorScheme, ViewStyle, Image, TextStyle } from "react-native"
+import { ImageStyle, useColorScheme, ViewStyle, Image, TextStyle, View, Alert, ToastAndroid } from "react-native"
 import { hasUnsyncedChanges } from "@nozbe/watermelondb/sync"
-import { View, Alert, ToastAndroid } from "react-native"
 import {
   DrawerContentScrollView,
   DrawerItem,

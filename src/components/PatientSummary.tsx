@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react"
 import { Alert, TextStyle, View, ViewStyle } from "react-native"
 import { Button, IconButton, MD3Colors, TextInput } from "react-native-paper"
-import Icon from "react-native-vector-icons/MaterialCommunityIcons"
 import { Text } from "./Text"
-import { If } from "./If.tsx"
+import { If } from "./If"
 import { getLatestPatientEventByType, createEvent, createVisit } from "../db/api"
 import { translate } from "../i18n"
 import { useProviderStore } from "../stores/provider"
@@ -23,7 +22,7 @@ export const PatientSummary = ({ patientId }: Props) => {
   const fetchPatientData = async () => {
     const latestEvent = await getLatestPatientEventByType(patientId, "Patient Summary")
 
-    if (latestEvent.length > 0) setPatientSummary(latestEvent)
+    if (latestEvent.summary) setPatientSummary(latestEvent.summary)
   }
 
   const savePatientSummary = async () => {
@@ -33,8 +32,10 @@ export const PatientSummary = ({ patientId }: Props) => {
       const visit = await createVisit({
         patientId,
         checkInTimestamp: new Date().getTime(),
+        providerName: provider.name,
         clinicId: clinic?.id,
         providerId: provider?.id,
+        metadata: {},
         isDeleted: false,
       })
       await createEvent({
@@ -42,7 +43,9 @@ export const PatientSummary = ({ patientId }: Props) => {
         visitId: visit.id,
         eventType: "Patient Summary",
         isDeleted: false,
-        eventMetadata: JSON.stringify(patientSummary),
+        eventMetadata: {
+          summary: patientSummary,
+        }
       })
       setViewMode("view")
     } catch (error) {

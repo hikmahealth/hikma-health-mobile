@@ -38,7 +38,7 @@ export function MedicalHistoryForm(props: Props) {
       patientId: patientId,
       visitId: visitId,
       isDeleted: false,
-      eventMetadata: JSON.stringify(data),
+      eventMetadata: data,
     } as unknown as Event)
       .then((res) => {
         navigation.goBack()

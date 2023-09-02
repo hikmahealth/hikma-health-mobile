@@ -4,11 +4,11 @@ import { useForm, SubmitHandler, FormProvider } from "react-hook-form"
 import { View, ViewStyle } from "react-native"
 import { HorizontalRadioGroup } from "../components/HorizontalRadioGroup"
 import { If } from "../components/If"
-import {Screen} from "../components/Screen"
-import {Text} from "../components/Text"
-import {ControlledTextField} from "../components/ControlledTextField"
-import {ControlledRadioGroup} from "../components/ControlledRadioGroup"
-import {Button} from "../components/Button"
+import { Screen } from "../components/Screen"
+import { Text } from "../components/Text"
+import { ControlledTextField } from "../components/ControlledTextField"
+import { ControlledRadioGroup } from "../components/ControlledRadioGroup"
+import { Button } from "../components/Button"
 import { createEvent, getLatestPatientEventByType } from "../db/api"
 import { translate } from "../i18n"
 import { PatientFlowParamList } from "../navigators/PatientFlowNavigator"
@@ -57,8 +57,8 @@ export const PhysiotherapyForm = (props: Props) => {
     // Load the most recent Physiotherapy event for this patient and visit
     getLatestPatientEventByType(patientId, "Physiotherapy")
       .then((res) => {
-        if (res !== null && res !== "") {
-          formMethods.reset(JSON.parse(res))
+        if (res) {
+          formMethods.reset(res)
         }
       })
       .catch((error) => {
@@ -72,7 +72,7 @@ export const PhysiotherapyForm = (props: Props) => {
       patientId: patientId,
       visitId: visitId,
       isDeleted: false,
-      eventMetadata: JSON.stringify(data),
+      eventMetadata: data,
     })
       .then((res) => {
         navigation.goBack()

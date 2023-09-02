@@ -137,20 +137,13 @@ export function PatientView(props: Props) {
 
 
   const downloadFile = async (patient: Patient, summary = translate("noContent")) => {
-    let options = {
-      html: '<h1>Patient Report</h1>',
-      fileName: 'test',
-      directory: 'Documents',
-    };
-
     const latestSummaryEvent = await getLatestPatientEventByType(patient.id, "Patient Summary")
     const latestVitalsEvent = await getLatestPatientEventByType(patient.id, "Vitals")
 
-      console.log(latestVitalsEvent, typeof latestVitalsEvent === "object", Object.keys(latestVitalsEvent).length > 0)
     var height = translate("noContent")
     var weight = translate("noContent")
 
-    if (latestVitalsEvent.length > 0 || (typeof latestVitalsEvent === "object" && Object.keys(latestVitalsEvent).length > 0)) {
+    if (latestVitalsEvent && Object.keys(latestVitalsEvent).length > 0) {
       const vitalsTaken = Object.keys(latestVitalsEvent)
 
       vitalsTaken.forEach(vital => {
@@ -162,7 +155,7 @@ export function PatientView(props: Props) {
       })
     }
 
-    printHTML(patient, latestSummaryEvent.length > 0 ? latestSummaryEvent : summary, height, weight)
+    printHTML(patient, latestSummaryEvent.summary?.length > 0 ? latestSummaryEvent.summary : summary, height, weight)
 
   }
 
@@ -243,14 +236,14 @@ export function PatientView(props: Props) {
 
 
           <div>
-            <h3 class='mb-0'>Patient Summary</h3>
+            <h3 class='mb-0'>${translate("patientSummary")}</h3>
             ${summary}
           </div>
         </div>
 
 
         <div>
-            <h3>Patient Visits List</h3>
+            <h3>${translate("visitHistory")}</h3>
             ${visitsList}
         </div>
 
@@ -421,7 +414,7 @@ const PatientFileSummary = ({
           </Button>
         </View>
         <Text>{`${translate("dob")}: ${localeDate(new Date(patient.dateOfBirth), "yyyy MMM dd", {})}`}</Text>
-        <Text>{`${translate("sex")}: ${translate(patient.sex)}`}</Text>
+        <Text>{`${translate("sex")}: ${translate(patient.sex as "male" | "female")}`}</Text>
         <Text>{`${translate("camp")}: ${patient.camp || ""}`}</Text>
         <PatientSummary patientId={patient.id} />
 

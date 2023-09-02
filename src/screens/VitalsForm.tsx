@@ -45,7 +45,7 @@ export function VitalsForm(props: Props) {
       visitId,
       isDeleted: false,
       eventType: "Vitals",
-      eventMetadata: JSON.stringify(data),
+      eventMetadata: data,
     })
       .then((res) => {
         navigation.goBack()

@@ -57,7 +57,7 @@ export function EventFormScreen(props: Props) {
   useEffect(() => {
     console.log({ formData })
     if (formData) {
-      const {result: parsedMetadata, error} = parseMetadata(JSON.parse(formData)?.event_metadata)
+      const { result: parsedMetadata, error } = parseMetadata(JSON.parse(formData)?.event_metadata)
       if (error) {
         // the metadata could not be parsed
         console.error(error)
@@ -155,7 +155,7 @@ export function EventFormScreen(props: Props) {
 
     if (formData && JSON.parse(formData).id) {
       return updateEvent(JSON.parse(formData).id, {
-        eventMetadata: JSON.stringify(data)
+        eventMetadata: data
       }).then(res => navigation.goBack({ refresh: true })).catch(err => console.error(err)).finally(() => { setLoading(false); onUpdate && onUpdate() })
     }
     createEvent({

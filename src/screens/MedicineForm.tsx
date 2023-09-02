@@ -67,10 +67,10 @@ export function MedicineForm(props: Props) {
       visitId,
       isDeleted: false,
       eventType: "Medicine",
-      eventMetadata: JSON.stringify({
+      eventMetadata: {
         ...data,
         days: Number(data.days),
-      }),
+      },
     })
       .then((res) => {
         navigation.goBack()
