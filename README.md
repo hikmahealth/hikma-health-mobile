@@ -1,5 +1,5 @@
-<p align="center">
-<img src="https://drive.google.com/file/d/1zQgr6td283xH2xDEvg70oyCHH_1TJzbx/view?usp=sharing" alt="Hikma Health" />
+<p align="centr">
+<img src="https://images.squarespace-cdn.com/content/5cc0e57236f8e70001651ea6/1599789508819-NGZXYWJDQRCULLU94QEJ/hikma-hb.png?format=300w&content-type=image/png" alt="Hikma Health" />
 </p>
 
 
