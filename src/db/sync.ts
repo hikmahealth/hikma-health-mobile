@@ -1,4 +1,4 @@
-import { hasUnsyncedChanges, SyncDatabaseChangeSet, synchronize, SyncTableChangeSet } from "@nozbe/watermelondb/sync"
+import { hasUnsyncedChanges, SyncDatabaseChangeSet, synchronize, SyncTableChangeSet, Timestamp } from "@nozbe/watermelondb/sync"
 import database from "."
 import { HIKMA_API } from "@env"
 import { Alert } from "react-native"
@@ -6,6 +6,7 @@ import { interpret } from "xstate"
 import { syncMachine } from "../components/state_machines/sync"
 import EncryptedStorage from "react-native-encrypted-storage"
 import { cloneDeep } from "lodash"
+import { symbolObservable } from "xstate/lib/utils"
 
 global.Buffer = require('buffer').Buffer;
 
@@ -18,8 +19,6 @@ export async function syncDB(syncService: typeof syncServiceT, hasLocalChangesTo
   const email = await EncryptedStorage.getItem("provider_email");
   const password = await EncryptedStorage.getItem("provider_password");
 
-  console.log(email, password)
-
   const buffer = Buffer.from(`${email}:${password}`);
   const encodedUsernameAndPassword = buffer.toString('base64');
 
@@ -30,8 +29,6 @@ export async function syncDB(syncService: typeof syncServiceT, hasLocalChangesTo
     database,
     sendCreatedAsUpdated: false,
     pullChanges: async ({ lastPulledAt, schemaVersion, migration }) => {
-      // const hasRecordsToUpload = await hasUnsyncedChanges({database});
-      // console.warn({hasRecordsToUpload});
       const urlParams = `last_pulled_at=${lastPulledAt}&schema_version=${schemaVersion}&migration=${encodeURIComponent(
         JSON.stringify(migration),
       )}`
@@ -39,106 +36,74 @@ export async function syncDB(syncService: typeof syncServiceT, hasLocalChangesTo
       // Update the global state tracking sync progression
       syncService.send("FETCH")
 
-      const response = await fetch(`${SYNC_API}?${urlParams}`, {
-        // Headers include the username and password in base64 encoded string
-        headers: headers
-      })
 
-      console.log({ response: response })
+      let changes: SyncDatabaseChangeSet = {};
+      let timestamp: Timestamp = 0;
 
-      if (!response.ok) {
-        syncService.send("COMPLETED")
-        throw new Error(await response.text())
+      try {
+        const response = await fetch(`${SYNC_API}?${urlParams}`, {
+          // Headers include the username and password in base64 encoded string
+          headers: headers
+        })
+
+        console.log({ response: response })
+
+        if (!response.ok) {
+          syncService.send("COMPLETED")
+          throw new Error(await response.text())
+        }
+
+        // changes object looks something like this
+        // changes: {
+        //   events: {
+        //     created: [{id: "", created_at: "", updatedAt: ""}],
+        //     updated: [],
+        //     deleted: []
+        //   }
+        //   patients: { ... }
+        //   ....
+        // }
+        const syncPullResult = await response.json() as { changes: SyncDatabaseChangeSet; timestamp: Timestamp }
+        changes = syncPullResult.changes;
+        timestamp = syncPullResult.timestamp;
+
+        updateDates(changes)
+
+        const newRecordsToChange = countRecordsInChanges(changes)
+        syncService.send({
+          type: "RESOLVE_CONFLICTS",
+          downloadedRecords: newRecordsToChange,
+        })
+
+
+        /** 
+         * If there are some changes that need to be synced from the local database, wait
+         * a bit so that the alert modal is still showing the user giving them time to see the number of
+         * changes before the modal disappears
+         * ALTERNATIVE: track this and react to it somewhere outside the sync functions
+        */
+        if (!hasLocalChangesToPush) {
+          setTimeout(
+            () =>
+              syncService.send({
+                type: "COMPLETED",
+                downloadedRecords: newRecordsToChange,
+              }),
+            2_500,
+          )
+        }
+      } catch (error) {
+        console.error(error)
+        syncService.send({
+          type: "ERROR",
+          downloadedRecords: 0,
+        })
+      } finally {
+        return { changes, timestamp }
       }
-
-      // changes: {
-      //   events: {
-      //     created: [{id: "", created_at: "", updatedAt: ""}],
-      //     updated: [],
-      //     deleted: []
-      //   }
-      // }
-
-      const { changes, timestamp } = await response.json()
-      // loop through the changes object and for every event convert the string date into a js Date object
-      // changes.events?.created.forEach((event) => {
-      //   event.created_at = new Date(event.created_at).getTime()
-      //   event.updated_at = new Date(event.updated_at).getTime()
-      // })
-      // changes.events?.updated.forEach((event) => {
-      //   event.created_at = new Date(event.created_at).getTime()
-      //   event.updated_at = new Date(event.updated_at).getTime()
-      // })
-
-      // // do the same for the visits
-      // changes.visits?.created.forEach((visit) => {
-      //   visit.created_at = new Date(visit.created_at).getTime()
-      //   visit.updated_at = new Date(visit.updated_at).getTime()
-      // })
-      // changes.visits?.updated.forEach((visit) => {
-      //   visit.created_at = new Date(visit.created_at).getTime()
-      //   visit.updated_at = new Date(visit.updated_at).getTime()
-      // })
-
-      // // do the same for the patients
-      // changes.patients?.created.forEach((patient) => {
-      //   patient.created_at = new Date(patient.created_at).getTime()
-      //   patient.updated_at = new Date(patient.updated_at).getTime()
-      // })
-      // changes.visits?.updated.forEach((patient) => {
-      //   patient.created_at = new Date(patient.created_at).getTime()
-      //   patient.updated_at = new Date(patient.updated_at).getTime()
-      // })
-
-      // // do the same for event_forms
-      // changes.event_forms?.created.forEach((eventForm) => {
-      //   eventForm.created_at = new Date(eventForm.created_at).getTime()
-      //   eventForm.updated_at = new Date(eventForm.updated_at).getTime()
-      //   if (eventForm.metadata && typeof eventForm.metadata !== "string") {
-      //     eventForm.metadata = JSON.stringify(eventForm.metadata)
-      //   }
-      // })
-      // changes.event_forms?.updated.forEach((eventForm) => {
-      //   eventForm.created_at = new Date(eventForm.created_at).getTime()
-      //   eventForm.updated_at = new Date(eventForm.updated_at).getTime()
-      // })
-      updateDates(changes)
-      console.log(JSON.stringify(changes, null, 2))
-
-
-      const newRecordsToChange = countRecordsInChanges(changes)
-      syncService.send({
-        type: "RESOLVE_CONFLICTS",
-        downloadedRecords: newRecordsToChange,
-      })
-      // syncService.send({
-      //   type: 'downloaded records loaded',
-      //   downloadedRecords: newRecordsToChange.length,
-      // });
-      // syncService.send('COMPLETED');
-
-      if (!hasLocalChangesToPush) {
-        setTimeout(
-          () =>
-            syncService.send({
-              type: "COMPLETED",
-              downloadedRecords: newRecordsToChange,
-            }),
-          2_500,
-        )
-      }
-
-      console.log("after")
-      // console.log({FORMS: JSON.stringify(changes.event_forms.created, null, 2)})
-
-      // Remove the last
-
-      // const datedChanges = changes
-      // console.warn({changes, timestamp});
-      return { changes, timestamp }
     },
     pushChanges: async ({ changes, lastPulledAt }) => {
-      // record timestamp at begining of push
+      // record timestamp at begining of push (uncomment if tracking duration of pushing data to server)
       // const timestamp = Date.now()
       syncService.send({
         type: "UPLOAD",
@@ -153,7 +118,7 @@ export async function syncDB(syncService: typeof syncServiceT, hasLocalChangesTo
         },
       })
 
-      // calculate how long it took to push
+      // calculate how long it took to push (uncomment if tracking duration of pushing data to the server)
       // const timeToPush = (Date.now() - timestamp) / 1000
       syncService.send({ type: "COMPLETED" })
       if (!response.ok) {
@@ -196,7 +161,16 @@ function updateDates(changes: SyncDatabaseChangeSet) {
 }
 
 
-const countRecordsInChanges = (changes: { [key: string]: [] }) =>
-  Object.values(changes)
-    .flatMap((b) => Object.values(b))
-    .flat().length
+/**
+Count the number of records inside a changeset
+@param {SyncDatabaseChangeSet} changes
+@returns {number} count of records in changeset
+*/
+const countRecordsInChanges = (changes: SyncDatabaseChangeSet): number => {
+  let result = 0;
+  for (const tableName in changes) {
+    const { created, updated, deleted } = changes[tableName]
+    result = result + created.length + updated.length + deleted.length
+  }
+  return result
+}
