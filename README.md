@@ -2,7 +2,6 @@
 <img src="https://images.squarespace-cdn.com/content/5cc0e57236f8e70001651ea6/1599789508819-NGZXYWJDQRCULLU94QEJ/hikma-hb.png?format=300w&content-type=image/png" alt="Hikma Health" />
 </p>
 
-
 # Hikma Health Mobile Application
 The Hikma Health platform is a mobile electronic health record system designed for organizations working in low-resource settings to collect and access patient health information. The repository contains the mobile application (Android tested, iOS support can be includes) that supports offline functionality, thousands of patients and multiple languages including Arabic, Spanish, and English. Other languages can be added trivially.
 
@@ -82,6 +81,18 @@ Hikma Health mobile application is built on the open source community, key techn
 - Cross platform (Android tested, iOS can be added)
 - Easily extendable
 - Supports custom workflows and forms
+
+## Screenshots
+
+<div style="display: flex">
+  <img src="https://drive.google.com/uc?export=view&id=1kwDc9YuXC27DI8jnbvcHwr6EWMENDfRU" style="width: 200px; height:auto;" alt="Hikma Health" />
+  <img src="https://drive.google.com/uc?export=view&id=1jGzP4cVkfg42sbCTwD69IZmNpsIa0vDA" style="width: 200px; height:auto;" alt="Hikma Health" />
+  <img src="https://drive.google.com/uc?export=view&id=1UYK1wHHnNtT1KInZ9Nv53dKTDS1ZlqOr" style="width: 200px; height:auto" alt="Hikma Health" />
+  <img src="https://drive.google.com/uc?export=view&id=13HntluH8zTokKSFvaMeqHmlGjBvjZWnT" style="width: 200px; height:auto" alt="Hikma Health" />
+  <img src="https://drive.google.com/uc?export=view&id=10-ihEwudiCo_ozOa_5TlRtVaL-jdhaLR" style="width: 200px; height:auto;" alt="Hikma Health" />
+  <img src="https://drive.google.com/uc?export=view&id=1Xcu6_-3cHqRTLfhuiFZmxeSvApd4tEEK" style="width: 200px; height:auto" alt="Hikma Health" />
+</div>
+
 
 ## FAQ
 
