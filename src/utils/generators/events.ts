@@ -15,6 +15,7 @@ type EventMetadata =
   | MedicineMetadata
   | MedicalHistoryMetadata
   | Covid19FormMetadata
+  | Record<string, any> // Support for dynamic data from created forms on the admin dashboard
   | string
 
 const generateMedicineMetadata = (doctor?: string): MedicineMetadata => ({
@@ -79,7 +80,7 @@ const generateEventAndMetadata = (doctor?: string): [EventTypes, EventMetadata] 
     case "Medicine":
       return [eventType, generateMedicineMetadata(doctor)]
     case "Complaint":
-      return [eventType, faker.lorem.sentence()]
+      return [eventType, {}]
     default:
       // @ts-ignore
       return [eventType, { doctor: doctor || faker.name.fullName }]

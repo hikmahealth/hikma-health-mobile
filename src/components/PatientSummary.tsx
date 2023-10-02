@@ -72,6 +72,7 @@ export const PatientSummary = ({ patientId }: Props) => {
         {viewMode === "view" ? (
           <IconButton
             onPress={toggleViewMode("edit")}
+            testID="edit"
             icon={"pencil"}
             size={20}
             iconColor={MD3Colors.primary20}
@@ -80,6 +81,7 @@ export const PatientSummary = ({ patientId }: Props) => {
           <IconButton
             onPress={toggleViewMode("view")}
             icon={"close"}
+            testID="close"
             size={20}
             iconColor={MD3Colors.primary20}
           />

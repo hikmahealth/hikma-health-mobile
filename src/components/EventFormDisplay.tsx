@@ -7,7 +7,6 @@ import { MedicalHistoryDisplay, MedicalHistoryMetadata } from "../screens/Medica
 import { MedicineDisplay, MedicineMetadata } from "../screens/Medicine"
 import { ExaminationDisplay } from "../screens/Examination"
 import { VitalsDisplay } from "../screens/VisitList"
-import { Covid19Display, Covid19FormMetadata } from "../screens/Covid19Form"
 import { Text } from "./Text"
 import { Event, Examination } from "../types"
 import { translate } from "../i18n"
@@ -169,11 +168,6 @@ export function getEventDisplay(event: Event) {
   // LEFT behind for reference during transition period
 
   switch (event.eventType) {
-    case "COVID-19 Screening":
-      display = (
-        <Covid19Display metadataObj={parseMetadata<Covid19FormMetadata>(event.eventMetadata).result} />
-      )
-      break
     case "Vitals":
       display = <VitalsDisplay metadataObj={parseMetadata<VitalsMetadata>(event.eventMetadata).result} />
       break

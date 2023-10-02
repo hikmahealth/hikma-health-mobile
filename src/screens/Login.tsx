@@ -6,9 +6,8 @@ import EncryptedStorage from 'react-native-encrypted-storage';
 import { Text } from "../components/Text"
 import { Button } from "../components/Button"
 import { Screen } from "../components/Screen"
-
+import Config from "react-native-config";
 import { translate } from "../i18n"
-import { HIKMA_API } from "@env"
 import { useProviderStore } from "../stores/provider"
 import { useSyncStore } from "../stores/sync"
 import { syncDB } from "../db/sync"
@@ -18,6 +17,8 @@ import { useActor } from "@xstate/react"
 import database from "../db"
 import { hasUnsyncedChanges } from "@nozbe/watermelondb/sync"
 import LanguageToggle from "../components/LanguageToggle"
+
+const HIKMA_API = Config.HIKMA_API
 
 export default function Login() {
   const navigation = useNavigation()

@@ -1,6 +1,6 @@
 import { hasUnsyncedChanges, SyncDatabaseChangeSet, synchronize, SyncTableChangeSet, Timestamp } from "@nozbe/watermelondb/sync"
 import database from "."
-import { HIKMA_API } from "@env"
+import Config from "react-native-config";
 import { Alert } from "react-native"
 import { interpret } from "xstate"
 import { syncMachine } from "../components/state_machines/sync"
@@ -10,6 +10,7 @@ import { symbolObservable } from "xstate/lib/utils"
 
 global.Buffer = require('buffer').Buffer;
 
+const HIKMA_API = Config.HIKMA_API
 
 const SYNC_API = `${HIKMA_API}/api/v2/sync`
 

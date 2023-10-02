@@ -178,7 +178,7 @@ export function PatientView(props: Props) {
                 ${evs}
               </div>
             </div>`
-        
+
         }).join("")
         return `
           <div class="mb-38">
@@ -201,13 +201,13 @@ export function PatientView(props: Props) {
         html: `
       <div style="">
         <div class="flex justify-between wide">
-          <h1>Patient Medical Record</h1>
+          <h1>${translate("patientReport.patientMedicalRecord")}</h1>
           <img src=${logoStr} style="height: 40px; width: 40px;" />
         </div>
         <div class="patient-info-container" style="">
           <div class="flex">
             <div style="flex: 1">
-                <h3 class="mb-0">Patient Information</h3>
+                <h3 class="mb-0">${translate("patientReport.PatientInformation")}</h3>
                 ${patientFullName}
 
                 <br>
@@ -226,10 +226,10 @@ export function PatientView(props: Props) {
                 <h3 class="mb-0">${translate("dob")}</h3>
                 ${localeDate(new Date(patient.dateOfBirth), "MMMM dd yyyy", {})}
 
-                <h3 class="mb-0">Weight</h3>
+                <h3 class="mb-0">${translate("weight")}</h3>
                 ${weight}
 
-                <h3 class="mb-0">Height</h3>
+                <h3 class="mb-0">${translate("height")}</h3>
                 ${height}
             </div>
           </div>
@@ -419,7 +419,7 @@ const PatientFileSummary = ({
         <PatientSummary patientId={patient.id} />
 
         <Button icon="download" mode="text" onPress={() => downloadFile(patient)}>
-          {`Download Patient History`}
+          {translate("downloadPatientHistory")}
         </Button>
       </View>
     </View>

@@ -28,7 +28,7 @@ export function PatientListItem(props: PatientListItemProps) {
   }, [patient.id])
 
   return (
-    <TouchableOpacity style={$patientItemContainer} onPress={handlePatientSelected}>
+    <TouchableOpacity style={$patientItemContainer} testID="patientItem" onPress={handlePatientSelected}>
       <View style={[$cardContent, isRtl ? $rtlView : {}]}>
         <Avatar.Text
           style={{
@@ -47,12 +47,13 @@ export function PatientListItem(props: PatientListItemProps) {
             }}
           />
           <Text
+            testID="dob"
             style={{
               flexWrap: "wrap",
             }}
           >{`${translate("dob")}:  ${format(new Date(patient.dateOfBirth), "dd MMM yyyy")}`}</Text>
-          <Text>{`${translate("sex")}:  ${upperFirst(translate(patient.sex))}`}</Text>
-          <Text style={{ flexWrap: "wrap" }} >{`${translate("camp")}:  ${patient.camp}`}</Text>
+          <Text testID="sex">{`${translate("sex")}:  ${upperFirst(translate(patient.sex))}`}</Text>
+          <Text testID="camp" style={{ flexWrap: "wrap" }} >{`${translate("camp")}:  ${patient.camp}`}</Text>
           <Text>{localeDate(patient.createdAt, "MMM dd, yyyy", {})}</Text>
         </View>
       </View>

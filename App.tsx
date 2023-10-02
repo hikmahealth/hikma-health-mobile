@@ -9,50 +9,27 @@ import {
   MD3DarkTheme,
   MD3LightTheme,
   adaptNavigationTheme,
-  IconButton,
 } from "react-native-paper"
-import {
-  createDrawerNavigator,
-  DrawerContentScrollView,
-  DrawerItemList,
-  DrawerItem,
-} from "@react-navigation/drawer"
 import merge from "deepmerge"
 
 import {
   NavigationContainer,
   DarkTheme as NavigationDarkTheme,
   DefaultTheme as NavigationDefaultTheme,
-  DrawerActions,
-  StackActions,
 } from "@react-navigation/native"
 import Login from "./src/screens/Login"
 import { createNativeStackNavigator } from "@react-navigation/native-stack"
-import PatientList from "./src/screens/PatientList"
 import { Colors } from "react-native/Libraries/NewAppScreen"
-import Icon from "react-native-vector-icons/MaterialCommunityIcons"
-import { i18n, translate } from "./src/i18n"
-import NewPatient from "./src/screens/NewPatient"
 import database from "./src/db"
 import { Patient, Visit } from "./src/types"
 import { Event, EventTypes } from "./src/types/Event"
-import { VisitList } from "./src/screens/VisitList"
-import { EventList } from "./src/screens/EventList"
-import { MedicineForm } from "./src/screens/MedicineForm"
 import {
   SyncModal,
   GlobalServicesContextProvider,
-  GlobalServiceContext,
 } from "./src/components/SyncModal"
 import { useProviderStore } from "./src/stores/provider"
-import { primaryTheme } from "./src/styles/buttons"
-import { HeaderRight } from "./src/components/HeaderRight"
 import { getClinic } from "./src/db/api"
-import { Text } from "./src/components"
-import { useActor } from "@xstate/react"
-import { CustomDrawerContent } from "./src/components/CustomDrawerContent"
 import { RootNavigator } from "./src/navigators/RootDrawerNavigator"
-import { useLanguageStore } from "./src/stores/language"
 import { PrivacyPolicy } from "./src/screens/PrivacyPolicy"
 
 const { LightTheme, DarkTheme } = adaptNavigationTheme({

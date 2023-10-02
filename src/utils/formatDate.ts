@@ -38,7 +38,7 @@ const getLocale = (): Locale => {
 // };
 
 export function localeDate(date: Date, dateFormat: string = "MMM dd, yyyy", options: Options = {}): string {
-  console.log(getLocale())
+  // console.log(getLocale())
   return format(
     date,
     dateFormat,

@@ -4,7 +4,6 @@ import { Text } from "../components/Text"
 import { AppBarNav } from "../components/AppBarNav"
 import { CustomDrawerContent } from "../components/CustomDrawerContent"
 import { translate } from "../i18n"
-import { Covid19Form } from "../screens/Covid19Form"
 import { EventList } from "../screens/EventList"
 import { ExaminationForm } from "../screens/Examination"
 import { MedicalHistoryForm } from "../screens/MedicalHistoryForm"
@@ -17,7 +16,6 @@ import { PatientView } from "../screens/PatientView"
 import { PhysiotherapyForm } from "../screens/PhysiotherapyForm"
 import { SnapshotList } from "../screens/SnapshotList"
 import { VisitList } from "../screens/VisitList"
-import { VitalsForm } from "../screens/VitalsForm"
 import { EventFormScreen } from "../screens/EventForm"
 import { EventTypes, Patient, Visit } from "../types"
 import { DiagnosisPickerScreen } from "../screens/DiagnosisPicker"
@@ -64,7 +62,6 @@ export type PatientFlowParamList = {
   PhysiotherapyForm: VisitScreensProps
   Covid19Form: VisitScreensProps & { patientAge: number }
   OpenTextEvent: VisitScreensProps
-  VitalsForm: VisitScreensProps
   EventForm: VisitScreensProps & { formId: string, formData: JSONString | undefined, eventDate: number }
   DiagnosisPicker: undefined
   MedicationEditor: { medication: MedicationEntry }
@@ -154,13 +151,6 @@ export const PatientFlow = () => {
         component={MedicineForm}
       />
       <Stack.Screen
-        name="Covid19Form"
-        options={{
-          title: translate("covidScreening"),
-        }}
-        component={Covid19Form}
-      />
-      <Stack.Screen
         name="OpenTextEvent"
         options={({ route }) => ({
           title: route.params.eventType || "Open Text Event",
@@ -178,13 +168,6 @@ export const PatientFlow = () => {
           title: translate("physiotherapy"),
         }}
         component={PhysiotherapyForm}
-      />
-      <Stack.Screen
-        name="VitalsForm"
-        options={{
-          title: "Patient Vitals",
-        }}
-        component={VitalsForm}
       />
       <Stack.Screen
         name="EventForm"

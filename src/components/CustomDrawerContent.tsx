@@ -56,7 +56,7 @@ export function CustomDrawerContent(props: Props) {
       <DrawerContentScrollView {...props}>
         {/* <DrawerItemList {...props} /> */}
         <View style={$brandingContainer}>
-          <Image source={launchIcon} style={$launchIcon} resizeMode="contain" />
+          <Image testID="hikmaLogo" source={launchIcon} style={$launchIcon} resizeMode="contain" />
           <Text variant="titleLarge">HIKMA HEALTH</Text>
         </View>
 
@@ -86,6 +86,7 @@ export function CustomDrawerContent(props: Props) {
 
         <DrawerItem
           label={({ color, focused }) => <Text tx="drawer.sync" />}
+          testID="syncBtn"
           icon={({ focused, color, size }) => <Icon color={color} size={size} name={"refresh"} />}
           onPress={initSync}
         />
@@ -104,7 +105,7 @@ export function CustomDrawerContent(props: Props) {
         </View>
       </View>
       <Text variant="bodySmall" style={$versionText}>
-        V 2.3.5
+        V 2.3.7
       </Text>
     </>
   )

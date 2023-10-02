@@ -2,6 +2,11 @@
 import * as ReactNative from 'react-native';
 // import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
 import mockFile from './mockFile';
+import { create, createStore, storeResetFns } from './mockZustand';
+// @ts-ignore: no type information
+import mockSafeAreaContext from 'react-native-safe-area-context/jest/mock';
+
+jest.mock('react-native-safe-area-context', () => mockSafeAreaContext);
 
 // libraries to mock
 jest.doMock('react-native', () => {
@@ -37,8 +42,46 @@ jest.mock('i18n-js', () => ({
   },
 }));
 
+// Mock the useSafeAreaInsets hook
+// jest.mock('react-native-safe-area-context', () => ({
+//   useSafeAreaInsets: jest.fn(),
+// }));
+
 
 jest.mock('@nozbe/watermelondb/utils/common/randomId/randomId', () => { });
+
+
+// jest.mock("zustand", () => ({
+//   create,
+//   createStore
+// }))
+
+
+jest.mock('react-native-encrypted-storage', () => {
+  return {
+    setItem: jest.fn(() => Promise.resolve()),
+    getItem: jest.fn(() => Promise.resolve('{ "foo": 1 }')),
+    removeItem: jest.fn(() => Promise.resolve()),
+    clear: jest.fn(() => Promise.resolve()),
+  };
+});
+
+
+jest.mock('@xstate/react', () => {
+  const state = {
+    matches: jest.fn()
+  }
+  return {
+    useActor: jest.fn(() => [state, jest.fn()]),
+    useInterpret: jest.fn(),
+    useService: jest.fn(() => [
+      state, // This represents the state. You can adjust this mock value as needed.
+      jest.fn(), // This represents the send function.
+    ]),
+    useMachine: jest.fn(() => [state, jest.fn()])
+  }
+});
+
 
 
 // @ts-ignore

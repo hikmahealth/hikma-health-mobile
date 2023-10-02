@@ -92,26 +92,6 @@ export default function PatientList(props: Props) {
     }
   }, [currentPage])
 
-  const searchWithQuery = useCallback((query: string) => {
-    if (query.length > 0) {
-      setIsSearching(true)
-      database
-        .get<PatientModel>("patients")
-        .query(
-          // Q.skip(RESULTS_PER_PAGE * currentPage),
-          Q.where("given_name", Q.like(`${Q.sanitizeLikeString(query)}%`)),
-          Q.sortBy("created_at", Q.desc),
-          Q.take(50),
-        )
-        .fetch()
-        .then((patients: PatientModel[]) => {
-          // console.warn('sub');
-          setPatients(patients as unknown as Patient[])
-        })
-    } else {
-      setIsSearching(false)
-    }
-  }, [])
 
 
   const performSearch = useCallback((form: SearchForm) => {
@@ -119,7 +99,7 @@ export default function PatientList(props: Props) {
     if (form.searchQuery.length === 0) return;
 
     // Set state to searching
-    send({type: 'SEARCH'});
+    send({ type: 'SEARCH' });
 
     const queries = [
       form.sex.length > 0 && Q.where("sex", Q.like(form.sex)),
@@ -145,16 +125,16 @@ export default function PatientList(props: Props) {
       .then((patients: PatientModel[]) => {
         // console.warn('sub');
         console.log("PATIENTS: ")
-        console.log({patients})
+        console.log({ patients })
         // setPatients(patients as unknown as Patient[])
         // Set state to results with the result findings
-        send({type: 'RESULTS', results: patients });
+        send({ type: 'RESULTS', results: patients });
       })
     // Set state to results with the result findings
   }, [])
 
   const cancelSearch = useCallback(() => {
-    send({type: 'RESET'});
+    send({ type: 'RESET' });
   }, [])
 
 
@@ -176,20 +156,7 @@ export default function PatientList(props: Props) {
       return
     }
     setCurrentPage((currentPage) => currentPage + 1)
-    // TODO: fetch more patients
   }
-
-  const renderItem = useCallback(
-    ({ item }: { item: Patient }) => (
-      <PatientListItem
-        patient={item}
-        key={item.id}
-        onPatientSelected={openPatientFile}
-      />
-    ),
-    [],
-  )
-
 
   return (
     <>
@@ -216,19 +183,25 @@ export default function PatientList(props: Props) {
         />
       </Screen>
       <If condition={current.matches("idle")}>
-      <FAB
-        icon="plus"
-        color="white"
-        label={translate("patientList.newPatient")}
-        style={[$fab, isRtl ? { left: 4 } : { right: 4 }]}
-        onPress={goToNewPatient}
-      />
-    </If>
+        <FAB
+          icon="plus"
+          color="white"
+          label={translate("patientList.newPatient")}
+          style={[$fab, isRtl ? { left: 4 } : { right: 4 }]}
+          onPress={goToNewPatient}
+        />
+      </If>
     </>
   )
 }
 
-const HeaderSearch = ({ submitSearch, totalPatientsCount, cancelSearch }) => {
+type HeaderSearchProps = {
+  cancelSearch: () => void;
+  submitSearch: (form: SearchForm) => void;
+  totalPatientsCount: number;
+}
+
+export const HeaderSearch = ({ submitSearch, totalPatientsCount, cancelSearch }: HeaderSearchProps) => {
   const [form, setForm] = useState<SearchForm>({
     searchQuery: "",
     sex: "male",
@@ -262,7 +235,7 @@ const HeaderSearch = ({ submitSearch, totalPatientsCount, cancelSearch }) => {
       minAge: 0,
       maxAge: 0,
     })
-    
+
     cancelSearch()
   }
 
@@ -282,48 +255,45 @@ const HeaderSearch = ({ submitSearch, totalPatientsCount, cancelSearch }) => {
       <View style={$subSearchRow}>
         <Text variant="bodyLarge">{totalPatientsCount.toLocaleString()} {translate("patients")}</Text>
 
-        <TouchableOpacity style={$row} onPress={toggleAdvancedSearch}>
+        <TouchableOpacity style={$row} testID="advancedFilters" onPress={toggleAdvancedSearch}>
           <Text variant="bodyLarge">{translate("advancedFilters")}</Text>
           <Icon name={isAdvancedSearch ? "chevron-up" : "chevron-down"} size={20} />
         </TouchableOpacity>
       </View>
 
-
       <If condition={isAdvancedSearch}>
-      <View style={{rowGap: 12}}>
-        <View style={{ display: "flex", flexDirection: "row", columnGap: 8 }}>
-          <TextInput mode="outlined" onChangeText={setFormField("country")} value={form.country} style={$searchInput} label={translate("country")} />
-          <TextInput mode="outlined" onChangeText={setFormField("hometown")} value={form.hometown} style={$searchInput} label={translate("hometown")} />
-        </View>
+        <View style={{ rowGap: 12 }}>
+          <View style={{ display: "flex", flexDirection: "row", columnGap: 8 }}>
+            <TextInput testID="country" mode="outlined" onChangeText={setFormField("country")} value={form.country} style={$searchInput} label={translate("country")} />
+            <TextInput testID="hometown" mode="outlined" onChangeText={setFormField("hometown")} value={form.hometown} style={$searchInput} label={translate("hometown")} />
+          </View>
 
-        <View style={{ display: "flex", flexDirection: "row", columnGap: 8 }}>
-          <TextInput mode="outlined" onChangeText={setFormField("camp")} value={form.camp} style={$searchInput} label={translate("camp")} />
-          <TextInput mode="outlined" onChangeText={setFormField("phone")} value={form.phone} style={$searchInput} label={translate("phone")} />
-        </View>
+          <View style={{ display: "flex", flexDirection: "row", columnGap: 8 }}>
+            <TextInput mode="outlined" onChangeText={setFormField("camp")} value={form.camp} style={$searchInput} label={translate("camp")} />
+            <TextInput mode="outlined" onChangeText={setFormField("phone")} value={form.phone} style={$searchInput} label={translate("phone")} />
+          </View>
 
-    {/* <View style={{ display: "flex", flexDirection: "row", columnGap: 8 }}>
+          {/* <View style={{ display: "flex", flexDirection: "row", columnGap: 8 }}>
           <TextInput mode="outlined" onChangeText={setFormField("minAge")} value={String(form.minAge)} keyboardType="number-pad" style={$searchInput} label="Min Age" />
           <TextInput mode="outlined" onChangeText={setFormField("maxAge")} value={String(form.maxAge)} keyboardType="number-pad" style={$searchInput} label="Max Age" />
         </View> */}
 
-        <View style={{ display: "flex", flexDirection: "row", columnGap: 8, paddingHorizontal: 8 }}>
-          <HorizontalRadioGroup 
-            options={[{ label: translate("male"), value: "male" }, { label: translate("female"), value: "female" }]} 
-            value={form.sex}
-            onChange={setFormField("sex")}
-            label={translate("sex")} />
-      </View>
+          <View style={{ display: "flex", flexDirection: "row", columnGap: 8, paddingHorizontal: 8 }}>
+            <HorizontalRadioGroup
+              options={[{ label: translate("male"), value: "male" }, { label: translate("female"), value: "female" }]}
+              value={form.sex}
+              onChange={setFormField("sex")}
+              label={translate("sex")} />
+          </View>
 
-        <View style={{ display: "flex", flexDirection: "row", columnGap: 8 }}>
-          <Button mode="contained" onPress={() => submitSearch(form)} labelStyle={{ color: "#fff" }} style={$flex1}>{translate("patientList.search")}</Button>
-          <Button mode="outlined" onPress={clearForm} style={$flex1}>{translate("patientList.clear")}</Button>
-          
+          <View style={{ display: "flex", flexDirection: "row", columnGap: 8 }}>
+            <Button mode="contained" onPress={() => submitSearch(form)} labelStyle={{ color: "#fff" }} style={$flex1}>{translate("patientList.search")}</Button>
+            <Button mode="outlined" onPress={clearForm} style={$flex1}>{translate("patientList.clear")}</Button>
+
+          </View>
+
         </View>
-
-
-      </View>
-
-      <Divider style={{ marginVertical: 28 }} />
+        <Divider style={{ marginVertical: 28 }} />
       </If>
 
     </View>
