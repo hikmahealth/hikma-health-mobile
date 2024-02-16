@@ -4,19 +4,23 @@
  * Generally speaking, it will contain an auth flow (registration, login, forgot password)
  * and a "main" flow which the user will use once logged in.
  */
-import {
-  DarkTheme,
-  DefaultTheme,
-  NavigationContainer,
-} from "@react-navigation/native"
+import { DarkTheme, DefaultTheme, NavigationContainer } from "@react-navigation/native"
 import { createNativeStackNavigator, NativeStackScreenProps } from "@react-navigation/native-stack"
 import { observer } from "mobx-react-lite"
 import React from "react"
-import { useColorScheme } from "react-native"
+import { Alert, AppState, Pressable, useColorScheme } from "react-native"
 import * as Screens from "app/screens"
 import Config from "../config"
 import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
 import { colors } from "app/theme"
+import { useStores } from "app/models"
+import { translate } from "app/i18n"
+import { ArrowUpDownIcon, AxeIcon, LoaderIcon, Settings2Icon } from "lucide-react-native"
+import { syncDB } from "app/db/sync"
+import { hasUnsyncedChanges } from "@nozbe/watermelondb/sync"
+import database from "app/db"
+import { on } from "@nozbe/watermelondb/QueryDescription"
+import { View } from "app/components"
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -33,7 +37,38 @@ import { colors } from "app/theme"
  */
 export type AppStackParamList = {
   Welcome: undefined
-  // 🔥 Your screens go here
+  Login: undefined
+  PrivacyPolicy: undefined
+  PatientsList: undefined
+  PatientRegistrationForm: { editPatientId?: string }
+  PatientView: { patientId: string }
+  NewVisit: {
+    patientId: string
+    visitId: string | null
+    visitDate: number // timestamp
+  }
+  EventForm: {
+    patientId: string
+    formId: string
+    visitId: string | null
+    eventId: string | null
+    visitDate: number // timestamp
+  }
+  PatientVisitsList: {
+    patientId: string
+  }
+  VisitEventsList: {
+    visitId: string
+    patientId: string
+    visitDate: number // timestamp
+  }
+  FormEventsList: {
+    patientId: string
+    formId: string
+  }
+  Settings: undefined
+  Feedback: undefined
+  Reports: undefined
   // IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
 }
 
@@ -52,13 +87,127 @@ export type AppStackScreenProps<T extends keyof AppStackParamList> = NativeStack
 const Stack = createNativeStackNavigator<AppStackParamList>()
 
 const AppStack = observer(function AppStack() {
+  const { provider, sync, appState } = useStores()
+
+  const isSyncing = sync.state !== "idle"
+  const startSync = async () => {
+    if (provider.email === "tester.g@gmail.com") {
+      return Alert.alert("Please sign in with your server to continue syncing")
+    }
+    const hasLocalChangesToPush = await hasUnsyncedChanges({ database })
+
+    syncDB(
+      hasLocalChangesToPush,
+      sync.startSync,
+      sync.startResolve,
+      sync.startPush,
+      console.log,
+      sync.errorSync,
+      sync.finishSync,
+    )
+  }
+
+  const isSignedIn = provider.isSignedIn
+
   return (
     <Stack.Navigator
-      screenOptions={{ headerShown: false, navigationBarColor: colors.background }}
+      screenOptions={({ navigation }) => ({
+        headerShown: true,
+        navigationBarColor: colors.background,
+        headerStyle: { backgroundColor: colors.background },
+        headerRight: () => (
+          <View direction="row" gap={10}>
+            {isSyncing ? (
+              <Pressable
+                onPress={() => {
+                  sync.setProp("state", "idle")
+                  sync.setProp("error", null)
+                }}
+              >
+                <LoaderIcon size={24} color="black" />
+              </Pressable>
+            ) : (
+              <Pressable onPress={startSync}>
+                <ArrowUpDownIcon size={24} color="black" />
+              </Pressable>
+            )}
+            <Pressable onPress={() => navigation.navigate("Settings")}>
+              <Settings2Icon size={24} color="black" />
+            </Pressable>
+          </View>
+        ),
+      })}
     >
-          <Stack.Screen name="Welcome" component={Screens.WelcomeScreen} />
-      {/** 🔥 Your screens go here */}
-      {/* IGNITE_GENERATOR_ANCHOR_APP_STACK_SCREENS */}
+      {/* <Stack.Screen name="Welcome" component={Screens.WelcomeScreen} /> */}
+      {!isSignedIn ? (
+        <Stack.Group>
+          <Stack.Screen
+            name="Login"
+            options={{ headerShown: false }}
+            component={Screens.LoginScreen}
+          />
+        </Stack.Group>
+      ) : (
+        <Stack.Group>
+          <Stack.Screen
+            options={{
+              title: translate("patients"),
+            }}
+            name="PatientsList"
+            component={Screens.PatientsListScreen}
+          />
+          <Stack.Screen
+            name="PatientRegistrationForm"
+            options={{
+              title: translate("newPatient.newPatient"),
+            }}
+            component={Screens.PatientRegistrationFormScreen}
+          />
+          <Stack.Screen
+            options={{
+              title: translate("patientFile.patientView"),
+            }}
+            name="PatientView"
+            component={Screens.PatientViewScreen}
+          />
+          <Stack.Screen
+            name="NewVisit"
+            options={{
+              title: translate("newVisit.newVisit"),
+            }}
+            component={Screens.NewVisitScreen}
+          />
+          <Stack.Screen
+            name="EventForm"
+            options={{
+              title: translate("eventList.newEntry"),
+            }}
+            component={Screens.EventFormScreen}
+          />
+          <Stack.Screen name="PatientVisitsList" component={Screens.PatientVisitsListScreen} />
+          <Stack.Screen name="VisitEventsList" component={Screens.VisitEventsListScreen} />
+          <Stack.Screen name="FormEventsList" component={Screens.FormEventsListScreen} />
+          <Stack.Screen
+            name="Settings"
+            options={{
+              title: "More",
+            }}
+            component={Screens.SettingsScreen}
+          />
+          <Stack.Screen name="Feedback" component={Screens.FeedbackScreen} />
+          <Stack.Screen name="Reports" component={Screens.ReportsScreen} />
+          {/* IGNITE_GENERATOR_ANCHOR_APP_STACK_SCREENS */}
+        </Stack.Group>
+      )}
+      <Stack.Screen
+        options={{
+          title: "Privacy Policy",
+          presentation: "modal",
+          headerRight: undefined,
+        }}
+        name="PrivacyPolicy"
+        component={Screens.PrivacyPolicyScreen}
+      />
     </Stack.Navigator>
   )
 })
@@ -68,16 +217,40 @@ export interface NavigationProps
 
 export const AppNavigator = observer(function AppNavigator(props: NavigationProps) {
   const colorScheme = useColorScheme()
+  const { appState, provider } = useStores()
 
   useBackButtonHandler((routeName) => exitRoutes.includes(routeName))
 
+  const isSignedIn = provider.isSignedIn
+
+  // TODO: on app minimize, set the app state last active time
+  // TODO: on app resume check if the last active time is more than 5 minutes, if so, show the lock screen if the app state enables locking
+  AppState.addEventListener("change", (nextAppState) => {
+    if (nextAppState === "active") {
+      console.log("App has come to the foreground!")
+
+      // if the app is locked, dont set the last active time to null
+      if (!appState.isLocked) {
+        appState.setProp("lastActiveTime", null)
+      }
+    }
+    if (nextAppState === "background") {
+      console.log("App has gone to the background!")
+      appState.setProp("lastActiveTime", new Date().getTime())
+    }
+  })
+
   return (
-    <NavigationContainer
-      ref={navigationRef}
-      theme={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-      {...props}
-    >
-      <AppStack />
-    </NavigationContainer>
+    <>
+      <NavigationContainer
+        ref={navigationRef}
+        // theme={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+        theme={DefaultTheme}
+        {...props}
+      >
+        <AppStack />
+      </NavigationContainer>
+      {isSignedIn && appState.isLocked && <Screens.AppLockedScreen />}
+    </>
   )
 })

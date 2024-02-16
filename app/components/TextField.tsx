@@ -11,6 +11,7 @@ import {
 import { isRTL, translate } from "../i18n"
 import { colors, spacing, typography } from "../theme"
 import { Text, TextProps } from "./Text"
+import { useStores } from "../models"
 
 export interface TextFieldAccessoryProps {
   style: StyleProp<any>
@@ -123,6 +124,10 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
     inputWrapperStyle: $inputWrapperStyleOverride,
     ...TextInputProps
   } = props
+  const {
+    language: { isRTL },
+  } = useStores()
+
   const input = useRef<TextInput>(null)
 
   const disabled = TextInputProps.editable === false || status === "disabled"

@@ -5,8 +5,7 @@ import { I18nManager } from "react-native"
 // if English isn't your default language, move Translations to the appropriate language file.
 import en, { Translations } from "./en"
 import ar from "./ar"
-import ko from "./ko"
-import fr from "./fr"
+import es from "./es"
 
 i18n.fallbacks = true
 /**
@@ -14,7 +13,7 @@ i18n.fallbacks = true
  * the language code is the suffixed with "-US". i.e. if a device is set to English ("en"),
  * if you change to another language and then return to English language code is now "en-US".
  */
-i18n.translations = { ar, en, "en-US": en, ko, fr }
+i18n.translations = { ar, en, "en-US": en, es }
 
 const locales = Localization.getLocales() // This method is guaranteed to return at least one array item.
 // The preferred language is the first element in the array, however, we fallback to en-US, especially for tests.
@@ -53,3 +52,5 @@ type RecursiveKeyOfHandleValue<TValue, Text extends string> = TValue extends any
   : TValue extends object
   ? Text | `${Text}${RecursiveKeyOfInner<TValue>}`
   : Text
+
+export { isRTL, i18n }

@@ -1,4 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import Config from "react-native-config"
+import EncryptedStorage from "react-native-encrypted-storage"
 
 /**
  * Loads a string from storage.
@@ -66,7 +68,7 @@ export async function save(key: string, value: unknown): Promise<boolean> {
 export async function remove(key: string): Promise<void> {
   try {
     await AsyncStorage.removeItem(key)
-  } catch {}
+  } catch { }
 }
 
 /**
@@ -75,5 +77,19 @@ export async function remove(key: string): Promise<void> {
 export async function clear(): Promise<void> {
   try {
     await AsyncStorage.clear()
-  } catch {}
+  } catch { }
+}
+
+/**
+ * Get the HH api URL stored in encrypted storage
+ * @returns {Promise<string | null>}
+ */
+export async function getHHApiUrl(): Promise<string | null> {
+  // if in dev mode, use the HIKMA_API from the .env file
+  const DEV_HIKMA_API = Config.HIKMA_API
+  const HIKMA_API = await EncryptedStorage.getItem("HIKMA_API")
+  if (__DEV__ && HIKMA_API === null) {
+    return DEV_HIKMA_API || null
+  }
+  return await EncryptedStorage.getItem("HIKMA_API")
 }

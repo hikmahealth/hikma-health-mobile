@@ -1,8 +1,10 @@
 import i18n from "i18n-js"
 import React from "react"
 import { StyleProp, Text as RNText, TextProps as RNTextProps, TextStyle } from "react-native"
+import { observer } from "mobx-react-lite"
 import { isRTL, translate, TxKeyPath } from "../i18n"
 import { colors, typography } from "../theme"
+import { useStores } from "../models"
 
 type Sizes = keyof typeof $sizeStyles
 type Weights = keyof typeof typography.primary
@@ -31,6 +33,14 @@ export interface TextProps extends RNTextProps {
    */
   preset?: Presets
   /**
+   * Decoration Line of the text
+   */
+  textDecorationLine?: "none" | "underline" | "line-through" | "underline line-through"
+  /**
+   * Color of the text
+   */
+  color?: string
+  /**
    * Text weight modifier.
    */
   weight?: Weights
@@ -38,6 +48,10 @@ export interface TextProps extends RNTextProps {
    * Text size modifier.
    */
   size?: Sizes
+  /**
+   * Text aligh modifier
+   */
+  align?: "auto" | "left" | "right" | "center"
   /**
    * Children components.
    */
@@ -50,18 +64,36 @@ export interface TextProps extends RNTextProps {
  *
  * - [Documentation and Examples](https://github.com/infinitered/ignite/blob/master/docs/Components-Text.md)
  */
-export function Text(props: TextProps) {
-  const { weight, size, tx, txOptions, text, children, style: $styleOverride, ...rest } = props
+export const Text = observer(function Text(props: TextProps) {
+  const {
+    weight,
+    size,
+    tx,
+    txOptions,
+    text,
+    children,
+    color,
+    textDecorationLine,
+    align,
+    style: $styleOverride,
+    ...rest
+  } = props
+  const {
+    language: { isRTL, current: lng },
+  } = useStores()
 
   const i18nText = tx && translate(tx, txOptions)
   const content = i18nText || text || children
 
   const preset: Presets = props.preset ?? "default"
   const $styles: StyleProp<TextStyle> = [
-    $rtlStyle,
+    isRTL ? $rtlStyle : {},
     $presets[preset],
     weight && $fontWeightStyles[weight],
     size && $sizeStyles[size],
+    color ? { color } : {},
+    textDecorationLine ? { textDecorationLine } : {},
+    align ? { textAlign: align } : {},
     $styleOverride,
   ]
 
@@ -70,7 +102,7 @@ export function Text(props: TextProps) {
       {content}
     </RNText>
   )
-}
+})
 
 const $sizeStyles = {
   xxl: { fontSize: 36, lineHeight: 44 } satisfies TextStyle,

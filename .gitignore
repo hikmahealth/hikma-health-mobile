@@ -90,3 +90,14 @@ web-build/
 !env.js
 
 /coverage
+/coverage/*
+.env
+
+# ignore local gradle.properties file
+gradle.properties
+
+
+.yarn
+
+
+coverage

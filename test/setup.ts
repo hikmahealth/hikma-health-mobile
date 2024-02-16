@@ -1,6 +1,8 @@
 // we always make sure 'react-native' gets included first
 import * as ReactNative from "react-native"
+// import '@testing-library/jest-native/extend-expect';
 import mockFile from "./mockFile"
+jest.mock('@nozbe/watermelondb/utils/common/randomId/randomId', () => { });
 
 // libraries to mock
 jest.doMock("react-native", () => {
@@ -26,6 +28,17 @@ jest.doMock("react-native", () => {
 jest.mock("@react-native-async-storage/async-storage", () =>
   require("@react-native-async-storage/async-storage/jest/async-storage-mock"),
 )
+
+// mock react-native-encrypted-storage
+jest.mock("react-native-encrypted-storage", () => {
+  return {
+    getItem: jest.fn(),
+    setItem: jest.fn(),
+    removeItem: jest.fn(),
+    clear: jest.fn(),
+  }
+})
+
 
 jest.mock("i18n-js", () => ({
   currentLocale: () => "en",

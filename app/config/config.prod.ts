@@ -5,6 +5,8 @@
  *
  * https://reactnative.dev/docs/security#storing-sensitive-info
  */
+import Config from "react-native-config"
+
 export default {
-  API_URL: "CHANGEME",
+  API_URL: Config.HIKMA_API,
 }

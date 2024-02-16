@@ -149,7 +149,7 @@ function ScreenWithoutScrolling(props: ScreenProps) {
 function ScreenWithScrolling(props: ScreenProps) {
   const {
     children,
-    keyboardShouldPersistTaps = "handled",
+    keyboardShouldPersistTaps = "always",
     contentContainerStyle,
     ScrollViewProps,
     style,
@@ -191,8 +191,8 @@ export function Screen(props: ScreenProps) {
   const {
     backgroundColor = colors.background,
     KeyboardAvoidingViewProps,
-    keyboardOffset = 0,
-    safeAreaEdges,
+    keyboardOffset = 54,
+    safeAreaEdges = ["bottom"],
     StatusBarProps,
     statusBarStyle = "dark",
   } = props
