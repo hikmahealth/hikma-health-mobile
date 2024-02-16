@@ -153,19 +153,19 @@ app
 ```
 
 **components**
-This is where your reusable components live which help you build your screens.
+This is where our reusable components live which help you build your screens.
 
 **i18n**
-This is where your translations will live if you are using `react-native-i18n`.
+This is where our translations will live if you are using `react-native-i18n`.
 
 **models**
-This is where your app's models will live. Each model has a directory which will contain the `mobx-state-tree` model file, test file, and any other supporting files like actions, types, etc.
+This is where our app's models will live. Each model has a directory which will contain the `mobx-state-tree` model file, test file, and any other supporting files like actions, types, etc.
 
 **navigators**
-This is where your `react-navigation` navigators will live.
+This is where our `react-navigation` navigators will live.
 
 **screens**
-This is where your screen components will live. A screen is a React component which will take up the entire screen and be part of the navigation hierarchy. Each screen will have a directory containing the `.tsx` file, along with any assets or other helper files.
+This is where our screen components will live. A screen is a React component which will take up the entire screen and be part of the navigation hierarchy. Each screen will have a directory containing the `.tsx` file, along with any assets or other helper files.
 
 **services**
 Any services that interface with the outside world will live here (think REST APIs, Push Notifications, etc.).
@@ -238,3 +238,7 @@ Features on the roadmap represent the vision for the mobile app over the coming 
 - [x]  Official iOS support (add documentation for this support)
 - [ ]  Memory & performance profiling
 - [ ]  Automated CI pipeline for tests (add coveralls)
+
+
+## Credits
+This project, like many other open source works, relies heavily on the open source community and their contributions. We have built this EHR system on the shoulders of great projects such as the [Ignite](https://github.com/infinitered/ignite) boilerplate, WatermelonDB, and many others.
