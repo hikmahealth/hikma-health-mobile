@@ -16,15 +16,17 @@ import VisitModel from "./model/Visit"
 // NOTE: Should the original text be stored with relation to the langage of the app when creating it?
 export async function registerNewPatient(patient: Patient) {
   return await database.write(async () => {
+    console.log("Inserting data: ", patient.additionalData)
     const pt = await database.get<PatientModel>("patients").create((newPatient) => {
       newPatient.givenName = patient.givenName
       newPatient.surname = patient.surname
       newPatient.sex = patient.sex
-      newPatient.phone = patient.phone
+      // newPatient.phone = patient.phone
       newPatient.country = patient.country
-      newPatient.camp = patient.camp
-      newPatient.hometown = patient.hometown
+      // newPatient.camp = patient.camp
+      // newPatient.hometown = patient.hometown
       newPatient.dateOfBirth = patient.dateOfBirth
+      newPatient.additionalData = patient.additionalData
       // newPatient.updatedAt = timestamp;
       // newPatient.createdAt = timestamp;
     })
@@ -41,11 +43,12 @@ export async function updatePatientWithId(patientId: string, patient: Patient) {
       newPatient.givenName = patient.givenName
       newPatient.surname = patient.surname
       newPatient.sex = patient.sex
-      newPatient.phone = patient.phone
+      // newPatient.phone = patient.phone
       newPatient.country = patient.country
-      newPatient.camp = patient.camp
-      newPatient.hometown = patient.hometown
+      // newPatient.camp = patient.camp
+      // newPatient.hometown = patient.hometown
       newPatient.dateOfBirth = patient.dateOfBirth
+      newPatient.additionalData = patient.additionalData
       // newPatient.updatedAt = timestamp;
       // newPatient.createdAt = timestamp;
     })
@@ -103,11 +106,11 @@ export async function createEvent(event: Omit<Event, "id" | "createdAt" | "updat
 
 
 // Update an event
-export async function updateEvent(eventId: string, event: Event) {
+export async function updateEventMetaData(eventId: string, eventMetadata: EventModel["eventMetadata"]) {
   return await database.write(async () => {
     const evt = await database.get<EventModel>("events").find(eventId)
     const res = evt.update((newEvent) => {
-      newEvent.eventMetadata = event.eventMetadata
+      newEvent.eventMetadata = eventMetadata
     })
 
     return res

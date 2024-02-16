@@ -41,7 +41,8 @@ const ar = {
     "patients": "المريض",
     "search": "بحث",
     "clear": "مسح ",
-    "newPatient": "مريض جديد"
+    "newPatient": "مريض جديد",
+    "yearOfBirth": "سنة الميلاد"
   },
   "patientView": {
     "newVisit": "زياره جديده"

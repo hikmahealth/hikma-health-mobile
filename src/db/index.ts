@@ -16,6 +16,7 @@ import { setGenerator } from "@nozbe/watermelondb/utils/common/randomId"
 import ClinicModel from "./model/Clinic"
 import EventFormModel from "./model/EventForm"
 import mockDBAdapter from "../../test/mockDBAdapter"
+import RegistrationFormModel from "./model/PatientRegistrationForm"
 
 // set the unique identifier to be uuid1
 setGenerator(() => uuidv1())
@@ -39,7 +40,17 @@ const adapter = isTest ? mockDBAdapter : new SQLiteAdapter({
 // Then, make a Watermelon database from it!
 const database = new Database({
   adapter,
-  modelClasses: [Patient, StringId, StringContent, User, EventModel, VisitModel, ClinicModel, EventFormModel],
+  modelClasses: [
+    Patient,
+    StringId,
+    StringContent,
+    User,
+    EventModel,
+    VisitModel,
+    ClinicModel,
+    EventFormModel,
+    RegistrationFormModel
+  ],
 })
 
 export default database

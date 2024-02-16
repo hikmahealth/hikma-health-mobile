@@ -1,0 +1,97 @@
+# flow: register a new patient and open their profile to find the information used to register the patient
+
+appId: com.hikmahealthapp
+jsEngine: graaljs
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "Patients" # or any other selector
+    timeout: 100000      # Timeout in milliseconds
+
+# Make sure that the translations to arabic are working
+- tapOn:
+    id: icon-button
+    index: 0
+- tapOn: English
+- tapOn: عربي
+- back
+- tapOn:
+    id: icon-button
+    index: 1
+- tapOn: عربي
+- tapOn: English
+- back
+
+
+- tapOn:
+    id: "newPatientBtn-content"
+- tapOn:
+    id: "firstName"
+- "inputRandomPersonName"
+- tapOn:
+    id: "surname"
+- inputText: "Maestro"
+- tapOn:
+    id: "phone"
+- inputRandomNumber:
+    length: 10
+- tapOn:
+    id: "country"
+- inputText: "${[\"Uganda\", \"Ireland\", \"Canada\", \"Iran\", \"Pakistan\", \"Syria\"\
+    , \"Sudan\"][Math.floor(Math.random() * 7)]}"
+- tapOn:
+    id: "hometown"
+- "inputRandomText"
+- tapOn:
+    id: "camp"
+- "inputRandomText"
+# - tapOn:
+    # id: "DatePickerButton"
+
+
+# Copy the first name for comparison
+- copyTextFrom: 
+    id: "firstName"
+- evalScript: ${console.log(maestro.copiedText)}
+- evalScript: ${output.firstName = maestro.copiedText}
+- evalScript: ${console.log(output.firstName)}
+
+- hideKeyboard
+
+- tapOn:
+    id: "submit"
+
+
+- assertVisible: ${output.firstName + " Maestro"}
+
+
+# open the patient
+- tapOn: ${output.firstName + " Maestro"}
+- assertVisible: ${output.firstName + " Maestro"}
+
+# Continue with creating a visit
+- tapOn:
+    id: newPatientVisitBtn-content
+- tapOn:
+    id: formItem-0
+- tapOn:
+    id: ControlledTextField
+    index: 0
+- inputText: Hello test text!
+- hideKeyboard
+- tapOn:
+    id: submit
+- tapOn: Back
+- tapOn: Visit History
+- tapOn:
+    id: visitItem
+    index: 0
+- assertVisible: Hello test text!
+- longPressOn:
+    id: eventListItem
+    index: 0
+- tapOn: DELETE
+- tapOn:
+    text: DELETE
+    index: 1
+- assertNotVisible: Hello test text

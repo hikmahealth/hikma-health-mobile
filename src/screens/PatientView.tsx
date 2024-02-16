@@ -27,6 +27,7 @@ import EventModel from "../db/model/Event";
 import { getEventDisplayPrint } from "../components/EventFormDisplay";
 import { upperFirst } from "lodash";
 import database from "../db";
+import { useDBEventForms } from "../hooks/useDBEventForms";
 
 type Props = NativeStackScreenProps<RootStackParamList, "PatientView">
 
@@ -96,18 +97,20 @@ export function PatientView(props: Props) {
   const { patient } = route.params
   const isDarkmode = useColorScheme() === "dark"
   const [clinic, provider] = useProviderStore((store) => [store.clinic, store.provider])
-  const [snapshotForms, setSnapshotForms] = useState<EventFormModel[]>([])
 
-  useEffect(() => {
-    database.get<EventFormModel>("event_forms")
-      .query(
-        Q.where("language", translate("languageCode")),
-        Q.where("is_snapshot_form", true)
-      ).fetch().then((forms) => {
-        setSnapshotForms(forms)
-      })
+  const snapshotForms = useDBEventForms(translate("languageCode"))
 
-  }, [])
+  // const [snapshotForms, setSnapshotForms] = useState<EventFormModel[]>([])
+  // useEffect(() => {
+  //   database.get<EventFormModel>("event_forms")
+  //     .query(
+  //       Q.where("language", translate("languageCode")),
+  //       Q.where("is_snapshot_form", true)
+  //     ).fetch().then((forms) => {
+  //       setSnapshotForms(forms)
+  //     })
+
+  // }, [])
 
 
 
@@ -212,8 +215,7 @@ export function PatientView(props: Props) {
 
                 <br>
                 <br>
-                ${patient.phone}
-                <br>
+                ${patient.additionalData && Object.entries(patient.additionalData).map(v => "<p>" + v[0] + ": " + v[1] + "</p>").join("")}
                 <br>
                 ${upperFirst(translate(patient.sex as any || ""))}
 
@@ -338,6 +340,7 @@ export function PatientView(props: Props) {
     [],
   )
 
+
   return (
     <>
       <Screen preset="scroll" style={$screen}>
@@ -363,8 +366,10 @@ export function PatientView(props: Props) {
             />
           ))
         }
+
+        <View style={{ height: 80 }} />
       </Screen>
-      <FAB icon="plus" color="white" label={translate("patientView.newVisit")} style={$fab} onPress={goToNewPatientVisit} />
+      <FAB icon="plus" color="white" label={translate("patientView.newVisit")} style={$fab} onPress={goToNewPatientVisit} testID="newPatientVisitBtn" />
     </>
   )
 }
@@ -415,7 +420,6 @@ const PatientFileSummary = ({
         </View>
         <Text>{`${translate("dob")}: ${localeDate(new Date(patient.dateOfBirth), "yyyy MMM dd", {})}`}</Text>
         <Text>{`${translate("sex")}: ${translate(patient.sex as "male" | "female")}`}</Text>
-        <Text>{`${translate("camp")}: ${patient.camp || ""}`}</Text>
         <PatientSummary patientId={patient.id} />
 
         <Button icon="download" mode="text" onPress={() => downloadFile(patient)}>

@@ -13,6 +13,8 @@ import { ControlledRadioGroup } from "../components/ControlledRadioGroup"
 import { ControlledDatePickerButton } from "../components/DatePicker"
 import { ControlledSelectField } from "../components/ControlledSelectField"
 import { Button } from "../components/Button"
+import medicationsList from "../data/medicationsList"
+import { useLanguageStore } from "../stores/language"
 
 const initialValues: MapOrEntries<keyof MedicationEntry, string | number> = [
   ["id", ""],
@@ -31,6 +33,7 @@ export function MedicationEditorScreen() {
   const navigation = useNavigation()
   const route = useRoute()
 
+  const language = useLanguageStore((state) => state.language)
   const [map, actions] = useMap<keyof MedicationEntry, string | number>(initialValues)
 
   const { medication } = route.params || {}
@@ -40,7 +43,7 @@ export function MedicationEditorScreen() {
     if (medication) {
       actions.setAll(new Map(Object.entries(medication)))
     } else {
-      actions.reset()
+      actions.setAll(initialValues)
     }
   }, [medication])
 
@@ -52,6 +55,7 @@ export function MedicationEditorScreen() {
     return map.get(key)
   }
   const submit = () => {
+    console.log(Object.fromEntries(map.entries()))
     navigation.navigate({
       name: "EventForm",
       params: {
@@ -63,6 +67,29 @@ export function MedicationEditorScreen() {
       merge: true,
     })
   }
+
+
+  console.log("first", map)
+
+
+
+  /** Filter out the medications list using the search query. This supports english and arabic fields. */
+  const filterMedSuggestions = ((meds: { name: string, name_ar: string, form: string }[], language: string) => (query: string) => {
+    // if the query is non-existant, dont show any suggestions
+    if (query.length === 0) return []
+
+    const field = language === "ar" ? "name_ar" : "name"
+
+    const searchResults = meds.filter(m => m[field].toLowerCase().includes(query.toLowerCase()))
+
+    // if there is at least one result and the same one already entered in the search, then return no suggestions
+    if (searchResults.length >= 1 && searchResults[0][field].toLowerCase() === query.toLowerCase()) {
+      return []
+    }
+
+    return searchResults
+  })(medicationsList, language)
+
 
   return (
     <Screen preset="scroll">
@@ -76,6 +103,21 @@ export function MedicationEditorScreen() {
               onChangeText={setValue("name")}
               mode="outlined"
             />
+
+            <View style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
+              {
+                filterMedSuggestions((map.get("name") || "") as string).slice(0, 5).map((suggestion, idx) => (
+                  <Pressable
+                    onPress={() => {
+                      setValue("name")(language === "ar" ? suggestion.name_ar : suggestion.name)
+                    }}
+                    key={suggestion.name + String(idx)}
+                    style={{ padding: 8, backgroundColor: "#ccc", borderRadius: 8 }}>
+                    <Text text={upperFirst(language === "ar" ? suggestion.name_ar : suggestion.name)} />
+                  </Pressable>
+                ))
+              }
+            </View>
             <Picker selectedValue={map.get("form")} onValueChange={setValue("form")}>
               <Picker.Item label={"Choose an option"} value="" />
               {stringsListToOptions(medicineFormOptions).map((option) => (
@@ -136,7 +178,7 @@ export function MedicationsFormItem({
   viewOnly = true,
 }: {
   value: MedicationEntry[]
-  deleteEntry: (medicine: MedicationEntry) => void
+  deleteEntry: (medicine: MedicationEntry["id"]) => void
   viewOnly?: boolean
 }) {
   const navigation = useNavigation()
@@ -166,16 +208,16 @@ export function MedicationsFormItem({
           >
             <Text variant="headlineSmall" text={med.name} />
             <View style={$row}>
-              <Text text={med.dose} />
+              <Text text={String(med.dose || "")} />
               <Text text=" " />
-              <Text text={med.doseUnits} />
+              <Text text={med.doseUnits || ""} />
             </View>
             <View style={$row}>
-              <Text text={upperFirst(med.route)} />
+              <Text text={upperFirst(med.route || "")} />
               <Text text=" " />
-              <Text text={upperFirst(med.form)} />
+              <Text text={upperFirst(med.form || "")} />
               <Text text=": " />
-              <Text text={med.frequency} />
+              <Text text={String(med.frequency || "")} />
             </View>
 
             {!viewOnly && (

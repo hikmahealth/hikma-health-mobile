@@ -29,6 +29,8 @@ const patientSchema = tableSchema({
     { name: "phone", type: "string" },
     { name: "sex", type: "string" },
     { name: "camp", type: "string", isOptional: true },
+    { name: "additional_data", type: "string" },
+    { name: "metadata", type: "string" },
     { name: "image_timestamp", type: "number" },
     { name: "is_deleted", type: "boolean" }, // is stored as integer in old deployment
     { name: "deleted_at", type: "number", isOptional: true },
@@ -112,6 +114,20 @@ const visitSchema = tableSchema({
   ],
 })
 
+
+const registrationFormSchema = tableSchema({
+  name: "registration_forms",
+  columns: [
+    { name: "name", type: "string" },
+    { name: "fields", type: "string" },
+    { name: "metadata", type: "string" },
+    { name: "is_deleted", type: "boolean" },
+    { name: "deleted_at", type: "number", isOptional: true },
+    { name: "created_at", type: "number" },
+    { name: "updated_at", type: "number" },
+  ]
+})
+
 export default appSchema({
   version: 1, // 🔥 when migrating dont forget to change this number
   tables: [
@@ -122,7 +138,8 @@ export default appSchema({
     userSchema,
     visitSchema,
     eventSchema,
-    eventFormSchema
+    eventFormSchema,
+    registrationFormSchema
   ],
 })
 

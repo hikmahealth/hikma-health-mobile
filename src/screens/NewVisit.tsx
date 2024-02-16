@@ -12,6 +12,7 @@ import { PatientFlowParamList, VisitScreensProps } from "../navigators/PatientFl
 import EventFormModel from "../db/model/EventForm"
 import { DatePickerButton } from "../components/DatePicker"
 import database from "../db"
+import { useDBEventForms } from "../hooks/useDBEventForms"
 
 type Props = NativeStackScreenProps<RootStackParamList, "NewVisit">
 
@@ -29,131 +30,133 @@ const patientVisitLinks = (
   iconName: string
   params: VisitScreensProps | (VisitScreensProps & { patientAge: number })
 }[] => [
-  {
-    labelTx: "newVisitScreen.medicalHistory",
-    route: "MedicalHistoryForm",
-    descriptionTx: "patientFile.medicalHistoryDescription",
-    iconName: "hospital-building",
-    params: {
-      eventType: "Medical History Full",
-      visitId,
-      patientId,
-      providerId,
+    {
+      labelTx: "newVisitScreen.medicalHistory",
+      route: "MedicalHistoryForm",
+      descriptionTx: "patientFile.medicalHistoryDescription",
+      iconName: "hospital-building",
+      params: {
+        eventType: "Medical History Full",
+        visitId,
+        patientId,
+        providerId,
+      },
     },
-  },
-  {
-    labelTx: "newVisitScreen.complaint",
-    route: "OpenTextEvent",
-    descriptionTx: "newVisitScreen.complaintDescription",
-    iconName: "stethoscope",
-    params: {
-      eventType: "Medical History Full",
-      visitId,
-      patientId,
-      providerId,
+    {
+      labelTx: "newVisitScreen.complaint",
+      route: "OpenTextEvent",
+      descriptionTx: "newVisitScreen.complaintDescription",
+      iconName: "stethoscope",
+      params: {
+        eventType: "Medical History Full",
+        visitId,
+        patientId,
+        providerId,
+      },
     },
-  },
-  {
-    labelTx: "newVisitScreen.vitals",
-    route: "VitalsForm",
-    descriptionTx: "newVisitScreen.vitalsDescription",
-    iconName: "eye-outline",
-    params: {
-      visitId,
-      patientId,
-      providerId,
+    {
+      labelTx: "newVisitScreen.vitals",
+      route: "VitalsForm",
+      descriptionTx: "newVisitScreen.vitalsDescription",
+      iconName: "eye-outline",
+      params: {
+        visitId,
+        patientId,
+        providerId,
+      },
     },
-  },
-  {
-    labelTx: "newVisitScreen.examination",
-    route: "ExaminationForm",
-    descriptionTx: "newVisitScreen.examinationDescription",
-    iconName: "test-tube",
-    params: {
-      visitId,
-      patientId,
-      providerId,
+    {
+      labelTx: "newVisitScreen.examination",
+      route: "ExaminationForm",
+      descriptionTx: "newVisitScreen.examinationDescription",
+      iconName: "test-tube",
+      params: {
+        visitId,
+        patientId,
+        providerId,
+      },
     },
-  },
-  {
-    labelTx: "newVisitScreen.medicineDispensed",
-    route: "MedicineForm",
-    descriptionTx: "newVisitScreen.medicineDispensedDescription",
-    iconName: "pill",
-    params: {
-      visitId,
-      patientId,
-      providerId,
+    {
+      labelTx: "newVisitScreen.medicineDispensed",
+      route: "MedicineForm",
+      descriptionTx: "newVisitScreen.medicineDispensedDescription",
+      iconName: "pill",
+      params: {
+        visitId,
+        patientId,
+        providerId,
+      },
     },
-  },
-  {
-    labelTx: "newVisitScreen.physiotherapy",
-    route: "PhysiotherapyForm",
-    descriptionTx: "newVisitScreen.physiotherapyDescription",
-    iconName: "arm-flex-outline",
-    params: {
-      visitId,
-      patientId,
-      providerId,
+    {
+      labelTx: "newVisitScreen.physiotherapy",
+      route: "PhysiotherapyForm",
+      descriptionTx: "newVisitScreen.physiotherapyDescription",
+      iconName: "arm-flex-outline",
+      params: {
+        visitId,
+        patientId,
+        providerId,
+      },
     },
-  },
-  {
-    labelTx: "newVisitScreen.dentalTreatment",
-    route: "OpenTextEvent",
-    descriptionTx: "newVisitScreen.dentalTreatmentDescription",
-    iconName: "tooth-outline",
-    params: {
-      eventType: "Dental Treatment",
-      visitId,
-      patientId,
-      providerId,
+    {
+      labelTx: "newVisitScreen.dentalTreatment",
+      route: "OpenTextEvent",
+      descriptionTx: "newVisitScreen.dentalTreatmentDescription",
+      iconName: "tooth-outline",
+      params: {
+        eventType: "Dental Treatment",
+        visitId,
+        patientId,
+        providerId,
+      },
     },
-  },
-  {
-    labelTx: "newVisitScreen.notes",
-    route: "OpenTextEvent",
-    descriptionTx: "newVisitScreen.notesDescription",
-    iconName: "file-document-edit-outline",
-    params: {
-      eventType: "Notes",
-      visitId,
-      patientId,
-      providerId,
+    {
+      labelTx: "newVisitScreen.notes",
+      route: "OpenTextEvent",
+      descriptionTx: "newVisitScreen.notesDescription",
+      iconName: "file-document-edit-outline",
+      params: {
+        eventType: "Notes",
+        visitId,
+        patientId,
+        providerId,
+      },
     },
-  },
-  {
-    labelTx: "newVisitScreen.covid19Screening",
-    route: "Covid19Form",
-    descriptionTx: "newVisitScreen.covid19ScreeningDescription",
-    iconName: "virus",
-    params: {
-      visitId,
-      patientId,
-      patientAge,
-      providerId,
+    {
+      labelTx: "newVisitScreen.covid19Screening",
+      route: "Covid19Form",
+      descriptionTx: "newVisitScreen.covid19ScreeningDescription",
+      iconName: "virus",
+      params: {
+        visitId,
+        patientId,
+        patientAge,
+        providerId,
+      },
     },
-  },
-]
+  ]
 
 export function NewVisit(props: Props) {
   const { navigation, route } = props
   const { patientId, visitId, patientAge, visitDate } = route.params
-  const [forms, setForms] = useState<EventFormModel[]>([])
   const [eventDate, setEventDate] = useState<number>(visitDate || new Date().getTime())
   const provider = useProviderStore((store) => store.provider)
 
-  useEffect(() => {
-    database.get<EventFormModel>("event_forms").query(
-      // Get only the forms in my language
-      // Q.where("language", Q.oneOf([translate("languageCode"), "en"])), // This option supports rendering both english and arabic forms
-      Q.where("language", translate("languageCode")),
-    ).fetch().then((forms) => {
-      console.log(forms)
-      setForms(forms)
-    }).catch((err) => {
-      console.log(err)
-    })
-  }, [])
+  const forms = useDBEventForms(translate("languageCode"))
+
+  // const [forms, setForms] = useState<EventFormModel[]>([])
+  // useEffect(() => {
+  //   database.get<EventFormModel>("event_forms").query(
+  //     // Get only the forms in my language
+  //     // Q.where("language", Q.oneOf([translate("languageCode"), "en"])), // This option supports rendering both english and arabic forms
+  //     Q.where("language", translate("languageCode")),
+  //   ).fetch().then((forms) => {
+  //     console.log(forms)
+  //     setForms(forms)
+  //   }).catch((err) => {
+  //     console.log(err)
+  //   })
+  // }, [])
 
   const providerId = provider?.id
 
@@ -182,11 +185,12 @@ export function NewVisit(props: Props) {
 
         <DatePickerButton date={new Date(eventDate)} onDateChange={d => setEventDate(d.getTime())} />
         {
-          forms.map(form => {
+          forms.map((form, idx) => {
             return (
               <List.Item
                 key={form.name}
                 title={form.name}
+                testID={`formItem-${idx}`}
                 right={(props) => <List.Icon {...props} icon="chevron-right" />}
                 onPress={goToScreen("EventForm", {
                   visitId,

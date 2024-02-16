@@ -2,33 +2,40 @@ import React, { useState } from "react"
 import { View, ViewStyle, Pressable, useColorScheme } from "react-native"
 import { useNavigation, useRoute } from "@react-navigation/native"
 import { Searchbar, Chip } from "react-native-paper"
-import MiniSearch from "minisearch"
+import MiniSearch, { SearchResult } from "minisearch"
 import { useDebounce } from "../hooks/useDebounce"
 import { Text } from "../components/Text"
 import { Screen } from "../components/Screen"
 import icd10Xs from "../data/icd10-xs"
 import { Button } from "../components/Button"
+import { useLanguageStore } from "../stores/language"
 
 export type ICD10Entry = {
   code: string
   desc: string
+  desc_ar: string
 }
 
 let miniSearch = new MiniSearch({
   idField: "code",
-  fields: ["code", "desc"], // fields to index for full-text search
-  storeFields: ["code", "desc"], // fields to return with search results
+  fields: ["code", "desc", "desc_ar"], // fields to index for full-text search
+  storeFields: ["code", "desc", "desc_ar"], // fields to return with search results
   searchOptions: {
-    boost: { desc: 4 },
+    boost: { desc_ar: 4 },
     fuzzy: 0.35,
   },
 })
 
+// Initializes only once
 miniSearch.addAll(icd10Xs)
 
 export function DiagnosisPickerScreen() {
   const navigation = useNavigation()
   const route = useRoute()
+  const [isRtl, language] = useLanguageStore((state) => [state.isRtl, state.language])
+
+  // field that determines the diagnosis language to be presented
+  const diagnosisFieldKey = language === "ar" ? 'desc_ar' : 'desc'
 
   const { diagnoses } = route.params
   const [searchQuery, setSearchQuery] = useState("")
@@ -39,7 +46,8 @@ export function DiagnosisPickerScreen() {
     setSearchQuery("")
   }
 
-  const createDiagnosis = () => selectDiagnosis({ code: "0000", desc: searchQuery })()
+  // TODO: Make one of the descriptions an empty string
+  const createDiagnosis = () => selectDiagnosis({ code: "0000", desc: searchQuery, desc_ar: searchQuery })()
 
   const removeDiagnosis = (code: string) => () => {
     setSelectedDiagnoses((sd) => sd.filter((d) => d.code !== code))
@@ -64,6 +72,9 @@ export function DiagnosisPickerScreen() {
 
   const onChangeSearch = (query) => setSearchQuery(query)
 
+  /** Get a diagnosis object from the search result item */
+  const getResultDiagnosis = (res: SearchResult): ICD10Entry => ({ code: res.code, desc: res.desc, desc_ar: res.desc_ar })
+
   return (
     <Screen preset="scroll">
       <View style={$formContainer}>
@@ -72,7 +83,8 @@ export function DiagnosisPickerScreen() {
           {selectedDiagnoses.map((diagnosis, ix) => (
             <SelectedDiagnosis
               key={diagnosis.code + ix}
-              {...diagnosis}
+              diagnosis={diagnosis}
+              language={language}
               onPress={removeDiagnosis(diagnosis.code)}
             />
           ))}
@@ -82,12 +94,13 @@ export function DiagnosisPickerScreen() {
           .slice(0, 25)
           .filter(removeSelected)
           .map((result, ix) => {
-            const diagnosis = result
+            const diagnosis = getResultDiagnosis(result)
             return (
               <DiagnosisListItem
                 key={diagnosis.code + ix}
-                onPress={selectDiagnosis({ code: diagnosis.code, desc: diagnosis.desc })}
-                {...diagnosis}
+                onPress={selectDiagnosis(diagnosis)}
+                language={language}
+                diagnosis={diagnosis}
               />
             )
           })}
@@ -95,8 +108,12 @@ export function DiagnosisPickerScreen() {
         {searchQuery.length > 0 && (
           <DiagnosisListItem
             onPress={createDiagnosis}
-            code="0000"
-            desc={`+ Create "${searchQuery}"`}
+            language={language}
+            diagnosis={{
+              code: "0000",
+              desc: `+ Create "${searchQuery}"`,
+              desc_ar: `+ Create "${searchQuery}"`
+            }}
           />
         )}
 
@@ -110,7 +127,8 @@ export function DiagnosisPickerScreen() {
   )
 }
 
-function DiagnosisListItem({ onPress, code, desc }: ICD10Entry & { onPress?: () => void }) {
+function DiagnosisListItem({ onPress, diagnosis, language }: { diagnosis: ICD10Entry, onPress?: () => void, language: string }) {
+  const { code, desc, desc_ar } = diagnosis
   // get color theme
   const isDark = useColorScheme() === "dark"
   const listItemStyle = {
@@ -120,27 +138,47 @@ function DiagnosisListItem({ onPress, code, desc }: ICD10Entry & { onPress?: () 
 
   return (
     <Pressable style={listItemStyle} onPress={onPress}>
-      <Text style={$diagnosisLabel}>{ICD10RecordLabel({ code, desc })}</Text>
+      <Text style={$diagnosisLabel}>{ICD10RecordLabel({ code, desc, desc_ar }, language)}</Text>
     </Pressable>
   )
 }
 
-export function SelectedDiagnosis(props: ICD10Entry & { onPress?: () => void }) {
-  return <Chip onPress={props.onPress}>{ICD10RecordLabel(props)}</Chip>
+
+/**
+Show the chips of the selected diagnoses
+
+@param {ICD10Entry} diagnosis
+@param {string} lagnuage
+@param {() => void} onPress
+*/
+export function SelectedDiagnosis(props: { diagnosis: ICD10Entry, language: string, onPress?: () => void }) {
+  const { diagnosis, language, onPress } = props
+  return <Chip onPress={onPress}>{ICD10RecordLabel(diagnosis, language)}</Chip>
 }
 
-function ICD10RecordLabel(entry: ICD10Entry) {
-  return `${entry.desc} (${entry.code})`
+/**
+Render out a language appropriate diagnosis string
+
+@param {ICD10Entry} entry
+@param {string} language
+@returns {string} diagnosis display field
+*/
+export function ICD10RecordLabel(entry: ICD10Entry, language: string): string {
+  const diagField = language === "ar" ? 'desc_ar' : 'desc'
+  return `${entry[diagField]} (${entry.code})`
 }
 
 export function DiagnosisPickerButton({ value }: { value: ICD10Entry[] }) {
   const navigation = useNavigation()
+  const [isRtl, language] = useLanguageStore((state) => [state.isRtl, state.language])
+
   const openDiagnosisPicker = () => {
     navigation.navigate({ name: "DiagnosisPicker", params: { diagnoses: value } })
   }
 
-  const diagnosesList = value.map((diagnosis) => ICD10RecordLabel(diagnosis)).join(", ")
+  const diagnosesList = value.map((diagnosis) => ICD10RecordLabel(diagnosis, language)).join(", ")
 
+  // TODO: reverse the string orientation for arabic
   return (
     <Pressable onPress={openDiagnosisPicker}>
       <Text variant="labelLarge" text="Diagnosis Picker" />

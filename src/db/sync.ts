@@ -66,6 +66,11 @@ export async function syncDB(syncService: typeof syncServiceT, hasLocalChangesTo
         // }
         const syncPullResult = await response.json() as { changes: SyncDatabaseChangeSet; timestamp: Timestamp }
         changes = syncPullResult.changes;
+
+        console.log(Object.keys(changes))
+
+        // map "patient_registration_forms" to "registration_forms"
+        // changes["registration_forms"] = changes["patient_registration_forms"];
         timestamp = syncPullResult.timestamp;
 
         updateDates(changes)
@@ -148,6 +153,11 @@ function updateDates(changes: SyncDatabaseChangeSet) {
           if (record.metadata && typeof record.metadata !== "string") {
             record.metadata = JSON.stringify(record.metadata)
           }
+          // set up metadata
+          if (record.fields && typeof record.fields !== "string") {
+            record.fields = JSON.stringify(record.fields)
+          }
+
           /** visits have a checkin timestamp */
           if (record.check_in_timestamp) {
             record.check_in_timestamp = new Date(record.check_in_timestamp || defaultDate).getTime();

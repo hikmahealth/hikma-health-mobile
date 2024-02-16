@@ -18,8 +18,9 @@ import { SnapshotList } from "../screens/SnapshotList"
 import { VisitList } from "../screens/VisitList"
 import { EventFormScreen } from "../screens/EventForm"
 import { EventTypes, Patient, Visit } from "../types"
-import { DiagnosisPickerScreen } from "../screens/DiagnosisPicker"
+import { DiagnosisPickerScreen, ICD10Entry } from "../screens/DiagnosisPicker"
 import { MedicationEditorScreen, MedicationEntry } from "../screens/MedicationEditor"
+import VisitModel from "../db/model/Visit"
 
 export type VisitScreensProps = {
   patientId: string
@@ -50,7 +51,7 @@ export type PatientFlowParamList = {
     visitDate: number
   }
   VisitList: { patientId: string; patient: Patient }
-  EventList: { patient: Patient; visit: Visit }
+  EventList: { patient: Patient; visitId: VisitModel["id"], visitCheckInTimestamp: number }
   SnapshotList: {
     patientId: string
     events: Event[]
@@ -62,7 +63,7 @@ export type PatientFlowParamList = {
   PhysiotherapyForm: VisitScreensProps
   Covid19Form: VisitScreensProps & { patientAge: number }
   OpenTextEvent: VisitScreensProps
-  EventForm: VisitScreensProps & { formId: string, formData: JSONString | undefined, eventDate: number }
+  EventForm: VisitScreensProps & { formId: string, formData: JSONString | undefined, eventDate: number, medication: MedicationEntry, diagnoses: ICD10Entry[] }
   DiagnosisPicker: undefined
   MedicationEditor: { medication: MedicationEntry }
 }

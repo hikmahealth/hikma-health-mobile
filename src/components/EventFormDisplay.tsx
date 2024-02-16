@@ -6,12 +6,11 @@ import { PhysiotherapyDisplay, PhysiotherapyMetadata } from "../screens/Physioth
 import { MedicalHistoryDisplay, MedicalHistoryMetadata } from "../screens/MedicalHistoryForm"
 import { MedicineDisplay, MedicineMetadata } from "../screens/Medicine"
 import { ExaminationDisplay } from "../screens/Examination"
-import { VitalsDisplay } from "../screens/VisitList"
 import { Text } from "./Text"
 import { Event, Examination } from "../types"
 import { translate } from "../i18n"
 import { parseMetadata } from "../utils/parsers"
-import { VitalsMetadata } from "../screens/VitalsForm"
+import { ICD10RecordLabel } from "../screens/DiagnosisPicker"
 
 type Props = {}
 
@@ -83,12 +82,14 @@ const isMedicineObj = (obj: any): boolean => {
   return obj && obj.name && obj.dose && obj.frequency
 }
 
-export function getEventDisplay(event: Event) {
+export function getEventDisplay(event: Event, language?: string) {
   let display
   // const parsedMetadata = parseMetadata<string>(event.eventMetadata)
   const { result: parsedMetadata, error } = parseMetadata<string>(event.eventMetadata)
   if (error) console.error(error)
-  console.warn(typeof parsedMetadata)
+
+  console.log("DATA:", JSON.stringify(parsedMetadata, null, 2))
+
   if (typeof parsedMetadata === "object") {
     // For each key in the object, show the key and the value
     display = (
@@ -96,6 +97,7 @@ export function getEventDisplay(event: Event) {
         {Object.keys(parsedMetadata).map((key) => {
           const data = parsedMetadata[key]
           const isDateField = isDate(data)
+          console.log("ONE: ", isDateField, data)
           if (isArray(data)) {
             const isCollection = isArrayOfObjects(data)
             if (!isCollection) {
@@ -119,10 +121,11 @@ export function getEventDisplay(event: Event) {
                   {data.map((item, index) => {
                     const isDiagnosis = isDiagnosisObj(item)
                     const isMedicine = isMedicineObj(item)
+                    console.warn("HEre", item)
                     if (isDiagnosis) {
                       return (
                         <View key={index}>
-                          <Text>{`(${item.code}) ${item.desc}`}</Text>
+                          <Text>{ICD10RecordLabel(item, language || "")}</Text>
                         </View>
                       )
                     }
@@ -146,13 +149,15 @@ export function getEventDisplay(event: Event) {
               )
             }
           }
+
+          // console.log("value: ", parsedMetadata[key])
           return (
             <View key={key} style={[$row, { flexWrap: "wrap" }]}>
               <Text text={upperFirst(key)} />
               <Text text=": " />
-              <Text>
+              {/*<Text>
                 {isDateField ? format(new Date(data), "dd MMMM yyyy") : parsedMetadata[key]}
-              </Text>
+              </Text>*/}
             </View>
           )
         })}
@@ -167,39 +172,39 @@ export function getEventDisplay(event: Event) {
   // Tombstonee: April 25 2023
   // LEFT behind for reference during transition period
 
-  switch (event.eventType) {
-    case "Vitals":
-      display = <VitalsDisplay metadataObj={parseMetadata<VitalsMetadata>(event.eventMetadata).result} />
-      break
-    case "Examination Full":
-    case "Examination":
-      display = <ExaminationDisplay metadataObj={parseMetadata<Examination>(event.eventMetadata).result} />
-      break
-    case "Medicine":
-      ; <MedicineDisplay metadataObj={parseMetadata<MedicineMetadata>(event.eventMetadata).result} />
-      break
-    case "Medical History Full":
-      display = (
-        <MedicalHistoryDisplay
-          metadataObj={parseMetadata<MedicalHistoryMetadata>(event.eventMetadata).result}
-        />
-      )
-      break
-    case "Physiotherapy":
-      display = (
-        <PhysiotherapyDisplay
-          metadataObj={parseMetadata<PhysiotherapyMetadata>(event.eventMetadata).result}
-        />
-      )
-      break
-    default:
-      display = (
-        <Text>{JSON.stringify(parseMetadata<string>(event.eventMetadata).result || "", null, 2)}</Text>
-      )
-      break
-  }
+  // switch (event.eventType) {
+  //   case "Vitals":
+  //     display = <VitalsDisplay metadataObj={parseMetadata<VitalsMetadata>(event.eventMetadata).result} />
+  //     break
+  //   case "Examination Full":
+  //   case "Examination":
+  //     display = <ExaminationDisplay metadataObj={parseMetadata<Examination>(event.eventMetadata).result} />
+  //     break
+  //   case "Medicine":
+  //     ; <MedicineDisplay metadataObj={parseMetadata<MedicineMetadata>(event.eventMetadata).result} />
+  //     break
+  //   case "Medical History Full":
+  //     display = (
+  //       <MedicalHistoryDisplay
+  //         metadataObj={parseMetadata<MedicalHistoryMetadata>(event.eventMetadata).result}
+  //       />
+  //     )
+  //     break
+  //   case "Physiotherapy":
+  //     display = (
+  //       <PhysiotherapyDisplay
+  //         metadataObj={parseMetadata<PhysiotherapyMetadata>(event.eventMetadata).result}
+  //       />
+  //     )
+  //     break
+  //   default:
+  //     display = (
+  //       <Text>{JSON.stringify(parseMetadata<string>(event.eventMetadata).result || "", null, 2)}</Text>
+  //     )
+  //     break
+  // }
 
-  return display
+  // return display
 }
 
 

@@ -76,7 +76,10 @@ export function SnapshotList(props: Props) {
 
   return (
     <Screen preset="fixed" style={$screen}>
-      <FlatList keyExtractor={keyExtractor} data={list} renderItem={(item) => renderItem(item)} />
+      <FlatList 
+        keyExtractor={keyExtractor} 
+        data={list} 
+        renderItem={(item) => renderItem(item)} />
     </Screen>
   )
 }

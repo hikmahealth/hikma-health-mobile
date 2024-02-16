@@ -1,4 +1,3 @@
-import { Q } from "@nozbe/watermelondb"
 import { NativeStackScreenProps } from "@react-navigation/native-stack"
 import { useEffect, useState } from "react"
 import { View, Alert, FlatList, TouchableOpacity } from "react-native"
@@ -10,10 +9,10 @@ import { translate } from "../i18n"
 import { PatientFlowParamList } from "../navigators/PatientFlowNavigator"
 import { Visit } from "../types"
 import { displayName } from "../utils/patient"
-import { VitalsMetadata } from "./VitalsForm"
 import UserModel from "../db/model/User"
 import { format } from "date-fns"
 import database from "../db"
+import { useDBPatientVisits } from "../hooks/useDBPatientVisits"
 
 type Props = NativeStackScreenProps<PatientFlowParamList, "VisitList">
 
@@ -21,44 +20,25 @@ export function VisitList(props: Props) {
   const { route, navigation } = props
   const { patientId, patient } = route.params
 
+  const patientVisits = useDBPatientVisits(patientId)
 
-  const [patientVisits, setPatientVisits] = useState<Visit[]>([])
-
-  const fetchPatientData = () => {
-    database
-      .get<VisitModel>("visits")
-      .query(Q.and(Q.where("patient_id", patientId), Q.where("is_deleted", false)))
-      .fetch()
-      .then((res) => {
-        setPatientVisits(res)
-      })
-      .catch((error) => {
-        Alert.alert("Error", "Something went wrong. Please try again.")
-        console.error(error)
-      })
-  }
-
-  useEffect(() => {
-    setTimeout(() => {
-      fetchPatientData()
-    }, 100)
-
-  }, [])
 
   // Update the header title when the patientVisits array changes
   useEffect(() => {
-        navigation.setOptions({ title:`Patient Visits (${patientVisits.length})` })
+    navigation.setOptions({ title: `Patient Visits (${patientVisits.length})` })
   }, [patientVisits.length])
 
   const keyExtractor = (item: any, index: number) => index.toString()
 
-  const renderItem = ({ item }: { item: Visit }) => (
+  const renderItem = ({ item }: { item: VisitModel }) => (
     <TouchableOpacity
       style={{}}
+      testID="visitItem"
       onPress={() =>
         props.navigation.navigate("EventList", {
           patient,
-          visit: item,
+          visitId: item.id,
+          visitCheckInTimestamp: item.checkInTimestamp?.getTime()
         })
       }
       onLongPress={() =>
@@ -71,8 +51,9 @@ export function VisitList(props: Props) {
           {
             text: "Confirm",
             onPress: () => {
-              deleteVisit(item.id).then((_) => {
-                setPatientVisits((visits) => visits.filter((v) => v.id !== item.id))
+              deleteVisit(item.id).catch(error => {
+                console.error(error)
+                Alert.alert("Error", "There was an error deleting this visit. Please try again")
               })
             },
           },
@@ -98,8 +79,6 @@ export function VisitList(props: Props) {
     </TouchableOpacity>
   )
 
-  console.log("patientVisits", patientVisits)
-
   return (
     <Screen preset="fixed">
       <FlatList
@@ -111,28 +90,3 @@ export function VisitList(props: Props) {
   )
 }
 
-type VitalsDisplayProps = {
-  metadataObj: VitalsMetadata
-}
-
-export const VitalsDisplay = (props: VitalsDisplayProps) => {
-  const { metadataObj } = props
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        flexWrap: "wrap",
-      }}
-    >
-      <Text style={{ width: "50%" }}>HR: {metadataObj.heartRate} BPM</Text>
-      <Text style={{ width: "50%" }}>
-        BP: {metadataObj.systolic}/{metadataObj.diastolic}
-      </Text>
-      <Text style={{ width: "50%" }}>Sats: {metadataObj.oxygenSaturation}%</Text>
-      <Text style={{ width: "50%" }}>Temp: {metadataObj.temperature} °C</Text>
-      <Text style={{ width: "50%" }}>RR: {metadataObj.respiratoryRate}</Text>
-      <Text style={{ width: "50%" }}>Weight: {metadataObj.weight} kg</Text>
-      <Text style={{ width: "50%" }}>BG: {metadataObj.bloodGlucose}</Text>
-    </View>
-  )
-}

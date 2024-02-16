@@ -41,7 +41,8 @@ const es = {
     "patients": "Pacientes",
     "search": "Busca",
     "clear": "Borre",
-    "newPatient": "Nuevo Paciente"
+    "newPatient": "Nuevo Paciente",
+    "yearOfBirth": "Año de nacimiento"
   },
   "patientView": {
     "newVisit": "Nueva Visita"

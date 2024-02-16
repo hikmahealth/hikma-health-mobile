@@ -1,4 +1,4 @@
-import { Locale, format, parseISO } from "date-fns"
+import { Locale, format, parseISO, isValid } from "date-fns"
 import { i18n } from "../i18n"
 
 import ar from "date-fns/locale/ar-SA"
@@ -44,5 +44,24 @@ export function localeDate(date: Date, dateFormat: string = "MMM dd, yyyy", opti
     dateFormat,
     { ...options, locale: getLocale() }
   )
+}
+
+
+/**
+Given an object that contains datestring fields, or strings that compose a valid date, 
+format them into a Date object
+
+@param {Record<string, any>}
+@returns {T}
+*/
+export function formatDateStrings<T>(obj: any): T {
+  const newObj = { ...obj }
+  Object.keys(newObj).forEach((key) => {
+    const value = newObj[key]
+    if (value && typeof value === "string" && (value.includes("/") || value.includes("-"))) {
+      newObj[key] = isValid(new Date(value)) ? new Date(value) : value
+    }
+  })
+  return newObj
 }
 

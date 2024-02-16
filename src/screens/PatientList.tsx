@@ -20,6 +20,8 @@ import { PatientFlowParamList } from "../navigators/PatientFlowNavigator"
 import { patientListMachine } from "../components/state_machines/patientList"
 import { useLanguageStore } from "../stores/language"
 import database from "../db"
+import { detectLanguage, removeSpecialCharacters } from "../utils/language"
+import { remove } from "lodash"
 
 type Props = NativeStackScreenProps<PatientFlowParamList, "PatientList">
 
@@ -35,6 +37,7 @@ type SearchForm = {
   hometown: string;
   camp: string;
   phone: string;
+  yearOfBirth: number;
   minAge: number;
   maxAge: number;
 }
@@ -62,6 +65,7 @@ export default function PatientList(props: Props) {
         hometown: patient.hometown,
         givenName: patient.givenName,
         dateOfBirth: patient.dateOfBirth,
+        additionalData: patient.additionalData,
         createdAt: new Date(patient.createdAt).getTime(),
         updatedAt: new Date(patient.updatedAt).getTime(),
       },
@@ -94,29 +98,60 @@ export default function PatientList(props: Props) {
 
 
 
-  const performSearch = useCallback((form: SearchForm) => {
+  const performSearch = useCallback((form: SearchForm, isAdvanced: boolean) => {
     console.log("perform search", form)
+
+    // if the search string is empty and it is not an advanced field, exit the search mode
+    if (form.searchQuery.trim().length === 0 && isAdvanced === false) {
+      console.warn("reseting")
+      return send({ type: "RESET" })
+    }
+
     if (form.searchQuery.length === 0) return;
+
 
     // Set state to searching
     send({ type: 'SEARCH' });
 
-    const queries = [
-      form.sex.length > 0 && Q.where("sex", Q.like(form.sex)),
+    const queries = !isAdvanced ? [] : [
+      form.sex.length > 0 && Q.where("sex", Q.eq(form.sex)),
       form.country.length > 0 && Q.where("country", Q.like(`${Q.sanitizeLikeString(form.country)}%`)),
-      form.hometown.length > 0 && Q.where("hometown", Q.like(`${Q.sanitizeLikeString(form.hometown)}%`)),
-      form.camp.length > 0 && Q.where("camp", Q.like(`%${Q.sanitizeLikeString(form.camp)}%`)),
-      form.phone.length > 0 && Q.where("phone", Q.like(`${Q.sanitizeLikeString(form.phone)}%`)),
-    ].filter(Boolean);
+      form.yearOfBirth > 1900 && typeof form.yearOfBirth === "number" && Number.isSafeInteger(form.yearOfBirth) && form.yearOfBirth <= new Date().getFullYear() && Q.where(
+        "date_of_birth",
+        // date of birth is stored as a string like: `yyyy-mm-dd`
+        Q.like(`${Q.sanitizeLikeString(form.yearOfBirth.toString())}%`)
+      )
+    ].filter(v => typeof v !== "boolean");
+
+
+    // Create a query string that searches first and last name.
+    const language = detectLanguage(form.searchQuery)
+    const queryStr = (() => {
+      const searchQ =
+        language === "en" ?
+          Q.sanitizeLikeString(form.searchQuery)
+          : removeSpecialCharacters(form.searchQuery)
+      return Q.or(
+        Q.where("given_name", Q.like(`%${searchQ}%`)),
+        Q.where("surname", Q.like(`%${searchQ}%`))
+      )
+    })()
 
 
     console.log({ queries, searchQuery: form.searchQuery })
+    console.warn(language, removeSpecialCharacters(form.searchQuery))
 
     // Perform search on database
     database.get<PatientModel>("patients")
       .query(
         // Add or support for first or last name match
-        Q.where("given_name", Q.like(`%${Q.sanitizeLikeString(form.searchQuery)}%`)),
+        // Q.or(
+        // Q.where("given_name", Q.like(`%${Q.sanitizeLikeString(form.searchQuery)}%`)),
+        // Q.where("given_name", Q.like(`%${form.searchQuery}%`)),
+        // Q.where("surname", Q.like(`%${Q.sanitizeLikeString(form.searchQuery)}%`)),
+        // ),
+        // Q.where("given_name", Q.like(`%${Q.sanitizeLikeString(form.searchQuery)}%`)),
+        queryStr,
         ...queries,
         Q.sortBy("created_at", Q.desc),
         Q.take(50),
@@ -186,6 +221,7 @@ export default function PatientList(props: Props) {
         <FAB
           icon="plus"
           color="white"
+          testID="newPatientBtn"
           label={translate("patientList.newPatient")}
           style={[$fab, isRtl ? { left: 4 } : { right: 4 }]}
           onPress={goToNewPatient}
@@ -197,7 +233,7 @@ export default function PatientList(props: Props) {
 
 type HeaderSearchProps = {
   cancelSearch: () => void;
-  submitSearch: (form: SearchForm) => void;
+  submitSearch: (form: SearchForm, isAdvanced: boolean) => void;
   totalPatientsCount: number;
 }
 
@@ -207,6 +243,7 @@ export const HeaderSearch = ({ submitSearch, totalPatientsCount, cancelSearch }:
     sex: "male",
     country: "",
     hometown: "",
+    yearOfBirth: 0,
     camp: "",
     phone: "",
     minAge: 0,
@@ -232,6 +269,7 @@ export const HeaderSearch = ({ submitSearch, totalPatientsCount, cancelSearch }:
       camp: "",
       phone: "",
       sex: "",
+      yearOfBirth: 0,
       minAge: 0,
       maxAge: 0,
     })
@@ -248,8 +286,8 @@ export const HeaderSearch = ({ submitSearch, totalPatientsCount, cancelSearch }:
         clearButtonMode="always"
         clearIcon={"close"}
         onClearIconPress={cancelSearch}
-        onIconPress={() => submitSearch(form)}
-        onSubmitEditing={() => submitSearch(form)}
+        onIconPress={() => submitSearch(form, isAdvancedSearch)}
+        onSubmitEditing={() => submitSearch(form, isAdvancedSearch)}
         value={form.searchQuery}
       />
       <View style={$subSearchRow}>
@@ -265,13 +303,13 @@ export const HeaderSearch = ({ submitSearch, totalPatientsCount, cancelSearch }:
         <View style={{ rowGap: 12 }}>
           <View style={{ display: "flex", flexDirection: "row", columnGap: 8 }}>
             <TextInput testID="country" mode="outlined" onChangeText={setFormField("country")} value={form.country} style={$searchInput} label={translate("country")} />
-            <TextInput testID="hometown" mode="outlined" onChangeText={setFormField("hometown")} value={form.hometown} style={$searchInput} label={translate("hometown")} />
+            <TextInput testID="yearOfBirth" mode="outlined" onChangeText={setFormField("yearOfBirth")} value={textInputNumber(form.yearOfBirth)} style={$searchInput} label={translate("patientList.yearOfBirth")} />
           </View>
 
-          <View style={{ display: "flex", flexDirection: "row", columnGap: 8 }}>
+          {/*<View style={{ display: "flex", flexDirection: "row", columnGap: 8 }}>
             <TextInput mode="outlined" onChangeText={setFormField("camp")} value={form.camp} style={$searchInput} label={translate("camp")} />
             <TextInput mode="outlined" onChangeText={setFormField("phone")} value={form.phone} style={$searchInput} label={translate("phone")} />
-          </View>
+          </View>*/}
 
           {/* <View style={{ display: "flex", flexDirection: "row", columnGap: 8 }}>
           <TextInput mode="outlined" onChangeText={setFormField("minAge")} value={String(form.minAge)} keyboardType="number-pad" style={$searchInput} label="Min Age" />
@@ -298,6 +336,18 @@ export const HeaderSearch = ({ submitSearch, totalPatientsCount, cancelSearch }:
 
     </View>
   )
+}
+
+
+/**
+Function takes in a number and converts it into a userfirendly string that can be seen on the input.
+If the input is 0, the output is an empty string
+*/
+function textInputNumber(num: number): string {
+  if (num === 0 || typeof num !== "number") {
+    return "";
+  }
+  return num.toString()
 }
 
 

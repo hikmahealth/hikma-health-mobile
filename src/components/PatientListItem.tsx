@@ -53,7 +53,6 @@ export function PatientListItem(props: PatientListItemProps) {
             }}
           >{`${translate("dob")}:  ${format(new Date(patient.dateOfBirth), "dd MMM yyyy")}`}</Text>
           <Text testID="sex">{`${translate("sex")}:  ${upperFirst(translate(patient.sex))}`}</Text>
-          <Text testID="camp" style={{ flexWrap: "wrap" }} >{`${translate("camp")}:  ${patient.camp}`}</Text>
           <Text>{localeDate(patient.createdAt, "MMM dd, yyyy", {})}</Text>
         </View>
       </View>

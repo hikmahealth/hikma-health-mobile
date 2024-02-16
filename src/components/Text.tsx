@@ -5,11 +5,13 @@ import { TextStyle, StyleProp } from "react-native"
 import { Text as RNPText, TextProps as RNPTextProps } from "react-native-paper"
 import { isRTL, i18n, translate, TxKeyPath } from "../i18n"
 import { useLanguageStore } from "../stores/language"
+import { colors } from "../theme/colors"
+import { typography } from "../theme/typography"
 // import { colors, typography } from "../theme"
 
-// type Sizes = keyof typeof $sizeStyles
-// type Weights = keyof typeof typography.primary
-// type Presets = keyof typeof $presets
+type Sizes = keyof typeof $sizeStyles
+type Weights = keyof typeof typography.primary
+type Presets = keyof typeof $presets
 
 export type TextProps = Omit<RNPTextProps, "children"> & {
   /**
@@ -98,23 +100,27 @@ const $sizeStyles = {
   xxs: { fontSize: 12, lineHeight: 18 } as TextStyle,
 }
 
-// const $fontWeightStyles = Object.entries(typography.primary).reduce(
-//   (acc, [weight, fontFamily]) => {
-//     return {...acc, [weight]: {fontFamily}};
-//   },
-//   {},
-// ) as Record<Weights, TextStyle>;
 
-// const $baseStyle: StyleProp<TextStyle> = [
-//   $sizeStyles.sm,
-//   $fontWeightStyles.normal,
-//   {color: colors.text},
-// ];
+// @ts-expect-error: the platform select for the primary text is causing a type of undefined to be possible
+const $fontWeightStyles = Object.entries(typography.primary).reduce(
+  (acc, [weight, fontFamily]) => {
+    return { ...acc, [weight]: { fontFamily } };
+  },
+  {},
+) as Record<Weights, TextStyle>;
+
+const $baseStyle: StyleProp<TextStyle> = [
+  $sizeStyles.sm,
+  // @ts-expect-error: the platform select for the primary text is causing a type of undefined to be possible
+  $fontWeightStyles.normal,
+  { color: colors.text },
+];
 
 const $presets = {
-  // default: $baseStyle,
+  default: $baseStyle,
 
-  // bold: [$baseStyle, $fontWeightStyles.bold] as StyleProp<TextStyle>,
+  // @ts-expect-error: the platform select for the primary text is causing a type of undefined to be possible
+  bold: [$baseStyle, $fontWeightStyles.bold] as StyleProp<TextStyle>,
 
   heading: [
     // $baseStyle,
@@ -137,4 +143,4 @@ const $presets = {
   ] as StyleProp<TextStyle>,
 }
 
-const $rtlStyle: TextStyle = { writingDirection: "rtl" }
+const $rtlStyle: TextStyle = { writingDirection: "rtl", textAlign: "right" }

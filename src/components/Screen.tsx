@@ -251,7 +251,6 @@ export function Screen(props: ScreenProps) {
 
 const $containerStyle: ViewStyle = {
   flex: 1,
-  paddingHorizontal: 8,
   height: "100%",
   width: "100%",
   // rtl support
@@ -260,6 +259,7 @@ const $containerStyle: ViewStyle = {
 
 const $keyboardAvoidingViewStyle: ViewStyle = {
   flex: 1,
+  paddingHorizontal: 8,
 }
 
 const $outerStyle: ViewStyle = {

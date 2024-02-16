@@ -7,7 +7,7 @@ type PatientListContext = {
 export const patientListMachine = createMachine({
   id: "patientListState",
   initial: "idle",
-    predictableActionArguments: true,
+  predictableActionArguments: true,
   context: {
     searchResults: [],
   } as PatientListContext,
@@ -16,12 +16,12 @@ export const patientListMachine = createMachine({
       on: { SEARCH: { target: "searching", actions: "clearSearchResults" } },
     },
     searching: {
-      on: { RESULTS: { target: "results", actions: "setSearchResults" } } ,
+      on: { RESULTS: { target: "results", actions: "setSearchResults" } },
     },
     results: {
-      on: { 
-        RESET: {target: "idle", actions: "clearSearchResults"},
-        SEARCH: {target: "searching", actions: "clearSearchResults"}
+      on: {
+        RESET: { target: "idle", actions: "clearSearchResults" },
+        SEARCH: { target: "searching", actions: "clearSearchResults" }
       },
     }
   },

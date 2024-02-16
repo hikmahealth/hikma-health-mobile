@@ -56,7 +56,6 @@ export type RootStackParamList = {
   }
   NewVisit: {
     patientId: string
-    providerId: string
     visitId: string
     patientAge: number
     visitDate: number

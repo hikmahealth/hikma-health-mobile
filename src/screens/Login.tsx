@@ -38,7 +38,6 @@ export default function Login() {
   const [email, setEmail] = useState("admin@hikmahealth.org")
   const [password, setPassword] = useState("")
 
-  console.log(HIKMA_API)
 
   const signIn = async () => {
     setIsLoading(true)

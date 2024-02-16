@@ -18,10 +18,11 @@ export type Patient = {
   surname: string
   dateOfBirth: string
   country: string
-  hometown: string
+  // hometown: string
   sex: string
-  phone: string
-  camp: string
+  // phone: string
+  // camp: string
+  additionalData: Record<string, any>;
   createdAt: Date
   updatedAt: Date
 }

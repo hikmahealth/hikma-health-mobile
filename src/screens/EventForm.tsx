@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { NativeStackScreenProps } from "@react-navigation/native-stack"
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form"
-import { isValid } from "date-fns"
 import { Q } from "@nozbe/watermelondb"
 import { View, ViewStyle } from "react-native"
 import { Screen } from "../components/Screen"
@@ -14,11 +13,12 @@ import { translate } from "../i18n"
 import { PatientFlowParamList } from "../navigators/PatientFlowNavigator"
 import EventFormModel from "../db/model/EventForm"
 import { ControlledSelectField } from "../components/ControlledSelectField"
-import { createEvent, updateEvent } from "../db/api"
+import { createEvent, updateEventMetaData } from "../db/api"
 import { parseMetadata } from "../utils/parsers"
 import { DiagnosisPickerButton, ICD10Entry } from "./DiagnosisPicker"
 import { MedicationEntry, MedicationsFormItem } from "./MedicationEditor"
 import database from "../db"
+import { formatDateStrings } from "../utils/formatDate"
 
 type Props = NativeStackScreenProps<PatientFlowParamList, "EventForm">
 
@@ -26,6 +26,8 @@ type FormData = {
   name: string
   description: string
   type: string
+  diagnosis?: ICD10Entry[]
+  medications?: MedicationEntry[]
 }
 
 // Take the medications array and add a new medication if there is no medication with its id, otherswise update the medication
@@ -40,7 +42,7 @@ const updateMedications = (medications: MedicationEntry[], newMedication: Medica
 
 export function EventFormScreen(props: Props) {
   const { navigation, route } = props
-  const { patientId, formId, visitId, diagnoses: selectedDiagnoses, medication, formData, onUpdate, eventDate } = route.params
+  const { patientId, formId, visitId, diagnoses: selectedDiagnoses, medication, formData, eventDate } = route.params
   const [eventForm, setEventForm] = useState<EventFormModel | null>(null)
   const [diagnoses, setDiagnoses] = useState<ICD10Entry[]>([])
   const [medications, setMedications] = useState<MedicationEntry[]>([])
@@ -62,24 +64,22 @@ export function EventFormScreen(props: Props) {
         // the metadata could not be parsed
         console.error(error)
       }
-      console.warn(parsedMetadata)
-      const metadata = formatDates(parsedMetadata);
+      const metadata = formatDateStrings<Record<string, any>>(parsedMetadata);
       // if there is a date field in the metadata, ensure that the date is a Date object
-      console.log({ event_metadata: JSON.parse(formData)?.event_metadata, metadata })
-
       if (metadata?.date) {
         metadata.date = new Date(metadata.date)
       }
       if (metadata) {
         // set the diagnosis and medications from the formData
         setDiagnoses(metadata.diagnosis)
-        setMedications(metadata.medications)
+        setMedications(metadata.medications || [])
         formMethods.reset(metadata)
       }
 
       // Query the database for the event form with the name equal to the formData.event_type
-      console.log("Query db for forms")
-      database.get<EventFormModel>("event_forms").query(Q.where("name", JSON.parse(formData).event_type)).fetch().then((form) => {
+      database.get<EventFormModel>("event_forms").query(
+        Q.where("name", JSON.parse(formData).event_type)
+      ).fetch().then((form) => {
         // if there are forms returned, get the first form from the database
         console.log("Found forms:", form.length)
         if (form.length > 0) {
@@ -91,8 +91,7 @@ export function EventFormScreen(props: Props) {
             isSnapshotForm: form[0].isSnapshotForm,
             language: form[0].language,
             metadata: form[0].metadata,
-          }
-          console.log({ formObj, metadata: formObj.metadata })
+          } as EventFormModel
           setEventForm(formObj)
         }
       })
@@ -110,12 +109,7 @@ export function EventFormScreen(props: Props) {
             isSnapshotForm: form.isSnapshotForm,
             language: form.language,
             metadata: form.metadata,
-          }
-          console.log(formId, formObj.metadata, form);
-          console.log(
-            "form",
-            formObj.metadata.map((f) => f.fields),
-          )
+          } as EventFormModel
           setEventForm(formObj)
           navigation.setOptions({ title: form.name })
         })
@@ -154,29 +148,32 @@ export function EventFormScreen(props: Props) {
     setLoading(true)
 
     if (formData && JSON.parse(formData).id) {
-      return updateEvent(JSON.parse(formData).id, {
-        eventMetadata: data
-      }).then(res => navigation.goBack({ refresh: true })).catch(err => console.error(err)).finally(() => { setLoading(false); onUpdate && onUpdate() })
-    }
-    createEvent({
-      eventType: eventForm.name,
-      patientId,
-      visitId,
-      isDeleted: false,
-      eventMetadata: {
-        ...data,
-        visitDate: eventDate || new Date().getTime()
-      }
-    })
-      .then((res) => {
-        navigation.goBack({
-          refresh: true
-        })
-        onUpdate && onUpdate()
+      return updateEventMetaData(JSON.parse(formData).id, {
+        eventMetadata: data,
       })
-      .catch((err) => {
-        console.error("error", err)
-      }).finally(() => setLoading(false))
+        .then(res => navigation.goBack())
+        .catch(err => console.error(err))
+        .finally(() => { setLoading(false); })
+    }
+
+    if (eventForm) {
+      createEvent({
+        eventType: eventForm.name as any,
+        patientId,
+        visitId,
+        isDeleted: false,
+        eventMetadata: {
+          ...data,
+          visitDate: eventDate || new Date().getTime()
+        }
+      })
+        .then((res) => {
+          navigation.goBack()
+        })
+        .catch((err) => {
+          console.error("error", err)
+        }).finally(() => setLoading(false))
+    }
   }
 
   const deleteMedication = (id: string) => {
@@ -221,7 +218,7 @@ export function EventFormScreen(props: Props) {
                     key={field.id}
                     name={field.name}
                     label={field.name}
-                    options={field.options}
+                    options={field.options || []}
                   />
                 )
               } else if (field.inputType === "checkbox") {
@@ -230,7 +227,7 @@ export function EventFormScreen(props: Props) {
                     key={field.id}
                     name={field.name}
                     label={field.name}
-                    options={field.options}
+                    options={field.options || []}
                   />
                 )
               } else if (field.inputType === "date") {
@@ -240,8 +237,6 @@ export function EventFormScreen(props: Props) {
                     <ControlledDatePickerButton
                       key={field.id}
                       name={field.name}
-                      label={field.name}
-                      keyboardType="numeric"
                     />
                   </>
                 )
@@ -251,7 +246,7 @@ export function EventFormScreen(props: Props) {
                     key={field.id}
                     name={field.name}
                     label={field.name}
-                    options={field.options}
+                    options={field.options || []}
                   />
                 )
               } else if (field.inputType === "dropdown" && field.fieldType === "diagnosis") {
@@ -280,7 +275,7 @@ export function EventFormScreen(props: Props) {
                 return <Text>Not implemented yet</Text>
               }
             })}
-          <Button mode="contained" disabled={!canSaveForm} loading={loading} onPress={formMethods.handleSubmit(onSubmit)}>
+          <Button mode="contained" disabled={!canSaveForm} loading={loading} onPress={formMethods.handleSubmit(onSubmit)} testID="submit">
             {translate("save")}
           </Button>
           <View style={{ height: 40 }} />

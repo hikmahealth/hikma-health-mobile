@@ -12,7 +12,11 @@ import {
   json,
 } from "@nozbe/watermelondb/decorators"
 
-// 'CREATE TABLE IF NOT EXISTS events (id varchar(32) PRIMARY KEY, patient_id varchar(32) REFERENCES patients(id) ON DELETE CASCADE, visit_id varchar(32) REFERENCES visits(id) ON DELETE CASCADE, event_type text, event_timestamp text, edited_at text, event_metadata text, deleted integer DEFAULT 0);',
+
+type VisitMetadata = {
+  // Add types for any metadata that gets attached to the visit
+}
+
 
 export default class VisitModel extends Model {
   static table = "visits"
@@ -33,7 +37,7 @@ export default class VisitModel extends Model {
   @date("check_in_timestamp") checkInTimestamp!: Date
   @field("is_deleted") isDeleted!: boolean
   @date("deleted_at") deletedAt!: Date
-  @json("metadata", sanitizeMetadata) metadata!: Object | null | undefined
+  @json("metadata", sanitizeMetadata) metadata!: VisitMetadata | null | undefined
   @readonly @date("created_at") createdAt!: number | Date
   @readonly @date("updated_at") updatedAt!: number | Date
 }
