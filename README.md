@@ -1,7 +1,3 @@
-<p align="centr">
-<img src="https://images.squarespace-cdn.com/content/5cc0e57236f8e70001651ea6/1599789508819-NGZXYWJDQRCULLU94QEJ/hikma-hb.png?format=300w&content-type=image/png" alt="Hikma Health" />
-</p>
-
 # Hikma Health Mobile Application
 The Hikma Health platform is a mobile electronic health record system designed for organizations working in low-resource settings to collect and access patient health information. The repository contains the mobile application (Android tested, iOS support can be includes) that supports offline functionality, thousands of patients and multiple languages including Arabic, Spanish, and English. Other languages can be added trivially.
 
@@ -14,6 +10,7 @@ This app is built using React Native and can be compiled for either iOS or Andro
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 
+![check-code-coverage](https://img.shields.io/badge/code--coverage-10.45%25-red)
 
 ## Quick Start
 

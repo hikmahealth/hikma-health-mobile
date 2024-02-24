@@ -14,7 +14,7 @@ module.exports = {
   "setupFilesAfterEnv": [
     "@testing-library/jest-native/extend-expect"
   ],
-  coverageDirectory: "<rootDir>/test/coverage",
+  coverageDirectory: "<rootDir>/coverage",
   collectCoverageFrom: [
     "**/*.{js,jsx,ts,tsx}",
     "!**/node_modules/**",
@@ -25,6 +25,9 @@ module.exports = {
     "!**/android/**",
     "!**/ios/**",
   ],
+  collectCoverage: true,
+  coverageReporters: ['clover', 'json', 'lcov'],
+  reporters: ['summary'],
   // moduleNameMapper: {
   //   "app/(.*)": "<rootDir>/app/$1",
   // },
