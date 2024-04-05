@@ -33,7 +33,7 @@ import {
   BottomSheetModalProvider,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet"
-import { ICD10Entry, MedicationEntry } from "app/types"
+import { ICDEntry, MedicationEntry } from "app/types"
 import { DatePickerButton } from "app/components/DatePicker"
 import { isValid } from "date-fns"
 
@@ -43,7 +43,7 @@ type ModalState =
   | { activeModal: "medication"; medication: MedicationEntry }
   | { activeModal: "diagnoses" }
 
-interface EventFormScreenProps extends AppStackScreenProps<"EventForm"> {}
+interface EventFormScreenProps extends AppStackScreenProps<"EventForm"> { }
 
 export const EventFormScreen: FC<EventFormScreenProps> = observer(function EventFormScreen({
   route,
@@ -64,7 +64,7 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
   >({
     defaultValues: {},
   })
-  const [diagnoses, setDiagnoses] = useState<ICD10Entry[]>([])
+  const [diagnoses, setDiagnoses] = useState<ICDEntry[]>([])
   const [medicines, setMedicines] = useState<MedicationEntry[]>([])
 
   const { form, state: formState, isLoading } = useEventForm(formId, visitId, patientId, eventId)
@@ -118,7 +118,9 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
           (field) =>
             field.name.toLowerCase() !== "diagnosis" &&
             field.name.toLowerCase() !== "medications" &&
-            field.name.toLowerCase() !== "medicine",
+            field.fieldType.toLowerCase() !== "diagnosis" &&
+            field.name.toLowerCase() !== "medicine" &&
+            field.fieldType.toLowerCase() !== "medicine"
         ) || []
 
     // if the form has medicine and diagnosis fields, add them to the form data
@@ -227,7 +229,7 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
     })
   }
 
-  const updateDiagnoses = (diagnoses: ICD10Entry[]) => {
+  const updateDiagnoses = (diagnoses: ICDEntry[]) => {
     setDiagnoses(diagnoses)
     updateModalState((draft) => {
       draft.activeModal = null
@@ -527,24 +529,24 @@ function useEventForm(
     /** Subscribe to the event if it exists. If there is no event, create a new one */
     const eventSub = eventId
       ? database.collections
-          .get<EventModel>("events")
-          .findAndObserve(eventId)
-          .subscribe((event) => {
-            updateFormState((d) => {
-              let draft = d || ({} as any)
-              // if (draft) {
-              draft.formId = event.formId
-              draft.visitId = event.visitId
-              draft.patientId = event.patientId
-              draft.formData = event.formData
-              draft.createdAt = event.createdAt
-              draft.updatedAt = event.updatedAt
-              draft.id = event.id
-              return draft
-              // }
-              // return event
-            })
+        .get<EventModel>("events")
+        .findAndObserve(eventId)
+        .subscribe((event) => {
+          updateFormState((d) => {
+            let draft = d || ({} as any)
+            // if (draft) {
+            draft.formId = event.formId
+            draft.visitId = event.visitId
+            draft.patientId = event.patientId
+            draft.formData = event.formData
+            draft.createdAt = event.createdAt
+            draft.updatedAt = event.updatedAt
+            draft.id = event.id
+            return draft
+            // }
+            // return event
           })
+        })
       : null
 
     return () => {

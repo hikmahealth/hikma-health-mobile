@@ -3,9 +3,9 @@ import { Pressable, StyleProp, TextStyle, ViewStyle, useColorScheme } from "reac
 import { observer } from "mobx-react-lite"
 import { colors, typography } from "../theme"
 import { Text } from "../components/Text"
-import icd10Xs from "../data/icd10-xs"
+import icd11Xs from "../data/icd11-xs" // use icd10-xs to load the icd10 codes with the arabic translations
 import MiniSearch, { SearchResult } from "minisearch"
-import { ICD10Entry } from "../types"
+import { ICDEntry } from "../types"
 import { useState } from "react"
 import { useDebounce } from "../hooks/useDebounce"
 import { TextField } from "./TextField"
@@ -23,7 +23,7 @@ let miniSearch = new MiniSearch({
 })
 
 // Initializes only once
-miniSearch.addAll(icd10Xs)
+miniSearch.addAll(icd11Xs)
 
 export interface DiagnosisEditorProps {
   /**
@@ -31,9 +31,9 @@ export interface DiagnosisEditorProps {
    */
   style?: StyleProp<ViewStyle>
 
-  onSubmit: (diagnoses: ICD10Entry[]) => void
+  onSubmit: (diagnoses: ICDEntry[]) => void
 
-  diagnoses: ICD10Entry[]
+  diagnoses: ICDEntry[]
 
   language: string
 }
@@ -46,9 +46,9 @@ export const DiagnosisEditor = observer(function DiagnosisEditor(props: Diagnosi
   const $styles = [$container, style]
 
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedDiagnoses, setSelectedDiagnoses] = useState<ICD10Entry[]>([...diagnoses])
+  const [selectedDiagnoses, setSelectedDiagnoses] = useState<ICDEntry[]>([...diagnoses])
 
-  const selectDiagnosis = (diagnosis: ICD10Entry) => () => {
+  const selectDiagnosis = (diagnosis: ICDEntry) => () => {
     setSelectedDiagnoses((sd) => [...sd, diagnosis])
     setSearchQuery("")
   }
@@ -61,12 +61,12 @@ export const DiagnosisEditor = observer(function DiagnosisEditor(props: Diagnosi
     setSelectedDiagnoses((sd) => sd.filter((d) => d.code !== code))
   }
 
-  const removeSelected = (result: ICD10Entry) => {
+  const removeSelected = (result: ICDEntry) => {
     return !selectedDiagnoses.find((d) => d.code === result.code)
   }
 
   /** Get a diagnosis object from the search result item */
-  const getResultDiagnosis = (res: SearchResult): ICD10Entry => ({
+  const getResultDiagnosis = (res: SearchResult): ICDEntry => ({
     code: res.code,
     desc: res.desc,
     desc_ar: res.desc_ar,
@@ -134,7 +134,7 @@ function DiagnosisListItem({
   diagnosis,
   language,
 }: {
-  diagnosis: ICD10Entry
+  diagnosis: ICDEntry
   onPress?: () => void
   language: string
 }) {
@@ -163,12 +163,12 @@ function DiagnosisListItem({
 /**
 Show the chips of the selected diagnoses
 
-@param {ICD10Entry} diagnosis
+@param {ICDEntry} diagnosis
 @param {string} lagnuage
 @param {() => void} onPress
 */
 export function SelectedDiagnosis(props: {
-  diagnosis: ICD10Entry
+  diagnosis: ICDEntry
   language: string
   onPress?: () => void
 }) {
@@ -183,17 +183,21 @@ export function SelectedDiagnosis(props: {
 /**
 Render out a language appropriate diagnosis string
 
-@param {ICD10Entry} entry
+@param {ICDEntry} entry
 @param {string} language
 @returns {string} diagnosis display field
 */
-export function ICD10RecordLabel(entry: ICD10Entry, language: string): string {
+export function ICD10RecordLabel(entry: ICDEntry, language: string): string {
   const diagField = language === "ar" ? "desc_ar" : "desc"
-  return `${entry[diagField]} (${entry.code})`
+  if (entry[diagField]) {
+    return `${entry[diagField]} (${entry.code})`
+  } else {
+    return `${entry.desc} (${entry.code})`
+  }
 }
 
 type DiagnosisPickerButtonProps = {
-  value: ICD10Entry[]
+  value: ICDEntry[]
   language: string
   openDiagnosisPicker: () => void
 }

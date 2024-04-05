@@ -8,7 +8,7 @@ import { withObservables } from "@nozbe/watermelondb/react"
 import { ICD10RecordLabel } from "./DiagnosisEditor"
 import { upperFirst } from "lodash"
 import { If } from "./If"
-import { ICD10Entry } from "../types"
+import { ICDEntry } from "../types"
 
 export interface EventListItemProps {
   /**
@@ -76,9 +76,9 @@ export const EventListItem = enhanceEvent(function EventListItem(props: EventLis
 /**
  * Given FormDataItem, return an array of only the diagnoses and their ICD10 codes
  * @param {FormDataItem[]} FormDataItem array- The FormDataItem object
- * @returns {Array<ICD10Entry>} - An array of ICD10Entry objects
+ * @returns {Array<ICDEntry>} - An array of ICD10Entry objects
  */
-export const getDiagnosesFromFormData = (formData: FormDataItem[]): Array<ICD10Entry> => {
+export const getDiagnosesFromFormData = (formData: FormDataItem[]): Array<ICDEntry> => {
   const diagnoses = formData.filter((field) => field.fieldType === "diagnosis")
   const diagnosesWithCodes = diagnoses.map((diagnosis) => {
     const { value } = diagnosis
@@ -127,6 +127,7 @@ const getEventDisplay = (event: EventModel, language: string): JSX.Element => {
               {Array.isArray(value) &&
                 value.map((med) => (
                   <View key={med.id}>
+                    <Text text={upperFirst(String(med.name || ""))} />
                     <Text text={`${String(med.dose || "")} ${med.doseUnits || ""}`} />
                     <Text
                       text={`${upperFirst(med?.route || "")} ${upperFirst(

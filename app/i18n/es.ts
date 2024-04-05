@@ -76,6 +76,11 @@ const es = {
     eventDeleted: "Evento Borrado",
     errorDeletingEvent: "Error al borrar de evento",
   },
+  errorScreen: {
+    title: "Se produjo un error en la aplicación.",
+    friendlySubtitle: "Si este error continúa ocurriendo, envíe un correo electrónico a nuestro equipo de soporte o presente un problema en github con los pasos que siguió para producir este error.",
+    reset: "Restablecer la aplicación"
+  },
   success: "Exitoso",
   done: "Listo",
   error: "Error",

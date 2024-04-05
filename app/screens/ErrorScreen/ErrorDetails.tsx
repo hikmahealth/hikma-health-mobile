@@ -1,6 +1,6 @@
 import React, { ErrorInfo } from "react"
 import { ScrollView, TextStyle, View, ViewStyle } from "react-native"
-import { Button, Icon, Screen, Text } from "../../components"
+import { Button, Icon, If, Screen, Text } from "../../components"
 import { colors, spacing } from "../../theme"
 
 export interface ErrorDetailsProps {
@@ -22,14 +22,16 @@ export function ErrorDetails(props: ErrorDetailsProps) {
         <Text tx="errorScreen.friendlySubtitle" />
       </View>
 
-      <ScrollView style={$errorSection} contentContainerStyle={$errorSectionContentContainer}>
-        <Text style={$errorContent} weight="bold" text={`${props.error}`.trim()} />
-        <Text
-          selectable
-          style={$errorBacktrace}
-          text={`${props.errorInfo?.componentStack ?? ""}`.trim()}
-        />
-      </ScrollView>
+      <If condition={__DEV__}>
+        <ScrollView style={$errorSection} contentContainerStyle={$errorSectionContentContainer}>
+          <Text style={$errorContent} weight="bold" text={`${props.error}`.trim()} />
+          <Text
+            selectable
+            style={$errorBacktrace}
+            text={`${props.errorInfo?.componentStack ?? ""}`.trim()}
+          />
+        </ScrollView>
+      </If>
 
       <Button
         preset="reversed"

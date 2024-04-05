@@ -76,6 +76,11 @@ const en = {
     eventDeleted: "Event Deleted",
     errorDeletingEvent: "Error deleting event",
   },
+  errorScreen: {
+    title: "An error occured in the application.",
+    friendlySubtitle: "If this error continues to occur, please email our support team, or file an issue on github with the steps you took to produce this error.",
+    reset: "Reset the application"
+  },
   success: "Success",
   done: "Done",
   error: "Error",

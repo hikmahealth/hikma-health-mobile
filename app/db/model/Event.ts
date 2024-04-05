@@ -7,7 +7,7 @@ import {
   readonly,
   json,
 } from "@nozbe/watermelondb/decorators"
-import { ICD10Entry } from "app/types"
+import { ICDEntry } from "app/types"
 
 // 'CREATE TABLE IF NOT EXISTS events (id varchar(32) PRIMARY KEY, patient_id varchar(32) REFERENCES patients(id) ON DELETE CASCADE, visit_id varchar(32) REFERENCES visits(id) ON DELETE CASCADE, event_type text, event_timestamp text, edited_at text, event_metadata text, deleted integer DEFAULT 0);',
 
@@ -21,7 +21,7 @@ export type FormDataItem = {
   inputType: string,
   fieldType: "diagnosis",
   name: string,
-  value: ICD10Entry[],
+  value: ICDEntry[],
   fieldId: string,
 }
 

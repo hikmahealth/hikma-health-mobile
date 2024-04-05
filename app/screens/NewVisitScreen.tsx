@@ -12,7 +12,7 @@ import { colors } from "app/theme"
 // import { useNavigation } from "@react-navigation/native"
 // import { useStores } from "app/models"
 
-interface NewVisitScreenProps extends AppStackScreenProps<"NewVisit"> {}
+interface NewVisitScreenProps extends AppStackScreenProps<"NewVisit"> { }
 
 export const NewVisitScreen: FC<NewVisitScreenProps> = observer(function NewVisitScreen({
   route,
@@ -39,6 +39,7 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = observer(function NewVisi
         <DatePickerButton
           date={new Date(eventDate)}
           theme="light"
+          maximumDate={new Date()}
           onDateChange={(d) => setEventDate(d.getTime())}
         />
         {forms.map((form, idx) => {

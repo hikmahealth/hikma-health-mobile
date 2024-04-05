@@ -30,7 +30,7 @@ const DEFAULT_DOB = (() => {
 })()
 
 interface PatientRegistrationFormScreenProps
-  extends AppStackScreenProps<"PatientRegistrationForm"> {}
+  extends AppStackScreenProps<"PatientRegistrationForm"> { }
 
 export const PatientRegistrationFormScreen: FC<PatientRegistrationFormScreenProps> = observer(
   function PatientRegistrationFormScreen({ route, navigation }) {
@@ -60,16 +60,18 @@ export const PatientRegistrationFormScreen: FC<PatientRegistrationFormScreenProp
             }
           })
       }
-    }, [editPatientId])
+    }, [editPatientId]);
+
 
     const onSubmit: SubmitHandler<typeof state> = async (data) => {
+      console.log({ data })
       if (data.given_name.length === 0 || data.surname.length === 0) {
         return Alert.alert("Empty name provided. Please fill in both the names")
       }
 
       // TODO: support adding the ID of the patient if they are being updated
       const patient = getPatientRecord()
-      // console.log({ patient })
+      console.log({ patient })
 
       try {
         let res: PatientModel
@@ -115,7 +117,7 @@ export const PatientRegistrationFormScreen: FC<PatientRegistrationFormScreenProp
     return (
       <Screen style={$root} keyboardOffset={64} preset="scroll" safeAreaEdges={["bottom"]}>
         <View gap={10} pb={40}>
-          {fields.map((field) => {
+          {fields.filter(field => field.visible).map((field) => {
             const { fieldType, column } = field
             return (
               <View key={field.id}>
@@ -140,6 +142,7 @@ export const PatientRegistrationFormScreen: FC<PatientRegistrationFormScreenProp
                       <DatePickerButton
                         modal
                         theme="light"
+                        maximumDate={new Date()}
                         title={getTranslation(field.label, language.current)}
                         date={isValid(state[column]) ? state[column] : new Date()}
                         onDateChange={(d) => setField(column, d)}

@@ -89,17 +89,17 @@ export function usePatientsList(pageSize: number): PatientsList {
       )
     }
     if (sex.length > 0) {
-      queryConditions.push(Q.where("sex", Q.eq(`%${Q.sanitizeLikeString(sex)}%`)))
+      queryConditions.push(Q.where("sex", Q.eq(`${Q.sanitizeLikeString(sex)}`)))
     }
 
     const refQuery =
       queryConditions.length === 0
         ? ref.query(Q.sortBy("updated_at", "desc"), Q.take(totalShowingResults))
         : ref.query(
-            Q.and(...queryConditions),
-            Q.sortBy("updated_at", "desc"),
-            Q.take(totalShowingResults),
-          )
+          Q.and(...queryConditions),
+          Q.sortBy("updated_at", "desc"),
+          Q.take(totalShowingResults),
+        )
 
     const sub = refQuery.observe().subscribe((patients) => {
       setPatients(patients)
@@ -200,7 +200,7 @@ export function usePatientsList(pageSize: number): PatientsList {
   }
 }
 
-interface PatientsListScreenProps extends AppStackScreenProps<"PatientsList"> {}
+interface PatientsListScreenProps extends AppStackScreenProps<"PatientsList"> { }
 
 export const PatientsListScreen: FC<PatientsListScreenProps> = observer(
   function PatientsListScreen({ navigation }) {
@@ -240,6 +240,8 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = observer(
     const openPatientRegisterForm = () => {
       navigation.navigate("PatientRegistrationForm")
     }
+
+    console.log(patients.map(p => p.sex))
 
     return (
       <SafeAreaView
