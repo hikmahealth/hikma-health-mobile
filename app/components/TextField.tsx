@@ -238,7 +238,7 @@ const $labelStyle: TextStyle = {
   marginBottom: spacing.xs,
 }
 
-const $inputWrapperStyle: ViewStyle = {
+export const $inputWrapperStyle: ViewStyle = {
   flexDirection: "row",
   alignItems: "flex-start",
   borderWidth: 1,

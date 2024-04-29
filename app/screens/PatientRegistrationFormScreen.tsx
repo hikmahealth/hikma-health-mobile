@@ -1,14 +1,13 @@
 import React, { FC, useEffect, useState } from "react"
 import { observer } from "mobx-react-lite"
-import { Alert, ViewStyle } from "react-native"
-import { SubmitHandler, useForm, FormProvider } from "react-hook-form"
+import { Alert, Pressable, ViewStyle } from "react-native"
+import { SubmitHandler } from "react-hook-form"
 import { AppStackScreenProps } from "app/navigators"
-import { Button, Screen, Text, View, TextField, Toggle } from "app/components"
+import { Button, Screen, Text, View, TextField, Toggle, If } from "app/components"
 import { useStores } from "app/models"
-import { isValid, format } from "date-fns"
+import { isValid } from "date-fns"
 import {
   TranslationObject,
-  baseColumns,
   useRegistrationForm,
 } from "app/hooks/usePatientRegistrationForm"
 import PatientModel, { PatientModelData } from "app/db/model/Patient"
@@ -17,6 +16,11 @@ import { sortBy, upperFirst, omit } from "lodash"
 import { DatePickerButton } from "app/components/DatePicker"
 import { api } from "app/services/api"
 import database from "app/db"
+import { LucideArrowRight } from "lucide-react-native"
+import { colors } from "app/theme"
+import { Q } from "@nozbe/watermelondb"
+import { levenshtein } from "app/utils/levenshtein"
+import _ from "lodash"
 // import { useNavigation } from "@react-navigation/native"
 // import { useStores } from "app/models"
 
@@ -28,6 +32,54 @@ const DEFAULT_DOB = (() => {
   d.setDate(1)
   return d
 })()
+
+
+/**
+Hook fetches similar patients and returns them for display
+@param givenName string
+@param surname string
+@returns {PatientModel[]}
+*/
+function useSimilarPatients(givenName: string, surname: string): PatientModel[] {
+  const [patients, setPatients] = useState<PatientModel[]>([]);
+
+  useEffect(() => {
+    if (givenName.length < 2 || surname.length < 2) {
+      setPatients([]);
+      return;
+    }
+    database.get<PatientModel>("patients").query(
+      Q.or(
+        Q.where("given_name", Q.like(`%${Q.sanitizeLikeString(givenName)}%`)),
+        Q.where("surname", Q.like(`%${Q.sanitizeLikeString(surname)}%`)),
+      ),
+      Q.take(10)
+    ).fetch().then((results) => {
+      // get the lev distance for each patient and sort
+      const sorted = _.sortBy(results.map(patient => {
+        console.warn(levenshtein(patient.givenName.toLowerCase(), givenName.toLowerCase()))
+        return {
+          patient,
+          distance: levenshtein(patient.givenName.toLowerCase(), givenName.toLowerCase())
+            +
+            levenshtein(patient.surname.toLowerCase(), surname.toLowerCase())
+        }
+      }), ["distance"])
+        .map(a => a.patient)
+
+      setPatients(sorted)
+
+    }, (error) => {
+      console.error(error);
+      setPatients([])
+    })
+
+  }, [givenName, surname]);
+
+
+
+  return patients;
+}
 
 interface PatientRegistrationFormScreenProps
   extends AppStackScreenProps<"PatientRegistrationForm"> { }
@@ -42,6 +94,10 @@ export const PatientRegistrationFormScreen: FC<PatientRegistrationFormScreenProp
       language.current,
       patientToEdit || undefined,
     )
+
+
+    /** Background patient search for similar existing patients */
+    const similarPatients = useSimilarPatients(state.given_name, state.surname);
 
     // console.log({ patientToEdit })
 
@@ -103,6 +159,18 @@ export const PatientRegistrationFormScreen: FC<PatientRegistrationFormScreenProp
         console.error(error)
         Alert.alert("Error", "An error occurred while saving the patient")
       }
+    }
+
+
+    /** Navigate to the patient file */
+    const openPatientFile = (id: string) => () => {
+      if (id.length < 5) {
+        console.error("Attempting to open a patient file with an invalid patient id");
+        return;
+      }
+      navigation.navigate("PatientView", {
+        patientId: id
+      })
     }
 
     const $rtl = language.isRTL ? $rtlStyle : {}
@@ -193,6 +261,25 @@ export const PatientRegistrationFormScreen: FC<PatientRegistrationFormScreenProp
               </View>
             )
           })}
+
+          <If condition={similarPatients.length > 0}>
+            <View gap={8} style={{
+              backgroundColor: "#ffea99",
+              borderRadius: 8,
+              padding: 10
+            }}>
+              <Text weight="semiBold" text="Similar Existing Patients" style={{ marginBottom: 8 }} />
+              {similarPatients.slice(0, 5).map(patient => (
+                <Pressable key={patient.id} onPress={openPatientFile(patient.id)} style={{ flexDirection: "row", justifyContent: "space-between", borderBottomWidth: 1, borderBottomColor: "#7f6600", alignItems: "center" }}>
+                  <View>
+                    <Text text={`${patient.givenName} ${patient.surname}`} />
+                    <Text text={`${translate("dob")}: ${patient.dateOfBirth}`} />
+                  </View>
+                  <LucideArrowRight color={colors.textDim} size={16} />
+                </Pressable>
+              ))}
+            </View>
+          </If>
 
           <Button preset="default" onPress={() => onSubmit(state)} testID="submit">
             {translate("save")}

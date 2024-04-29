@@ -234,6 +234,7 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen({
               })
             }
             value={creds.email}
+            autoCapitalize="none"
             labelTx={"login.email"}
           />
           <TextField

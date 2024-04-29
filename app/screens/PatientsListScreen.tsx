@@ -106,15 +106,9 @@ export function usePatientsList(pageSize: number): PatientsList {
       setIsLoading(false)
     })
 
-    ref
-      .query()
-      .fetchCount()
-      .then((count) => {
-        setTotalPatientsCount(count)
-      })
-      .catch((err) => {
-        console.log(err)
-      })
+
+    const patientCountSub = ref.query().observeCount().subscribe(setTotalPatientsCount);
+
 
     // const minDate = format(new Date(debouncedSearchFilter.yearOfBirth, 0, 1), "yyyy-MM-dd")
     // const maxDate = format(new Date(debouncedSearchFilter.yearOfBirth, 11, 31), "yyyy-MM-dd")
@@ -147,7 +141,8 @@ export function usePatientsList(pageSize: number): PatientsList {
     // }
 
     return () => {
-      sub.unsubscribe()
+      sub.unsubscribe();
+      patientCountSub.unsubscribe();
     }
   }, [totalShowingResults, debouncedSearchFilter])
 

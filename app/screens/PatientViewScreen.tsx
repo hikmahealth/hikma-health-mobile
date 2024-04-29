@@ -26,7 +26,7 @@ import logoStr from "app/assets/images/logoStr"
 import { useInteractionManager } from "@react-native-community/hooks"
 import { useDebounce } from "usehooks-ts"
 
-interface PatientViewScreenProps extends AppStackScreenProps<"PatientView"> {}
+interface PatientViewScreenProps extends AppStackScreenProps<"PatientView"> { }
 
 /**
  * Hook to subscribe to events from a form that is `is_snapshopt_form`
@@ -132,7 +132,7 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
       <Screen style={$root} preset="scroll">
         <View pt={40} pb={40} style={{ backgroundColor: colors.palette.primary50 }}>
           <If condition={interactionReady}>
-            <PatientProfileSummary patient={patient} onPressEdit={() => {}} />
+            <PatientProfileSummary patient={patient} onPressEdit={() => { }} />
           </If>
 
           <View direction="row" justifyContent="center" alignItems="center" mt={10} gap={10}>
@@ -298,12 +298,11 @@ async function printHTML(props: PDFReportProps) {
 
               <br>
               <br>
-              ${
-                patient.additionalData &&
-                Object.entries(patient.additionalData)
-                  .map((v) => "<p>" + v[0] + ": " + v[1] + "</p>")
-                  .join("")
-              }
+              ${patient.additionalData &&
+      Object.entries(patient.additionalData)
+        .map((v) => "<p>" + v[0] + ": " + v[1] + "</p>")
+        .join("")
+      }
               <br>
               ${upperFirst(translate((patient.sex as any) || ""))}
 
@@ -449,15 +448,14 @@ const PatientProfileSummary: FC<PatientProfileSummaryProps> = function PatientPr
           {displayName(patient)}
         </Text>
         <Text align="center" testID="sex">{`${translate("sex")}:  ${upperFirst(
-          translate(patient.sex as TxKeyPath),
+          translate(patient.sex as TxKeyPath, { defaultValue: patient.sex || "" }),
         )}`}</Text>
         <Text
           align="center"
-          text={`${translate("dob")}: ${
-            isValid(new Date(patient.dateOfBirth))
+          text={`${translate("dob")}: ${isValid(new Date(patient.dateOfBirth))
               ? format(new Date(patient.dateOfBirth), "dd MMM yyyy")
               : ""
-          }`}
+            }`}
         />
 
         <Text align="center">Registered: {localeDate(patient.createdAt, "MMM dd, yyyy", {})}</Text>

@@ -1,8 +1,9 @@
 import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { observer } from "mobx-react-lite"
-import { Alert, ViewStyle } from "react-native"
+import { Alert, BackHandler, ViewStyle } from "react-native"
 import { AppStackScreenProps } from "app/navigators"
 import {
+  $inputWrapperStyle,
   Button,
   DiagnosisEditor,
   DiagnosisPickerButton,
@@ -25,7 +26,7 @@ import { translate } from "app/i18n"
 import { colors } from "app/theme"
 import { api } from "app/services/api"
 import { useStores } from "app/models"
-import { CommonActions } from "@react-navigation/native"
+import { CommonActions, useFocusEffect } from "@react-navigation/native"
 // import { useNavigation } from "@react-navigation/native"
 // import { useStores } from "app/models"
 import {
@@ -36,6 +37,8 @@ import {
 import { ICDEntry, MedicationEntry } from "app/types"
 import { DatePickerButton } from "app/components/DatePicker"
 import { isValid } from "date-fns"
+import _ from "lodash"
+import DropDownPicker from "react-native-dropdown-picker"
 
 // type ModalState = { activeModal: "medication" | "diagnosis" | null, medication: MedicationEntry | null, diagnoses: any[] }
 type ModalState =
@@ -44,6 +47,21 @@ type ModalState =
   | { activeModal: "diagnoses" }
 
 interface EventFormScreenProps extends AppStackScreenProps<"EventForm"> { }
+
+
+/**
+Hook to manage multiple open pickers by Id
+*/
+export function useOpenDialogue() {
+  const [openId, setOpenId] = useState<null | string>(null);
+
+  return {
+    isOpen: (id: string) => openId === id,
+    openId,
+    openDialogue: (id: string) => () => setOpenId(id),
+    closeDialogue: () => setOpenId(null)
+  }
+}
 
 export const EventFormScreen: FC<EventFormScreenProps> = observer(function EventFormScreen({
   route,
@@ -68,6 +86,7 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
   const [medicines, setMedicines] = useState<MedicationEntry[]>([])
 
   const { form, state: formState, isLoading } = useEventForm(formId, visitId, patientId, eventId)
+  const { isOpen, openDialogue, closeDialogue } = useOpenDialogue();
 
   useEffect(() => {
     if (form && formState) {
@@ -82,6 +101,7 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
     }
   }, [formState, form])
 
+
   const [loading, setLoading] = useState(false)
   const [modalState, updateModalState] = useImmer<ModalState>({
     activeModal: null,
@@ -93,6 +113,39 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
       bottomSheetModalRef.current?.dismiss()
     }
   }, [modalState.activeModal])
+
+  /** Close any open bottom sheets on back press, if none are open then you can leave the screen */
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        if (modalState.activeModal) {
+          bottomSheetModalRef.current?.close();
+          return true;
+        } else {
+          return false;
+        }
+      };
+
+      // const hardwareSubscription = BackHandler.addEventListener(
+      // 'hardwareBackPress',
+      // onBackPress
+      // );
+
+      const subscription = navigation.addListener("beforeRemove", e => {
+        const res = onBackPress();
+        if (res) {
+          e.preventDefault();
+        }
+      })
+
+      // return () => subscription.remove();
+      return () => {
+        subscription()
+      }
+    }, [modalState.activeModal])
+  );
+
+
   const canSaveForm = useMemo(() => {
     if (loading) {
       return false
@@ -202,9 +255,9 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
   const snapPoints = useMemo(() => ["100%", "100%"], [])
 
   // callbacks
-  const handlePresentModalPress = useCallback(() => {
-    bottomSheetModalRef.current?.present()
-  }, [])
+  // const handlePresentModalPress = useCallback(() => {
+  // bottomSheetModalRef.current?.present()
+  // }, [])
   const handleSheetChanges = useCallback((index: number) => {
     console.log("handleSheetChanges", index)
     if (index === -1) {
@@ -297,27 +350,68 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
                     render={({ field: { onChange, value } }) => (
                       <View style={{}}>
                         <Text text={field.name} preset="formLabel" />
-                        <View
-                          style={{
-                            marginTop: 4,
-                            borderWidth: 1,
-                            borderRadius: 4,
-                            backgroundColor: colors.palette.neutral200,
-                            borderColor: colors.palette.neutral400,
-                            overflow: "hidden",
-                          }}
-                        >
-                          <Picker selectedValue={value} onValueChange={onChange}>
-                            <Picker.Item label="Select an option" value="" />
-                            {field.options?.map((option, idx) => (
-                              <Picker.Item
-                                key={option.value}
-                                label={option.label}
-                                value={option.value}
-                              />
-                            ))}
-                          </Picker>
-                        </View>
+                        {(field.options?.length || 0) >= 0 ? (
+                          <DropDownPicker
+                            open={isOpen(field.id)}
+                            value={value}
+                            searchable
+                            closeAfterSelecting
+                            style={{
+                              marginTop: 4,
+                              borderWidth: 1,
+                              borderRadius: 4,
+                              backgroundColor: colors.palette.neutral200,
+                              borderColor: colors.palette.neutral400,
+                              zIndex: 990000,
+                              flex: 1
+                              // overflow: "hidden",
+                            }}
+                            modalTitle={field.name}
+                            modalContentContainerStyle={{
+                              marginTop: 4,
+                              borderWidth: 1,
+                              borderRadius: 4,
+                              backgroundColor: colors.palette.neutral200,
+                              borderColor: colors.palette.neutral400,
+                              zIndex: 990000,
+                              flex: 1
+                              // overflow: "hidden",
+                            }}
+                            searchPlaceholder={translate("search", {defaultValue: "Search"}) + "..."}
+                            searchTextInputStyle={$inputWrapperStyle}
+                            closeOnBackPressed
+                            onClose={closeDialogue}
+                            items={_.sortBy(field.options, ["label"])}
+                            setOpen={openDialogue(field.id)}
+                            listMode="MODAL"
+                            setValue={onChange}
+                          // setItems={setItems} // For creatable items
+                          />
+                        ) : (
+                          <View
+                            style={{
+                              marginTop: 4,
+                              borderWidth: 1,
+                              borderRadius: 4,
+                              backgroundColor: colors.palette.neutral200,
+                              borderColor: colors.palette.neutral400,
+                              zIndex: 990000,
+                              flex: 1
+                              // overflow: "hidden",
+                            }}
+                          >
+                            <Picker selectedValue={value} onValueChange={onChange}>
+                              <Picker.Item label="Select an option" value="" />
+                              {_.sortBy(field.options, ["label"])?.map((option, idx) => (
+                                <Picker.Item
+                                  key={option.value}
+                                  label={option.label}
+                                  value={option.value}
+                                />
+                              ))}
+                            </Picker>
+                          </View>
+                        )}
                       </View>
                     )}
                     name={field.name as never}

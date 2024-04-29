@@ -53,14 +53,13 @@ export const PatientListItem = enhance(
               {displayName(patient)}
             </Text>
             <Text
-              text={`${translate("dob")}: ${
-                isValid(new Date(patient.dateOfBirth))
+              text={`${translate("dob")}: ${isValid(new Date(patient.dateOfBirth))
                   ? format(new Date(patient.dateOfBirth), "dd MMM yyyy")
                   : ""
-              }`}
+                }`}
             />
             <Text testID="sex">{`${translate("sex")}:  ${upperFirst(
-              translate(patient.sex as TxKeyPath),
+              translate(patient.sex as TxKeyPath, { defaultValue: patient.sex || "" }),
             )}`}</Text>
             <Text>{localeDate(patient.createdAt, "MMM dd, yyyy", {})}</Text>
           </View>
