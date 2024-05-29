@@ -1,4 +1,4 @@
-import React, { FC, useState } from "react"
+import React, { FC, useEffect, useState } from "react"
 import { observer } from "mobx-react-lite"
 import { Pressable, ViewStyle } from "react-native"
 import { AppStackParamList, AppStackScreenProps } from "app/navigators"
@@ -12,7 +12,7 @@ import { colors } from "app/theme"
 // import { useNavigation } from "@react-navigation/native"
 // import { useStores } from "app/models"
 
-interface NewVisitScreenProps extends AppStackScreenProps<"NewVisit"> { }
+interface NewVisitScreenProps extends AppStackScreenProps<"NewVisit"> {}
 
 export const NewVisitScreen: FC<NewVisitScreenProps> = observer(function NewVisitScreen({
   route,
@@ -27,6 +27,15 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = observer(function NewVisi
   const [eventDate, setEventDate] = useState<number>(visitDate)
 
   const forms = useDBEventForms(translate("languageCode"))
+
+  /** If we are updating an existing visit, then we are just adding an event. update the title to reflect this */
+  useEffect(() => {
+    if (visitId !== undefined && visitId !== null && visitId?.length > 3) {
+      navigation.setOptions({
+        title: "Add Event",
+      })
+    }
+  }, [visitId])
 
   console.warn({ visitId })
 
@@ -65,6 +74,7 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = observer(function NewVisi
           )
         })}
       </View>
+      <View style={{ height: 40 }} />
     </Screen>
   )
 })

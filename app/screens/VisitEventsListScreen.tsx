@@ -2,7 +2,7 @@ import React, { FC, useEffect } from "react"
 import { observer } from "mobx-react-lite"
 import { Alert } from "react-native"
 import { AppStackScreenProps } from "../navigators"
-import { EventListItem, Fab } from "../components"
+import { EventListItem, Fab, View } from "../components"
 import { useDBVisitEvents } from "../hooks/useDBVisitEvents"
 import { useStores } from "../models"
 import { PlusIcon } from "lucide-react-native"
@@ -83,6 +83,7 @@ export const VisitEventsListScreen: FC<VisitEventsListScreenProps> = observer(
               language={language.current}
             />
           )}
+          ListFooterComponent={() => <View style={{ height: 60 }} />}
         />
         <Fab Icon={PlusIcon} onPress={goToNewPatientVisit} />
       </>

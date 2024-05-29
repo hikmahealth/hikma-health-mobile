@@ -27,7 +27,12 @@ export interface PatientListItemProps {
   /**
    * Callback for when the patient is selected
    */
-  onPatientSelected: (patientId: Patient["id"]) => void
+  onPatientSelected: (patientId: Patient["id"], patient: Patient) => void
+
+  /*
+  Callback for when the patient list item is long pressed
+  */
+  onPatientLongPress: (patientId: Patient["id"]) => void
 }
 
 const enhance = withObservables(["patient"], ({ patient }) => ({
@@ -41,11 +46,15 @@ export const PatientListItem = enhance(
   observer(function PatientListItem(props: PatientListItemProps) {
     const { language } = useStores()
     const isRTL = language.isRTL
-    const { style, patient, onPatientSelected } = props
+    const { style, patient, onPatientSelected, onPatientLongPress } = props
     const $styles = [$container, style]
 
     return (
-      <Pressable onPress={() => onPatientSelected(patient.id)} style={$styles}>
+      <Pressable
+        onPress={() => onPatientSelected(patient.id, patient)}
+        style={$styles}
+        onLongPress={() => onPatientLongPress(patient.id)}
+      >
         <View gap={20} direction={isRTL ? "row-reverse" : "row"}>
           <Avatar fullName={`${displayName(patient)}`} imageURL={patient.photoUrl} />
           <View>
@@ -60,9 +69,9 @@ export const PatientListItem = enhance(
               }`}
             />
             <Text testID="sex">{`${translate("sex")}:  ${upperFirst(
-              translate(patient.sex as TxKeyPath),
+              translate(patient.sex as TxKeyPath, { defaultValue: patient.sex || "" }),
             )}`}</Text>
-            <Text>{localeDate(patient.createdAt, "MMM dd, yyyy", {})}</Text>
+            {/*<Text>{localeDate(patient.createdAt, "MMM dd, yyyy", {})}</Text>*/}
           </View>
         </View>
       </Pressable>

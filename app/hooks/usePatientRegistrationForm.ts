@@ -4,33 +4,35 @@ import { useEffect, useState } from "react"
 import { database } from "../db"
 import PatientModel, { PatientModelData } from "../db/model/Patient"
 import RegistrationFormModel from "../db/model/PatientRegistrationForm"
+import { TranslationObject } from "app/types"
 
 const inputTypes = ["number", "text", "select", "date", "boolean"] as const
-
-type DefaultLanguages = {
-  en: string
-  ar?: string
-  es?: string
-}
-
-export type TranslationObject = DefaultLanguages & {
-  [lang: string]: string
-}
-
-export type LanguageKey = "en" | "ar" | "es" | string
 
 /**
  * A list of all the base columns that are required for a patient to be registered
  * in the system. These are the fields that are required for all registration forms
  * to be valid.
  */
-export type BaseColumn = "given_name" | "surname" | "date_of_birth" | "sex" | "citizenship"
+export type BaseColumn =
+  | "given_name"
+  | "surname"
+  | "date_of_birth"
+  | "sex"
+  | "phone"
+  | "citizenship"
+  | "camp"
+  | "government_id"
+  | "external_patient_id"
 export const baseColumns: BaseColumn[] = [
   "given_name",
   "surname",
   "date_of_birth",
   "sex",
+  "phone",
   "citizenship",
+  "camp",
+  "government_id",
+  "external_patient_id",
 ]
 
 type RegistrationFormField = {
@@ -48,6 +50,12 @@ type RegistrationFormField = {
 
   /** Can be set by the administrator: determines whether or not the field is displayed during patient registration */
   visible: boolean
+
+  /** Whether or not a field is marked as deleted - this is a soft-delete */
+  deleted: boolean
+
+  /** Whether or not this field renders in the "advanced search" sections during patient search */
+  isSearchField: boolean
 }
 
 type RegistrationForm = {
@@ -65,11 +73,17 @@ Derived from the Patient Model
 */
 type BaseFields = {
   id: string
-  firstName: string
-  lastName: string
-  sex: string
+  givenName: string
+  surname: string
   dateOfBirth: Date
-  registrationDate: Date
+  citizenship: string
+  hometown: string
+  phone: string
+  sex: string
+  camp: string
+  photoUrl: string
+  governmentId: string
+  externalPatientId: string
 }
 
 // sometimes typescript is so confusing
@@ -90,7 +104,6 @@ export function useRegistrationForm(language: string, patientData?: PatientModel
   const [form, setForm] = useState<RegistrationForm>(initialFormState)
   const [state, setState] = useState<FormState>(stateFromFields(initialFormState.fields))
   const [isLoading, setIsLoading] = useState<boolean>(true)
-
 
   // set the state with the initial values from either the patientData or the initial values
 
@@ -123,7 +136,8 @@ export function useRegistrationForm(language: string, patientData?: PatientModel
         } else {
           setState(formState)
         }
-      }).finally(() => {
+      })
+      .finally(() => {
         setIsLoading(false)
       })
   }, [patientData])
@@ -143,6 +157,8 @@ export function useRegistrationForm(language: string, patientData?: PatientModel
       hometown: state.hometown || "",
       phone: state.phone || "",
       photoUrl: state.photo_url || "",
+      governmentId: state.government_id || "",
+      externalPatientId: state.external_patient_id || "",
 
       /** additionalData is the dynamic data that is stored in the database, not including the base fields that have their own columns */
       additionalData: omit(state, baseColumns),
@@ -156,7 +172,7 @@ export function useRegistrationForm(language: string, patientData?: PatientModel
     /** field is the column name */
     setField: (field: string, value: any) => setState((s) => ({ ...s, [field]: value })),
     getPatientRecord,
-    isLoading
+    isLoading,
   }
 }
 
@@ -249,6 +265,8 @@ const initialFormFields: RegistrationFormField[] = [
     options: [],
     visible: true,
     required: true,
+    isSearchField: false,
+    deleted: false,
   },
   {
     baseField: true,
@@ -264,6 +282,8 @@ const initialFormFields: RegistrationFormField[] = [
     options: [],
     visible: true,
     required: true,
+    isSearchField: false,
+    deleted: false,
   },
   {
     baseField: true,
@@ -279,6 +299,8 @@ const initialFormFields: RegistrationFormField[] = [
     options: [],
     visible: true,
     required: true,
+    isSearchField: true,
+    deleted: false,
   },
   {
     baseField: true,
@@ -305,6 +327,8 @@ const initialFormFields: RegistrationFormField[] = [
     ], // only if its a search field
     visible: true,
     required: true,
+    isSearchField: true,
+    deleted: false,
   },
   {
     baseField: true,
@@ -320,10 +344,80 @@ const initialFormFields: RegistrationFormField[] = [
     options: [],
     visible: true,
     required: true,
+    isSearchField: false,
+    deleted: false,
+  },
+  {
+    baseField: true,
+    id: "f6024866-bc83-11ee-a506-0242ac120002",
+    column: "camp",
+    position: 8,
+    label: {
+      en: "Camp",
+      ar: "مخيم",
+      es: "Campamento",
+    },
+    fieldType: "text",
+    options: [],
+    visible: true,
+    required: true,
+    isSearchField: false,
+    deleted: false,
+  },
+  {
+    baseField: true,
+    id: "be6e53d6-120a-11ef-9262-0242ac120002",
+    column: "government_id",
+    position: 9,
+    label: {
+      en: "Government ID",
+      ar: "الهوية الحكومية",
+      es: "Identificación del gobierno",
+    },
+    fieldType: "text",
+    options: [],
+    visible: true,
+    required: true,
+    isSearchField: false,
+    deleted: false,
+  },
+  {
+    baseField: true,
+    id: "b7671870-120a-11ef-9262-0242ac120002",
+    column: "external_patient_id",
+    position: 10,
+    label: {
+      en: "Patient ID",
+      ar: "رقم المريض",
+      es: "ID del paciente",
+    },
+    fieldType: "text",
+    options: [],
+    visible: true,
+    required: true,
+    isSearchField: false,
+    deleted: false,
+  },
+  {
+    baseField: true,
+    id: "fd328808-bc83-11ee-a506-0242ac120002",
+    column: "phone",
+    position: 11,
+    label: {
+      en: "Phone",
+      ar: "هاتف",
+      es: "Teléfono",
+    },
+    fieldType: "text",
+    options: [],
+    visible: true,
+    required: true,
+    isSearchField: false,
+    deleted: false,
   },
 ]
 
-const initialFormState: RegistrationForm = {
+export const initialFormState: RegistrationForm = {
   id: "initial-id",
   name: "Patient Registration Form",
   fields: initialFormFields,

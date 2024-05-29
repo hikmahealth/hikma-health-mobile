@@ -228,19 +228,58 @@ export const SettingsScreen: FC<SettingsScreenProps> = observer(function Setting
           )}
         </View>
 
-        <View direction="row" justifyContent="space-between" style={$withBottomBorder} py={12}>
-          <Text text="Collect climate data when available" size="sm" />
-          <Toggle
-            variant="switch"
-            value={appState.hersEnabled}
-            onValueChange={(value) => appState.setProp("hersEnabled", value)}
-          />
-        </View>
+        <If condtion={false}>
+          <View direction="row" justifyContent="space-between" style={$withBottomBorder} py={12}>
+            <Text text="Enable Health + Environment Index" size="sm" />
+            <Toggle
+              variant="switch"
+              value={appState.hersEnabled}
+              disabled
+              onValueChange={(value) => appState.setProp("hersEnabled", value)}
+            />
+          </View>
 
-        <View style={$withBottomBorder} py={12}>
-          <LanguageToggle />
-        </View>
+          <View style={$withBottomBorder} py={4}>
+            <LanguageToggle />
+          </View>
+        </If>
       </View>
+
+      {/** HERS DATA **/}
+      <If condition={appState.hersEnabled && false}>
+        <View py={22} gap={10}>
+          <Text text="Health + Environment Summary" size="lg" />
+          <Text size="xs" text="7 day avg - today +/- 3 days" />
+          <View direction="row" justifyContent="space-between" style={$withBottomBorder} py={12}>
+            <Text text="Air Quality" size="sm" />
+            <Text text="2" />
+          </View>
+          <View direction="row" justifyContent="space-between" style={$withBottomBorder} py={12}>
+            <Text text="Temperature" size="sm" />
+            <Text text="32ºC" />
+          </View>
+          <View direction="row" justifyContent="space-between" style={$withBottomBorder} py={12}>
+            <Text text="Precipitation" size="sm" />
+            <Text text="24mm" />
+          </View>
+          <View style={$withBottomBorder} py={12}>
+            <Text text="Conditions Impacted" size="sm" />
+            <View direction="row" style={{ flexWrap: "wrap" }} gap={6} pt={4}>
+              {[
+                "COPD",
+                "Pneumonia",
+                "Bronchitis",
+                "Malaria",
+                "Upper Respiratory Tract Infections",
+              ].map((cond) => (
+                <Pressable style={$hersChip} key={cond}>
+                  <Text text={cond} size="xs" />
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        </View>
+      </If>
 
       {/* ONLY SHOW THE FOLLOWING IN DEV MODE */}
       <If condition={__DEV__}>
@@ -262,6 +301,14 @@ export const SettingsScreen: FC<SettingsScreenProps> = observer(function Setting
 const $withBottomBorder: ViewStyle = {
   borderBottomColor: colors.border,
   borderBottomWidth: 1,
+}
+
+const $hersChip: ViewStyle = {
+  borderColor: colors.border,
+  borderWidth: 1,
+  borderRadius: 8,
+  paddingHorizontal: 8,
+  paddingVertical: 4,
 }
 
 const $root: ViewStyle = {

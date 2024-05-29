@@ -3,7 +3,7 @@ const ar = {
     signIn: "تسجيل الدخول",
     email: "البريد الإلكتروني",
     password: "كلمه السر",
-    qrCodeRegister: "تسجيل التطبيق مع رمز QR"
+    qrCodeRegister: "تسجيل التطبيق مع رمز QR",
   },
   patientFile: {
     patientView: "صفحة المريض",
@@ -53,7 +53,8 @@ const ar = {
   },
   newPatient: {
     newPatient: "مريض جديد",
-    continueToVisits: "الذهاب لزيارة المرضى"
+    updatePatient: "تحديث المريض",
+    continueToVisits: "الذهاب لزيارة المرضى",
   },
   summaryStats: {
     summaryStats: "احصائيه الملخص",
@@ -78,8 +79,9 @@ const ar = {
   },
   errorScreen: {
     title: "حدث خطأ في التطبيق.",
-    friendlySubtitle: "إذا استمر حدوث هذا الخطأ، فيرجى إرسال بريد إلكتروني إلى فريق الدعم لدينا، أو إرسال مشكلة على github مع الخطوات التي اتخذتها لإنتاج هذا الخطأ.",
-    reset: "إعادة تعيين التطبيق"
+    friendlySubtitle:
+      "إذا استمر حدوث هذا الخطأ، فيرجى إرسال بريد إلكتروني إلى فريق الدعم لدينا، أو إرسال مشكلة على github مع الخطوات التي اتخذتها لإنتاج هذا الخطأ.",
+    reset: "إعادة تعيين التطبيق",
   },
   success: "نجاح",
   done: "مكتمل",

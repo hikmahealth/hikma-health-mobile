@@ -147,13 +147,13 @@ export const MedicationEditor = observer(function MedicationEditor(props: Medica
               ))}
           </View>
           <Picker selectedValue={map.get("form")} onValueChange={setValue("form")}>
-            <Picker.Item label={"Choose an option"} value="" />
+            <Picker.Item label={"Choose medication form"} value="" />
             {stringsListToOptions(medicineFormOptions).map((option) => (
               <Picker.Item key={option.value} label={option.label} value={option.value} />
             ))}
           </Picker>
         </View>
-        <View style={[$medicineInputRow, $inputWithUnits]}>
+        <View style={[$medicineInputRow, $inputWithUnits]} gap={6}>
           <TextField
             value={getValue("dose") === 0 ? "" : getValue("dose")?.toString()}
             label="Dose (Concentration)"
@@ -166,7 +166,8 @@ export const MedicationEditor = observer(function MedicationEditor(props: Medica
           />
 
           <View style={{ flex: 2 }}>
-            <Text preset="formLabel" text="Units" />
+            {/*<Text preset="formLabel" text="Units" />*/}
+            <Text text="" />
             <Picker selectedValue={getValue("doseUnits")} onValueChange={setValue("doseUnits")}>
               <Picker.Item label={"Units"} value="" />
               {stringsListToOptions(doseUnitOptions, false).map((option) => (
