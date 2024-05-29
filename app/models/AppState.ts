@@ -12,7 +12,8 @@ export const AppStateModel = types
     notificationsEnabled: types.optional(types.boolean, true),
     lockWhenIdle: types.optional(types.boolean, false),
     lastActiveTime: types.maybeNull(types.number),
-    hersEnabled: types.optional(types.boolean, false),
+    // hersEnabled: types.optional(types.boolean, false),
+    hersEnabled: false,
   })
   .actions(withSetPropAction)
   .views((self) => ({
@@ -20,14 +21,14 @@ export const AppStateModel = types
     get isLocked() {
       // return self.lockWhenIdle && (new Date().getTime() - self.lastActiveTime) > LOCK_TIMEOUT
       if (self.lockWhenIdle && self.lastActiveTime) {
-        return (new Date().getTime() - self.lastActiveTime) > LOCK_TIMEOUT
+        return new Date().getTime() - self.lastActiveTime > LOCK_TIMEOUT
       }
       return false
     },
   }))
   .actions((self) => ({}))
 
-export interface AppState extends Instance<typeof AppStateModel> { }
-export interface AppStateSnapshotOut extends SnapshotOut<typeof AppStateModel> { }
-export interface AppStateSnapshotIn extends SnapshotIn<typeof AppStateModel> { }
+export interface AppState extends Instance<typeof AppStateModel> {}
+export interface AppStateSnapshotOut extends SnapshotOut<typeof AppStateModel> {}
+export interface AppStateSnapshotIn extends SnapshotIn<typeof AppStateModel> {}
 export const createAppStateDefaultModel = () => types.optional(AppStateModel, {})

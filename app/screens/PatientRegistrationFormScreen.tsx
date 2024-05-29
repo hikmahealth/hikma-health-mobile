@@ -6,10 +6,7 @@ import { AppStackScreenProps } from "app/navigators"
 import { Button, Screen, Text, View, TextField, Toggle, If } from "app/components"
 import { useStores } from "app/models"
 import { isValid } from "date-fns"
-import {
-  TranslationObject,
-  useRegistrationForm,
-} from "app/hooks/usePatientRegistrationForm"
+import { TranslationObject, useRegistrationForm } from "app/hooks/usePatientRegistrationForm"
 import PatientModel, { PatientModelData } from "app/db/model/Patient"
 import { translate } from "app/i18n"
 import { sortBy, upperFirst, omit } from "lodash"
@@ -21,6 +18,8 @@ import { colors } from "app/theme"
 import { Q } from "@nozbe/watermelondb"
 import { levenshtein } from "app/utils/levenshtein"
 import _ from "lodash"
+import { getTranslation } from "app/utils/parsers"
+import { useSimilarPatientsSearch } from "app/hooks/useSimilarPatientsSearch"
 // import { useNavigation } from "@react-navigation/native"
 // import { useStores } from "app/models"
 
@@ -33,56 +32,8 @@ const DEFAULT_DOB = (() => {
   return d
 })()
 
-
-/**
-Hook fetches similar patients and returns them for display
-@param givenName string
-@param surname string
-@returns {PatientModel[]}
-*/
-function useSimilarPatients(givenName: string, surname: string): PatientModel[] {
-  const [patients, setPatients] = useState<PatientModel[]>([]);
-
-  useEffect(() => {
-    if (givenName.length < 2 || surname.length < 2) {
-      setPatients([]);
-      return;
-    }
-    database.get<PatientModel>("patients").query(
-      Q.or(
-        Q.where("given_name", Q.like(`%${Q.sanitizeLikeString(givenName)}%`)),
-        Q.where("surname", Q.like(`%${Q.sanitizeLikeString(surname)}%`)),
-      ),
-      Q.take(10)
-    ).fetch().then((results) => {
-      // get the lev distance for each patient and sort
-      const sorted = _.sortBy(results.map(patient => {
-        console.warn(levenshtein(patient.givenName.toLowerCase(), givenName.toLowerCase()))
-        return {
-          patient,
-          distance: levenshtein(patient.givenName.toLowerCase(), givenName.toLowerCase())
-            +
-            levenshtein(patient.surname.toLowerCase(), surname.toLowerCase())
-        }
-      }), ["distance"])
-        .map(a => a.patient)
-
-      setPatients(sorted)
-
-    }, (error) => {
-      console.error(error);
-      setPatients([])
-    })
-
-  }, [givenName, surname]);
-
-
-
-  return patients;
-}
-
 interface PatientRegistrationFormScreenProps
-  extends AppStackScreenProps<"PatientRegistrationForm"> { }
+  extends AppStackScreenProps<"PatientRegistrationForm"> {}
 
 export const PatientRegistrationFormScreen: FC<PatientRegistrationFormScreenProps> = observer(
   function PatientRegistrationFormScreen({ route, navigation }) {
@@ -95,9 +46,8 @@ export const PatientRegistrationFormScreen: FC<PatientRegistrationFormScreenProp
       patientToEdit || undefined,
     )
 
-
     /** Background patient search for similar existing patients */
-    const similarPatients = useSimilarPatients(state.given_name, state.surname);
+    const similarPatients = useSimilarPatientsSearch(state.given_name, state.surname)
 
     // console.log({ patientToEdit })
 
@@ -116,11 +66,10 @@ export const PatientRegistrationFormScreen: FC<PatientRegistrationFormScreenProp
             }
           })
       }
-    }, [editPatientId]);
-
+    }, [editPatientId])
 
     const onSubmit: SubmitHandler<typeof state> = async (data) => {
-      console.log({ data })
+      // FIXME: All required fields must be checked at this point
       if (data.given_name.length === 0 || data.surname.length === 0) {
         return Alert.alert("Empty name provided. Please fill in both the names")
       }
@@ -161,19 +110,20 @@ export const PatientRegistrationFormScreen: FC<PatientRegistrationFormScreenProp
       }
     }
 
-
     /** Navigate to the patient file */
     const openPatientFile = (id: string) => () => {
       if (id.length < 5) {
-        console.error("Attempting to open a patient file with an invalid patient id");
-        return;
+        console.error("Attempting to open a patient file with an invalid patient id")
+        return
       }
       navigation.navigate("PatientView", {
-        patientId: id
+        patientId: id,
       })
     }
 
     const $rtl = language.isRTL ? $rtlStyle : {}
+
+    console.log({ form, fields: form.fields })
 
     const fields = sortBy(form.fields, ["position"])
 
@@ -185,63 +135,65 @@ export const PatientRegistrationFormScreen: FC<PatientRegistrationFormScreenProp
     return (
       <Screen style={$root} keyboardOffset={64} preset="scroll" safeAreaEdges={["bottom"]}>
         <View gap={10} pb={40}>
-          {fields.filter(field => field.visible).map((field) => {
-            const { fieldType, column } = field
-            return (
-              <View key={field.id}>
-                {(fieldType === "text" || fieldType === "number") && (
-                  <TextField
-                    keyboardType={fieldType === "number" ? "number-pad" : "default"}
-                    value={state[column]}
-                    onChangeText={(t) => setField(column, fieldType === "number" ? Number(t) : t)}
-                    label={getTranslation(field.label, language.current)}
-                  />
-                )}
+          {fields
+            .filter((field) => field.visible)
+            .map((field) => {
+              const { fieldType, column } = field
+              return (
+                <View key={field.id}>
+                  {(fieldType === "text" || fieldType === "number") && (
+                    <TextField
+                      keyboardType={fieldType === "number" ? "number-pad" : "default"}
+                      value={val}
+                      onChangeText={(t) => setField(column, fieldType === "number" ? Number(t) : t)}
+                      label={getTranslation(field.label, language.current)}
+                    />
+                  )}
 
-                {field.fieldType === "date" && (
-                  <View>
-                    <View style={$rtl}>
-                      <Text
-                        text={getTranslation(field.label, language.current)}
-                        preset="formLabel"
-                      />
-                    </View>
-                    <View style={$rtl}>
-                      <DatePickerButton
-                        modal
-                        theme="light"
-                        maximumDate={new Date()}
-                        title={getTranslation(field.label, language.current)}
-                        date={isValid(state[column]) ? state[column] : new Date()}
-                        onDateChange={(d) => setField(column, d)}
-                      />
-                    </View>
-                  </View>
-                )}
-
-                {field.fieldType === "select" && (
-                  <View>
-                    <View style={$rtl}>
-                      <Text
-                        text={getTranslation(field.label, language.current)}
-                        preset="formLabel"
-                      />
-                    </View>
-                    <View style={$rtl} gap={6} pt={6}>
-                      {field.options.map((field) => (
-                        <Toggle
-                          key={field.en}
-                          label={upperFirst(getTranslation(field, language.current))}
-                          value={state[column] === getTranslation(field, language.current)}
-                          onValueChange={(value) => {
-                            if (value) {
-                              setField(column, getTranslation(field, language.current))
-                            }
-                          }}
-                          variant="radio"
+                  {field.fieldType === "date" && (
+                    <View>
+                      <View style={$rtl}>
+                        <Text
+                          text={getTranslation(field.label, language.current)}
+                          preset="formLabel"
                         />
-                      ))}
-                      {/* <RadioButton.Group
+                      </View>
+                      <View style={$rtl}>
+                        <DatePickerButton
+                          modal
+                          theme="light"
+                          maximumDate={new Date()}
+                          title={getTranslation(field.label, language.current)}
+                          date={isValid(state[column]) ? state[column] : new Date()}
+                          onDateChange={(d) => setField(column, d)}
+                        />
+                      </View>
+                    </View>
+                  )}
+
+                  {field.fieldType === "select" && (
+                    <View>
+                      <View style={$rtl}>
+                        <Text
+                          text={getTranslation(field.label, language.current)}
+                          preset="formLabel"
+                        />
+                      </View>
+                      <View style={$rtl} gap={6} pt={6}>
+                        {field.options.map((field) => (
+                          <Toggle
+                            key={field.en}
+                            label={upperFirst(getTranslation(field, language.current))}
+                            value={state[column] === getTranslation(field, language.current)}
+                            onValueChange={(value) => {
+                              if (value) {
+                                setField(column, getTranslation(field, language.current))
+                              }
+                            }}
+                            variant="radio"
+                          />
+                        ))}
+                        {/* <RadioButton.Group
                         onValueChange={(value: string) => setField(column, value)}
                         value={state[column]}
                       >
@@ -255,22 +207,39 @@ export const PatientRegistrationFormScreen: FC<PatientRegistrationFormScreenProp
                           />
                         ))}
                       </RadioButton.Group> */}
+                      </View>
                     </View>
-                  </View>
-                )}
-              </View>
-            )
-          })}
+                  )}
+                </View>
+              )
+            })}
 
           <If condition={similarPatients.length > 0}>
-            <View gap={8} style={{
-              backgroundColor: "#ffea99",
-              borderRadius: 8,
-              padding: 10
-            }}>
-              <Text weight="semiBold" text="Similar Existing Patients" style={{ marginBottom: 8 }} />
-              {similarPatients.slice(0, 5).map(patient => (
-                <Pressable key={patient.id} onPress={openPatientFile(patient.id)} style={{ flexDirection: "row", justifyContent: "space-between", borderBottomWidth: 1, borderBottomColor: "#7f6600", alignItems: "center" }}>
+            <View
+              gap={8}
+              style={{
+                backgroundColor: "#ffea99",
+                borderRadius: 8,
+                padding: 10,
+              }}
+            >
+              <Text
+                weight="semiBold"
+                text="Similar Existing Patients"
+                style={{ marginBottom: 8 }}
+              />
+              {similarPatients.slice(0, 5).map((patient) => (
+                <Pressable
+                  key={patient.id}
+                  onPress={openPatientFile(patient.id)}
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    borderBottomWidth: 1,
+                    borderBottomColor: "#7f6600",
+                    alignItems: "center",
+                  }}
+                >
                   <View>
                     <Text text={`${patient.givenName} ${patient.surname}`} />
                     <Text text={`${translate("dob")}: ${patient.dateOfBirth}`} />
@@ -289,30 +258,6 @@ export const PatientRegistrationFormScreen: FC<PatientRegistrationFormScreenProp
     )
   },
 )
-
-/**
-Given a translation object and a language key to, return that language label, or default to the english version.
-If the english version does not exist, return any.
-
-@param {TranslationObject} translations
-@param {string} language
-@return {string} translation
-*/
-function getTranslation(translations: TranslationObject, language: string): string {
-  const translationKeys = Object.keys(translations)
-
-  // in the case of no translations, return an empty string
-  if (translationKeys.length === 0) {
-    return ""
-  }
-  if (language in translations) {
-    return translations[language]
-  } else if (translations.en) {
-    return translations.en
-  } else {
-    return translations[translationKeys[0]]
-  }
-}
 
 const $root: ViewStyle = {
   flex: 1,

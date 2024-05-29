@@ -21,6 +21,11 @@ export default class PatientModel extends Model {
   @text("camp") camp!: string
   @text("photo_url") photoUrl!: string
 
+  // V2 Added
+  @text("government_id") governmentId!: string
+  @text("external_patient_id") externalPatientId!: string
+  // !V2 Added
+
   /** Additional data stores all the extra dynamic fields that are stored on the database */
   @json("additional_data", sanitizeAdditionalData) additionalData!: Record<string, any>
   @json("metadata", sanitizeMetadata) metadata!: Record<string, any>
@@ -47,6 +52,8 @@ export type PatientModelData = {
   sex: string
   camp: string
   photoUrl: string
+  governmentId: string
+  externalPatientId: string
   additionalData: Record<string, any>
   metadata: Record<string, any>
   isDeleted: boolean
@@ -65,6 +72,8 @@ export const defaultPatient: PatientModel = {
   sex: "male",
   camp: "",
   photoUrl: "",
+  governmentId: "",
+  externalPatientId: "",
   additionalData: {},
   metadata: {},
   // deletedAt: new Date(),

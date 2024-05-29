@@ -18,6 +18,10 @@ const patientSchema = tableSchema({
     { name: "deleted_at", type: "number", isOptional: true },
     { name: "created_at", type: "number" },
     { name: "updated_at", type: "number" },
+
+    // V2
+    { name: "government_id", type: "string" }, // government issued id
+    { name: "external_patient_id", type: "string" }, // paitent id for the patient from external sources
   ],
 })
 // NOTE: Addresses will be stored in a separate table
@@ -125,8 +129,51 @@ const registrationFormSchema = tableSchema({
   ],
 })
 
+/**
+CREATE TABLE patient_additional_attributes (
+    id: uuid PRIMARY KEY,
+    patient_id: uuid,
+    form_id: uuid NOT null
+    attribute: TEXT NOT null,
+    number_value: INT default null,
+    string_value: TEXT default null,
+    date_value: timestamp with time zone default null,
+    boolean_value: boolean default null,
+    
+    is_deleted boolean default false,
+    created_at timestamp with time zone default now(),
+    updated_at timestamp with time zone default now(),
+    last_modified timestamp with time zone default now(),
+    server_created_at timestamp with time zone default now(),
+    deleted_at timestamp with time zone default null
+)
+*/
+
+const patient_additional_attributes = tableSchema({
+  name: "patient_additional_attributes", // Assuming we're going with this table name
+  columns: [
+    { name: "patient_id", type: "string", isIndexed: true },
+
+    { name: "attribute_id", type: "string", isIndexed: true }, // attribute_id is also the field id in the dynamic form
+    { name: "attribute", type: "string" }, // storing the attribute name as a denormalized value to allow for faster read times in situations where accuracy is not needed
+
+    { name: "number_value", type: "number", isOptional: true }, // Store numbers here if used
+    { name: "string_value", type: "string", isOptional: true },
+    { name: "date_value", type: "number", isOptional: true }, // Store dates as Unix timestamps
+    { name: "boolean_value", type: "boolean", isOptional: true },
+
+    { name: "metadata", type: "string" }, // JSON medatadata field
+    { name: "is_deleted", type: "boolean" },
+    { name: "created_at", type: "number" },
+    { name: "updated_at", type: "number" },
+    { name: "last_modified", type: "number" },
+    { name: "server_created_at", type: "number" },
+    { name: "deleted_at", type: "number", isOptional: true },
+  ],
+})
+
 export default appSchema({
-  version: 1, // 🔥 IMPORTANT!! 🔥 when migrating dont forget to change this number
+  version: 2, // 🔥 IMPORTANT!! 🔥 when migrating dont forget to change this number
   tables: [
     patientSchema,
     clinicSchema,
@@ -135,5 +182,8 @@ export default appSchema({
     eventSchema,
     eventFormSchema,
     registrationFormSchema,
+
+    // New tables in V2
+    patient_additional_attributes,
   ],
 })

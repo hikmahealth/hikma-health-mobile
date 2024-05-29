@@ -21,6 +21,8 @@ import { hasUnsyncedChanges } from "@nozbe/watermelondb/sync"
 import database from "app/db"
 import { on } from "@nozbe/watermelondb/QueryDescription"
 import { View } from "app/components"
+import { PatientRecord } from "app/types"
+import PatientModel from "app/db/model/Patient"
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -40,8 +42,10 @@ export type AppStackParamList = {
   Login: undefined
   PrivacyPolicy: undefined
   PatientsList: undefined
+  // @depricated
   PatientRegistrationForm: { editPatientId?: string }
-  PatientView: { patientId: string }
+  PatientRecordEditor: { editPatientId?: string }
+  PatientView: { patientId: string; patient?: PatientModel }
   NewVisit: {
     patientId: string
     visitId: string | null
@@ -162,6 +166,13 @@ const AppStack = observer(function AppStack() {
               title: translate("newPatient.newPatient"),
             }}
             component={Screens.PatientRegistrationFormScreen}
+          />
+          <Stack.Screen
+            name="PatientRecordEditor"
+            options={{
+              title: translate("newPatient.newPatient"),
+            }}
+            component={Screens.PatientRecordEditorScreen}
           />
           <Stack.Screen
             options={{

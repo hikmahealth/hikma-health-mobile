@@ -3,7 +3,7 @@ const en = {
     signIn: "Sign In",
     email: "Email Address",
     password: "Password",
-    qrCodeRegister: "Register App with QR Code"
+    qrCodeRegister: "Register App with QR Code",
   },
   patientFile: {
     patientView: "Patient View",
@@ -43,6 +43,7 @@ const en = {
     search: "Search",
     clear: "Clear",
     newPatient: "New Patient",
+    updatePatient: "Update Patient",
     yearOfBirth: "Year of Birth",
   },
   patientView: {
@@ -53,6 +54,7 @@ const en = {
   },
   newPatient: {
     newPatient: "New Patient",
+    updatePatient: "Update Patient",
     continueToVisits: "Continue to Visits",
   },
   summaryStats: {
@@ -78,8 +80,9 @@ const en = {
   },
   errorScreen: {
     title: "An error occured in the application.",
-    friendlySubtitle: "If this error continues to occur, please email our support team, or file an issue on github with the steps you took to produce this error.",
-    reset: "Reset the application"
+    friendlySubtitle:
+      "If this error continues to occur, please email our support team, or file an issue on github with the steps you took to produce this error.",
+    reset: "Reset the application",
   },
   success: "Success",
   done: "Done",

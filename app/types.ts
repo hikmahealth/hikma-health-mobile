@@ -1,3 +1,16 @@
+import RegistrationFormModel, { RegistrationFormField } from "./db/model/PatientRegistrationForm"
+
+export type DefaultLanguages = {
+  en: string
+  ar?: string
+  es?: string
+}
+
+export type TranslationObject = DefaultLanguages & {
+  [lang: string]: string
+}
+
+export type LanguageKey = "en" | "ar" | "es" | string
 
 export type MedicineRoute =
   | "oral"
@@ -90,3 +103,16 @@ export type ICDEntry = {
   desc: string
   desc_ar: string
 }
+
+/**
+PatientRecord type containing both the registration form, and the values 
+from the database.
+
+The data field is an object mapping field ids to their values stored in the database.
+*/
+export type PatientRecord = {
+  fields: RegistrationFormModel["fields"]
+  values: Record<RegistrationFormField["id"], number | Date | string | boolean>
+}
+
+export type PatientValueColumn = "date_value" | "string_value" | "boolean_value" | "number_value"

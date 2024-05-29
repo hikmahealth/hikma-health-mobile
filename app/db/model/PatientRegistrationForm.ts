@@ -1,39 +1,34 @@
 import { Model } from "@nozbe/watermelondb"
-import {
-  field,
-  text,
-  date,
-  readonly,
-  json,
-} from "@nozbe/watermelondb/decorators"
-
+import { field, text, date, readonly, json } from "@nozbe/watermelondb/decorators"
 
 type Metadata = {
   // Add types for any metadata that gets attached to the visit
 }
-const inputTypes = ["number", "text", "select", "date"] as const
+const inputTypes = ["number", "text", "select", "date", "boolean"] as const
 
 type DefaultLanguages = {
-  en: string;
-  ar?: string;
-  es?: string;
+  en: string
+  ar?: string
+  es?: string
 }
 
 type TranslationObject = DefaultLanguages & {
   [lang: string]: string
 }
 
-type RegistrationFormField = {
-  id: string,
-  position: number;
+export type RegistrationFormField = {
+  id: string
+  position: number
   // column name in the database
-  column: string;
-  label: TranslationObject,
-  fieldType: typeof inputTypes[number],
+  column: string
+  label: TranslationObject
+  fieldType: (typeof inputTypes)[number]
   options: TranslationObject[]
-  required: boolean;
-  baseField: boolean; // whether or not this is part of the base inputs required of all registration forms
-  visible: boolean; // Whether or not it displays in the app
+  required: boolean
+  baseField: boolean // whether or not this is part of the base inputs required of all registration forms
+  visible: boolean // Whether or not it displays in the app
+  isSearchField: boolean // Whether or not this field can be sea
+  deleted: boolean
 }
 
 export default class RegistrationFormModel extends Model {

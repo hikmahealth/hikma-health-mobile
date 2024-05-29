@@ -3,7 +3,7 @@ const es = {
     signIn: "Iniciar Sesión",
     email: "Correo electrónico",
     password: "Contraseña",
-    qrCodeRegister: "Registrar aplicación con Código QR"
+    qrCodeRegister: "Registrar aplicación con Código QR",
   },
   patientFile: {
     patientView: "Vista del paciente",
@@ -53,6 +53,7 @@ const es = {
   },
   newPatient: {
     newPatient: "Nuevo Paciente",
+    updatePatient: "Actualizar Paciente",
     continueToVisits: "Continuar con las visitas",
   },
   summaryStats: {
@@ -78,8 +79,9 @@ const es = {
   },
   errorScreen: {
     title: "Se produjo un error en la aplicación.",
-    friendlySubtitle: "Si este error continúa ocurriendo, envíe un correo electrónico a nuestro equipo de soporte o presente un problema en github con los pasos que siguió para producir este error.",
-    reset: "Restablecer la aplicación"
+    friendlySubtitle:
+      "Si este error continúa ocurriendo, envíe un correo electrónico a nuestro equipo de soporte o presente un problema en github con los pasos que siguió para producir este error.",
+    reset: "Restablecer la aplicación",
   },
   success: "Exitoso",
   done: "Listo",

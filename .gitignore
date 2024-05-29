@@ -101,3 +101,5 @@ gradle.properties
 
 
 coverage
+/lib/
+.bsb.lock

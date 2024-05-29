@@ -14,6 +14,7 @@ import EventForm from "./model/EventForm"
 import User from "./model/User"
 import Clinic from "./model/Clinic"
 import { setGenerator } from "@nozbe/watermelondb/utils/common/randomId"
+import PatientAdditionalAttribute from "./model/PatientAdditionalAttribute"
 
 setGenerator(() => uuidv1())
 
@@ -35,7 +36,18 @@ const adapter = new SQLiteAdapter({
 
 export const database = new Database({
   adapter,
-  modelClasses: [PatientRegistrationForm, Patient, Visit, Event, EventForm, User, Clinic],
+  modelClasses: [
+    PatientRegistrationForm,
+    Patient,
+    Visit,
+    Event,
+    EventForm,
+    User,
+    Clinic,
+
+    // v2
+    PatientAdditionalAttribute,
+  ],
 })
 
 export default database

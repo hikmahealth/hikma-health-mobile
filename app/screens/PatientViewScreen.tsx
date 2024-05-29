@@ -14,7 +14,13 @@ import { TxKeyPath, translate } from "app/i18n"
 import { format, isValid } from "date-fns"
 import { upperFirst } from "lodash"
 import { localeDate } from "app/utils/date"
-import { ChevronRight, DownloadCloudIcon, PencilIcon, PlusIcon } from "lucide-react-native"
+import {
+  ChevronRight,
+  DownloadCloudIcon,
+  LucideCircleDot,
+  PencilIcon,
+  PlusIcon,
+} from "lucide-react-native"
 import { colors } from "app/theme"
 import { usePatientRecord } from "app/hooks/usePatientRecord"
 import EventModel from "app/db/model/Event"
@@ -26,7 +32,7 @@ import logoStr from "app/assets/images/logoStr"
 import { useInteractionManager } from "@react-native-community/hooks"
 import { useDebounce } from "usehooks-ts"
 
-interface PatientViewScreenProps extends AppStackScreenProps<"PatientView"> { }
+interface PatientViewScreenProps extends AppStackScreenProps<"PatientView"> {}
 
 /**
  * Hook to subscribe to events from a form that is `is_snapshopt_form`
@@ -67,11 +73,13 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
   navigation,
 }) {
   // Pull in one of our MST stores
-  // const { language } = useStores()
-  const { patientId } = route.params
+  const {
+    appState: { hersEnabled },
+  } = useStores()
+  const { patientId, patient: defaultPatient } = route.params
   const _interactionReady = useInteractionManager()
   const interactionReady = useDebounce(_interactionReady, 500)
-  const { patient, isLoading } = usePatientRecord(patientId)
+  const { patient, isLoading } = usePatientRecord(patientId, defaultPatient)
   const eventForms = useDBEventForms(translate("languageCode"))
 
   const createNewVisit = () => {
@@ -114,9 +122,9 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
     })
   }
 
-  if (isLoading && !patient) {
-    return <Text text="Loading Patient Details..." />
-  }
+  // if (isLoading && !patient) {
+  // return <Text text="Loading Patient Details..." />
+  // }
 
   if (!patient) {
     return <Text text="Patient not found" />
@@ -131,15 +139,13 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
     <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
       <Screen style={$root} preset="scroll">
         <View pt={40} pb={40} style={{ backgroundColor: colors.palette.primary50 }}>
-          <If condition={interactionReady}>
-            <PatientProfileSummary patient={patient} onPressEdit={() => { }} />
-          </If>
+          <PatientProfileSummary patient={patient} onPressEdit={() => {}} />
 
           <View direction="row" justifyContent="center" alignItems="center" mt={10} gap={10}>
             <Pressable
               style={$editButton}
               onPress={() =>
-                navigation.navigate("PatientRegistrationForm", { editPatientId: patient.id })
+                navigation.navigate("PatientRecordEditor", { editPatientId: patient.id })
               }
             >
               <PencilIcon color={colors.palette.primary400} size={20} style={{ marginRight: 10 }} />
@@ -157,34 +163,69 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
           </View>
         </View>
 
-        <If condition={interactionReady}>
-          <View px={16} py={20} gap={18}>
-            <SnapshotFormLink
-              onPress={() =>
-                navigation.navigate("PatientVisitsList", {
-                  patientId: patient.id,
-                })
-              }
-              label={translate("patientFile.visitHistory")}
-              description={translate("patientFile.visitHistoryDescription")}
-            />
-            {onlySnapshotForms(eventForms).map((form) => {
-              return (
-                <SnapshotFormLink
-                  key={form.id}
-                  onPress={() =>
-                    navigation.navigate("FormEventsList", {
-                      patientId: patient.id,
-                      formId: form.id,
-                    })
-                  }
-                  label={form.name}
-                  description={form.description}
-                />
-              )
-            })}
-          </View>
-        </If>
+        <View px={16} py={20} gap={10} mb={18}>
+          <If condition={hersEnabled && false}>
+            <View
+              direction="row"
+              alignItems="center"
+              gap={5}
+              style={{
+                borderRadius: 8,
+                borderColor: colors.error,
+                borderWidth: 1,
+                backgroundColor: colors.errorBackground,
+              }}
+              p={3}
+              mt={10}
+            >
+              <LucideCircleDot size={16} color={colors.error} />
+              <Text text={"High: Asthma worsening risk"} size="xs" />
+            </View>
+
+            <View
+              direction="row"
+              alignItems="center"
+              gap={5}
+              style={{
+                borderRadius: 8,
+                borderColor: "#facc15",
+                borderWidth: 1,
+                backgroundColor: "#fef9c3",
+              }}
+              p={3}
+              mt={0}
+              mb={10}
+            >
+              <LucideCircleDot size={16} color={"#facc15"} />
+              <Text text={"Low: Increased risk of stress & anxiety"} size="xs" />
+            </View>
+          </If>
+
+          <SnapshotFormLink
+            onPress={() =>
+              navigation.navigate("PatientVisitsList", {
+                patientId: patient.id,
+              })
+            }
+            label={translate("patientFile.visitHistory")}
+            description={translate("patientFile.visitHistoryDescription")}
+          />
+          {onlySnapshotForms(eventForms).map((form) => {
+            return (
+              <SnapshotFormLink
+                key={form.id}
+                onPress={() =>
+                  navigation.navigate("FormEventsList", {
+                    patientId: patient.id,
+                    formId: form.id,
+                  })
+                }
+                label={form.name}
+                description={form.description}
+              />
+            )
+          })}
+        </View>
       </Screen>
 
       <Pressable onPress={createNewVisit} style={$newVisitFAB}>
@@ -298,11 +339,12 @@ async function printHTML(props: PDFReportProps) {
 
               <br>
               <br>
-              ${patient.additionalData &&
-      Object.entries(patient.additionalData)
-        .map((v) => "<p>" + v[0] + ": " + v[1] + "</p>")
-        .join("")
-      }
+              ${
+                patient.additionalData &&
+                Object.entries(patient.additionalData)
+                  .map((v) => "<p>" + v[0] + ": " + v[1] + "</p>")
+                  .join("")
+              }
               <br>
               ${upperFirst(translate((patient.sex as any) || ""))}
 
@@ -452,10 +494,11 @@ const PatientProfileSummary: FC<PatientProfileSummaryProps> = function PatientPr
         )}`}</Text>
         <Text
           align="center"
-          text={`${translate("dob")}: ${isValid(new Date(patient.dateOfBirth))
+          text={`${translate("dob")}: ${
+            isValid(new Date(patient.dateOfBirth))
               ? format(new Date(patient.dateOfBirth), "dd MMM yyyy")
               : ""
-            }`}
+          }`}
         />
 
         <Text align="center">Registered: {localeDate(patient.createdAt, "MMM dd, yyyy", {})}</Text>
