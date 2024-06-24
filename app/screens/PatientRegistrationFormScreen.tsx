@@ -1,3 +1,6 @@
+/**
+THIS FORM IS DEPRICATED IN FAVOR OF PATIENT RECORD EDITOR
+*/
 import React, { FC, useEffect, useState } from "react"
 import { observer } from "mobx-react-lite"
 import { Alert, Pressable, ViewStyle } from "react-native"
@@ -144,7 +147,7 @@ export const PatientRegistrationFormScreen: FC<PatientRegistrationFormScreenProp
                   {(fieldType === "text" || fieldType === "number") && (
                     <TextField
                       keyboardType={fieldType === "number" ? "number-pad" : "default"}
-                      value={val}
+                      value={state[column]}
                       onChangeText={(t) => setField(column, fieldType === "number" ? Number(t) : t)}
                       label={getTranslation(field.label, language.current)}
                     />
@@ -160,6 +163,7 @@ export const PatientRegistrationFormScreen: FC<PatientRegistrationFormScreenProp
                       </View>
                       <View style={$rtl}>
                         <DatePickerButton
+                          locale="jp"
                           modal
                           theme="light"
                           maximumDate={new Date()}

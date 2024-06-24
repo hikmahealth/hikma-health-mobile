@@ -20,6 +20,7 @@ export const DatePickerButton = ({ date, onDateChange, ...rest }: CustomDatePick
         <Text>{format(date, "do MMMM yyyy")}</Text>
       </Pressable>
       <DatePicker
+        locale="jp"
         modal
         open={open}
         date={date}

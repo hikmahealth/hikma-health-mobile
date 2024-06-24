@@ -80,7 +80,13 @@ export function usePatientRecordEditor(
             "There are more than one registration form. Are you supporting multiple forms?",
           )
         }
-        setRegistrationForm(res[0] || null)
+        const patientRegistrationForm: RegistrationFormModel | null = res[0]
+          ? {
+              ...res[0],
+              fields: res[0].fields.filter((field) => !field.deleted && field.visible),
+            }
+          : null
+        setRegistrationForm(patientRegistrationForm)
       })
 
     return () => {
@@ -89,19 +95,21 @@ export function usePatientRecordEditor(
   }, [])
 
   const formFields: FormField[] = useMemo(() => {
-    return patientRecord.fields.map((field) => {
-      return {
-        id: field.id,
-        label: field.label[language] || field.label.en || "",
-        type: field.fieldType,
-        value: getPatientFieldById(patientRecord, field.id, ""),
-        visible: field.visible && !field.deleted,
-        isSearchField: field.isSearchField,
-        options: field.options || [],
-        baseField: field.baseField,
-        column: field.column,
-      }
-    })
+    return patientRecord.fields
+      .map((field) => {
+        return {
+          id: field.id,
+          label: field.label[language] || field.label.en || "",
+          type: field.fieldType,
+          value: getPatientFieldById(patientRecord, field.id, ""),
+          visible: field.visible && !field.deleted,
+          isSearchField: field.isSearchField,
+          options: field.options || [],
+          baseField: field.baseField,
+          column: field.column,
+        }
+      })
+      .filter((field) => field.visible)
   }, [registrationForm, patientRecord, patientRecord.values, patientId, patientRecord.fields])
   // get registration form
   // get the default values for each field

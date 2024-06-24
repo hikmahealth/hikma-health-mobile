@@ -7,8 +7,9 @@ import { DatePickerButton } from "app/components/DatePicker"
 import { translate } from "app/i18n"
 import { useDBEventForms } from "app/hooks/useDBEventForms"
 import { useStores } from "app/models"
-import { ChevronRight } from "lucide-react-native"
+import { ChevronRight, LucideCheckCheck } from "lucide-react-native"
 import { colors } from "app/theme"
+import { useDBVisitEvents } from "app/hooks/useDBVisitEvents"
 // import { useNavigation } from "@react-navigation/native"
 // import { useStores } from "app/models"
 
@@ -26,7 +27,10 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = observer(function NewVisi
   const { patientId, visitId, visitDate } = route.params
   const [eventDate, setEventDate] = useState<number>(visitDate)
 
-  const forms = useDBEventForms(translate("languageCode"))
+  const eventsList = useDBVisitEvents(visitId || "", patientId)
+  // console.log(eventsList.map((ev) => ev))
+  const forms = useDBEventForms()
+  // console.log(forms.map((ev) => ev.isDeleted))
 
   /** If we are updating an existing visit, then we are just adding an event. update the title to reflect this */
   useEffect(() => {
@@ -37,14 +41,14 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = observer(function NewVisi
     }
   }, [visitId])
 
-  console.warn({ visitId })
+  // console.warn({ visitId })
 
   // TODO: handle provider not found
   if (!provider.isSignedIn) return <Text>Provider not found</Text>
 
   return (
     <Screen style={$root} preset="scroll">
-      <View gap={8} pt={14}>
+      <View gap={8} pt={0}>
         <DatePickerButton
           date={new Date(eventDate)}
           theme="light"
@@ -66,7 +70,28 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = observer(function NewVisi
               style={$formListItem}
             >
               <View>
-                <Text weight="bold">{form.name}</Text>
+                <View direction="row" gap={8}>
+                  {eventsList.find((ev) => ev.formId === form.id) !== undefined && (
+                    <LucideCheckCheck color="green" />
+                  )}
+                  <Text weight="bold">{form.name}</Text>
+                  <Text></Text>
+                  <View justifyContent="flex-end">
+                    <View
+                      alignContent="center"
+                      justifyContent="center"
+                      alignItems="center"
+                      style={{
+                        backgroundColor: colors.palette.primary400,
+                        paddingVertical: 0,
+                        borderRadius: 5,
+                        paddingHorizontal: 5,
+                      }}
+                    >
+                      <Text text={form.language} color="white" size="xxs" />
+                    </View>
+                  </View>
+                </View>
                 <Text size="xs">{form.description}</Text>
               </View>
               <ChevronRight color={colors.palette.neutral500} />
@@ -82,6 +107,7 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = observer(function NewVisi
 const $root: ViewStyle = {
   flex: 1,
   padding: 10,
+  paddingTop: 0,
 }
 
 const $formListItem: ViewStyle = {

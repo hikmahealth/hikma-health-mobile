@@ -431,14 +431,7 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = observer(
     }
 
     return (
-      <SafeAreaView
-        edges={
-          NativeModules.PlatformConstants?.InterfaceOrientation?.portrait
-            ? ["top", "bottom"]
-            : ["left", "right"]
-        }
-        style={$root}
-      >
+      <>
         <StatusBar barStyle="dark-content" backgroundColor={colors.palette.neutral200} />
         <FlashList
           contentContainerStyle={$patientList}
@@ -564,7 +557,7 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = observer(
           <PlusIcon color={"white"} size={20} style={{ marginRight: 10 }} />
           <Text color="white" size="sm" text={translate("newPatient.newPatient")} />
         </Pressable>
-      </SafeAreaView>
+      </>
     )
   },
 )

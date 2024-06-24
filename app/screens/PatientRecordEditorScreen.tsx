@@ -174,6 +174,7 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = obs
                       </View>
                       <View style={$rtl}>
                         <DatePickerButton
+                          locale="en-US"
                           modal
                           theme="light"
                           title={label}

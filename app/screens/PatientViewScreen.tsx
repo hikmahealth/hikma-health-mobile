@@ -136,7 +136,7 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
   // }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+    <>
       <Screen style={$root} preset="scroll">
         <View pt={40} pb={40} style={{ backgroundColor: colors.palette.primary50 }}>
           <PatientProfileSummary patient={patient} onPressEdit={() => {}} />
@@ -232,7 +232,7 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
         <PlusIcon color={"white"} size={20} style={{ marginRight: 10 }} />
         <Text color="white" size="md" text="New Visit" />
       </Pressable>
-    </SafeAreaView>
+    </>
   )
 })
 

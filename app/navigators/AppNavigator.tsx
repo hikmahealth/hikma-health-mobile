@@ -8,7 +8,7 @@ import { DarkTheme, DefaultTheme, NavigationContainer } from "@react-navigation/
 import { createNativeStackNavigator, NativeStackScreenProps } from "@react-navigation/native-stack"
 import { observer } from "mobx-react-lite"
 import React from "react"
-import { Alert, AppState, Pressable, useColorScheme } from "react-native"
+import { Alert, AppState, NativeModules, Pressable, StatusBar, useColorScheme } from "react-native"
 import * as Screens from "app/screens"
 import Config from "../config"
 import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
@@ -23,6 +23,7 @@ import { on } from "@nozbe/watermelondb/QueryDescription"
 import { View } from "app/components"
 import { PatientRecord } from "app/types"
 import PatientModel from "app/db/model/Patient"
+import { SafeAreaView } from "react-native-safe-area-context"
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -118,6 +119,7 @@ const AppStack = observer(function AppStack() {
       screenOptions={({ navigation }) => ({
         headerShown: true,
         navigationBarColor: colors.background,
+        orientation: "all",
         headerStyle: { backgroundColor: colors.background },
         headerRight: () => (
           <View direction="row" gap={10}>
@@ -253,15 +255,25 @@ export const AppNavigator = observer(function AppNavigator(props: NavigationProp
 
   return (
     <>
-      <NavigationContainer
-        ref={navigationRef}
-        // theme={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        theme={DefaultTheme}
-        {...props}
+      <SafeAreaView
+        edges={
+          NativeModules.PlatformConstants?.InterfaceOrientation?.portrait
+            ? ["top", "bottom"]
+            : ["left", "right"]
+        }
+        style={{ flex: 1 }}
       >
-        <AppStack />
-      </NavigationContainer>
-      {isSignedIn && appState.isLocked && <Screens.AppLockedScreen />}
+        <StatusBar backgroundColor={colors.background} />
+        <NavigationContainer
+          ref={navigationRef}
+          // theme={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+          theme={DefaultTheme}
+          {...props}
+        >
+          <AppStack />
+        </NavigationContainer>
+        {isSignedIn && appState.isLocked && <Screens.AppLockedScreen />}
+      </SafeAreaView>
     </>
   )
 })

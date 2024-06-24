@@ -6,7 +6,7 @@
     "slug": "hikma-health-mobile",
     "scheme": "hikma-health-mobile",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/app-icon-all.png",
     "splash": {
       "image": "./assets/images/splash-logo-all.png",
@@ -65,7 +65,13 @@
             "newArchEnabled": false
           }
         }
-      ]
+      ],
+     [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "DEFAULT"
+        }
+      ] 
     ],
     "experiments": {
       "tsconfigPaths": true

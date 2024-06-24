@@ -238,11 +238,11 @@ export const SettingsScreen: FC<SettingsScreenProps> = observer(function Setting
               onValueChange={(value) => appState.setProp("hersEnabled", value)}
             />
           </View>
-
-          <View style={$withBottomBorder} py={4}>
-            <LanguageToggle />
-          </View>
         </If>
+
+        <View style={$withBottomBorder} py={4}>
+          <LanguageToggle />
+        </View>
       </View>
 
       {/** HERS DATA **/}
