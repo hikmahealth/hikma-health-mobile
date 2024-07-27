@@ -58,6 +58,7 @@ const ar: ENTranslations = {
     deletePatientQuestion: "حذف المريض؟",
     confirmDeletePatient: "هل أنت متأكد أنك تريد حذف هذا المريض؟",
     newPatient: "مريض جديد",
+    updatePatient: "تحديث المريض"
   },
   patientView: {
     newVisit: "زياره جديده",
