@@ -1,4 +1,4 @@
-import React, { FC, useEffect } from "react"
+import React, { FC } from "react"
 import { observer } from "mobx-react-lite"
 import { ViewStyle, Image, Pressable, Linking, Alert, ToastAndroid } from "react-native"
 import { AppStackScreenProps } from "app/navigators"
@@ -11,6 +11,7 @@ import * as Notifications from "expo-notifications"
 import EncryptedStorage from "react-native-encrypted-storage"
 import { useLockWhenIdleSettings } from "app/hooks/useLockWhenIdleSettings"
 import { generateDummyPatients, insertBenchmarkingData } from "app/utils/benchmarking"
+import { translate } from "i18n-js"
 
 const launchIcon = require("./../assets/images/launch_icon.png")
 
@@ -46,15 +47,15 @@ export const SettingsScreen: FC<SettingsScreenProps> = observer(function Setting
 
   const signOut = async () => {
     Alert.alert(
-      "Are you sure you want to sign out?",
-      "You will be signed out of your account.",
+      translate("settingsScreen.confirmSignOut"),
+      translate("settingsScreen.signOutDescription"),
       [
         {
-          text: "Cancel",
+          text: translate("cancel"),
           style: "cancel",
         },
         {
-          text: "Sign Out",
+          text: translate("drawer.signOut"),
           onPress: async () => {
             await EncryptedStorage.removeItem("provider_password")
             await EncryptedStorage.removeItem("provider_email")
@@ -130,40 +131,40 @@ export const SettingsScreen: FC<SettingsScreenProps> = observer(function Setting
               textDecorationLine="underline"
               color={colors.palette.primary600}
               size="sm"
-              text="Learn more"
+              tx="learnMore"
             />
           </Pressable>
         </View>
       </View>
 
       <View py={22} gap={10}>
-        <Text text="Quick Links" size="lg" />
+        <Text tx="settingsScreen.quickLinks" size="lg" />
         <Pressable onPress={openPrivacyPolicy}>
           <View direction="row" justifyContent="space-between" style={$withBottomBorder} py={12}>
-            <Text text="Privacy Policy" size="sm" />
+            <Text tx="settingsScreen.privacyPolicy" size="sm" />
             <ChevronRight color={colors.palette.neutral600} size={16} />
           </View>
         </Pressable>
 
         <Pressable onPress={() => navigation.navigate("Reports")}>
           <View direction="row" justifyContent="space-between" style={$withBottomBorder} py={12}>
-            <Text text="Reports" size="sm" />
+            <Text tx="settingsScreen.reports" size="sm" />
             <ChevronRight color={colors.palette.neutral600} size={16} />
           </View>
         </Pressable>
 
         <Pressable onPress={() => navigation.navigate("Feedback")}>
           <View direction="row" justifyContent="space-between" style={$withBottomBorder} py={12}>
-            <Text text="Feedback" size="sm" />
+            <Text tx="settingsScreen.feedback" size="sm" />
             <ChevronRight color={colors.palette.neutral600} size={16} />
           </View>
         </Pressable>
       </View>
 
       <View py={22} gap={10}>
-        <Text text="Settings" size="lg" />
+        <Text tx="settingsScreen.settings" size="lg" />
         <View direction="row" justifyContent="space-between" style={$withBottomBorder} py={12}>
-          <Text text="Show Notifications" size="sm" />
+          <Text tx="settingsScreen.showNotifications" size="sm" />
           <Toggle
             variant="switch"
             value={appState.notificationsEnabled}
@@ -173,7 +174,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = observer(function Setting
 
         <View style={$withBottomBorder} py={12}>
           <View direction="row" justifyContent="space-between">
-            <Text text="Lock Screen when idle" size="sm" />
+            <Text tx="settingsScreen.lockWhenIdle" size="sm" />
             <Toggle
               variant="switch"
               containerStyle={[
@@ -188,7 +189,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = observer(function Setting
           {state === "setting-pin" && (
             <View gap={4}>
               <TextField
-                label="Enter a 4-digit PIN"
+                labelTx="settingsScreen.requestPin"
                 secureTextEntry
                 keyboardType="number-pad"
                 onChangeText={(t) => {
@@ -197,10 +198,10 @@ export const SettingsScreen: FC<SettingsScreenProps> = observer(function Setting
               />
               <View direction="row" gap={10}>
                 <Pressable onPress={cancelSavePin}>
-                  <Text text="Cancel" size="sm" color={colors.palette.primary600} />
+                  <Text tx="cancel" size="sm" color={colors.palette.primary600} />
                 </Pressable>
                 <Pressable onPress={savePin}>
-                  <Text text="Save pin" size="sm" color={colors.palette.primary600} />
+                  <Text tx="settingsScreen.savePin" size="sm" color={colors.palette.primary600} />
                 </Pressable>
               </View>
             </View>
@@ -213,7 +214,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = observer(function Setting
                 style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
               >
                 <LockIcon size={14} color={colors.palette.primary600} />
-                <Text text="Lock screen" size="sm" color={colors.palette.primary600} />
+                <Text tx="settingsScreen.lockScreen" size="sm" color={colors.palette.primary600} />
               </Pressable>
               <Pressable
                 onPress={() => {
@@ -222,13 +223,13 @@ export const SettingsScreen: FC<SettingsScreenProps> = observer(function Setting
                 style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
               >
                 <UndoIcon size={14} color={colors.palette.primary600} />
-                <Text text="Change pin" size="sm" color={colors.palette.primary600} />
+                <Text tx="settingsScreen.changePin" size="sm" color={colors.palette.primary600} />
               </Pressable>
             </View>
           )}
         </View>
 
-        <If condtion={false}>
+        <If condition={false}>
           <View direction="row" justifyContent="space-between" style={$withBottomBorder} py={12}>
             <Text text="Enable Health + Environment Index" size="sm" />
             <Toggle
@@ -291,7 +292,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = observer(function Setting
 
       <View py={22}>
         <Button preset="filled" onPress={signOut}>
-          Sign Out
+          {translate("signOut")}
         </Button>
       </View>
     </Screen>

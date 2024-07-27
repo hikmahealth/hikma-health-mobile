@@ -1,6 +1,5 @@
 import React, { FC, useEffect, useState } from "react"
 import { observer } from "mobx-react-lite"
-import { Camera, CameraType } from "expo-camera"
 import { v4 as uuidv4 } from "uuid"
 import { BarCodeScanner } from "expo-barcode-scanner"
 import {
@@ -21,7 +20,6 @@ import { translate } from "app/i18n"
 import { hasUnsyncedChanges } from "@nozbe/watermelondb/sync"
 import { InfoIcon, QrCodeIcon } from "lucide-react-native"
 import { useImmer } from "use-immer"
-import Config from "react-native-config"
 import { colors } from "app/theme"
 import { useStores } from "app/models"
 import database from "app/db/"
@@ -71,7 +69,7 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen({
     if (status === "granted") {
       setCameraActive(true)
     } else {
-      Alert.alert("Camera permission is required to scan QR code")
+      Alert.alert(translate("login.requiredCameraPermissions"))
     }
   }
 
@@ -83,9 +81,9 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen({
     if (canOpen) {
       await EncryptedStorage.setItem("HIKMA_API", data)
       setCameraActive(false)
-      Alert.alert("APP registered updated successfully")
+      Alert.alert(translate("login.qrCodeRegistered"))
     } else {
-      Alert.alert("Invalid QR code")
+      Alert.alert(translate("login.invalidQRCode"))
       setCameraActive(false)
     }
   }
@@ -124,7 +122,7 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen({
     if (isGoogle) return authAsGoogleTester()
     const HIKMA_API = await getHHApiUrl()
     if (!HIKMA_API) {
-      Alert.alert("Please register the app with a valid QR code")
+      Alert.alert(translate("login.invalidQRMessage"))
       return
     }
     if (creds.email.length < 4 || creds.password.length < 4)
@@ -162,13 +160,13 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen({
         }
       } else {
         console.error({ error: response })
-        Alert.alert("Invalid email or password")
+        Alert.alert(translate("login.invalidCredentials"))
       }
     } catch (e) {
       console.error(e)
       setIsLoading(false)
       // TODO: translate
-      Alert.alert("Error connecting to the database")
+      Alert.alert(translate("login.errorConnectingToDB"))
     }
   }
 

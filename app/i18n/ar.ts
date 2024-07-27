@@ -1,9 +1,16 @@
-const ar = {
+import type { Translations as ENTranslations } from "./en"
+const ar: ENTranslations = {
   login: {
     signIn: "تسجيل الدخول",
     email: "البريد الإلكتروني",
     password: "كلمه السر",
-    qrCodeRegister: "تسجيل التطبيق مع رمز QR",
+    invalidCredentials: "بريد إلكتروني أو كلمة مرور غير صالحة",
+    errorConnectingToDB: "خطأ في الاتصال بقاعدة البيانات",
+    qrCodeRegister: "تسجيل التطبيق باستخدام رمز الاستجابة السريعة",
+    invalidQRMessage: "يرجى تسجيل التطبيق باستخدام رمز استجابة سريعة صالح",
+    requiredCameraPermissions: "مطلوب إذن الكاميرا لمسح رمز الاستجابة السريعة.",
+    qrCodeRegistered: "اكتمل تسجيل التطبيق",
+    invalidQRCode: "رمز استجابة سريعة غير صالح"
   },
   patientFile: {
     patientView: "صفحة المريض",
@@ -17,6 +24,7 @@ const ar = {
     examinationDescription: "فحوصات جسدية تمت في زيارات سابقة",
     medicine: "دواء",
     medicineDescription: "الوصفه الطبيه للمريض",
+    patientNotFound: "لم يتم العثور على السجل",
   },
   newVisitScreen: {
     medicalHistory: "التاريخ الطبي",
@@ -37,13 +45,19 @@ const ar = {
     notesDescription: "ملاحظات على المريض",
     covid19Screening: "تحري COVID-19",
     covid19ScreeningDescription: "فحص COVID-19",
+    addEvent: "إضافة حدث"
   },
   patientList: {
     patients: "المريض",
     search: "بحث",
-    clear: "مسح ",
+    nameSearch: "البحث عن طريق الاسم",
+    showSearchOptions: "إظهار الخيارات",
+    hideSearchOptions: "إخفاء الخيارات",
+    clear: "مسح",
+    managePatient: "إدارة المريض",
+    deletePatientQuestion: "حذف المريض؟",
+    confirmDeletePatient: "هل أنت متأكد أنك تريد حذف هذا المريض؟",
     newPatient: "مريض جديد",
-    yearOfBirth: "سنة الميلاد",
   },
   patientView: {
     newVisit: "زياره جديده",
@@ -55,6 +69,12 @@ const ar = {
     newPatient: "مريض جديد",
     updatePatient: "تحديث المريض",
     continueToVisits: "الذهاب لزيارة المرضى",
+    invalidPatientId: "محاولة فتح ملف مريض برقم تعريف مريض غير صالح",
+    similarFoundPatients: "مرضى موجودون متشابهون",
+    govtIdExists: "بطاقة الهوية الحكومية مسجلة بالفعل",
+    errorSaving: "حدث خطأ أثناء حفظ سجل المريض",
+    successfulSave: "تم حفظ سجل المريض بنجاح",
+    done: "تم"
   },
   summaryStats: {
     summaryStats: "احصائيه الملخص",
@@ -77,6 +97,21 @@ const ar = {
     eventDeleted: "حدث محذوف",
     errorDeletingEvent: "خطأ اثتاء حذف الاحداث",
   },
+  settingsScreen: {
+    settings: "الإعدادات",
+    showNotifications: "إظهار الإشعارات",
+    lockWhenIdle: "قفل الشاشة عند الخمول",
+    lockScreen: "قفل الشاشة",
+    requestPin: "أدخل رقم تعريف شخصي مكون من 4 أرقام",
+    changePin: "تغيير رقم التعريف الشخصي",
+    savePin: "حفظ رقم التعريف الشخصي",
+    quickLinks: "روابط سريعة",
+    feedback: "تعليقات",
+    reports: "تقارير",
+    confirmSignOut: "هل أنت متأكد أنك تريد تسجيل الخروج؟",
+    signOutDescription: "سيتم تسجيل الخروج من حسابك.",
+    privacyPolicy: "سياسة الخصوصية"
+  },
   errorScreen: {
     title: "حدث خطأ في التطبيق.",
     friendlySubtitle:
@@ -97,6 +132,7 @@ const ar = {
   DOB: "تاريخ الولادة",
   sex: "جنس",
   gender: "جنس",
+  yearOfBirth: "سنة الولادة",
   GENDER: "جنس",
   patientSummary: "ملخص المريض",
   noContent: "لا يوجد محتوى حتى الآن",
@@ -212,12 +248,18 @@ const ar = {
   logOut: "تسجيل خروج",
   sync: "مزامنة",
   loading: "جاري التحميل",
+  results: "النتائج",
+  healthcareProvider: "مقدم الرعاية الصحية",
+  delete: "حذف",
+  showing: "إظهار",
   height: "طول القامة",
   weight: "وزن",
   patientReport: {
     patientMedicalRecord: "السجل الطبي للمريض",
     PatientInformation: "معلومات المريض",
   },
+  learnMore: "تعرف على المزيد",
+  providerNotFound: "لم يتم العثور على مقدم الرعاية الصحية",
   downloadPatientHistory: "تحميل تاريخ المريض ",
 }
 

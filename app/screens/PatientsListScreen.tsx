@@ -392,19 +392,19 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = observer(
 
     const openPatientEditOptions = (patientId: string) => {
       Alert.alert(
-        "Manage patient",
+        translate("patientList.managePatient"),
         "",
         [
           {
-            text: "Delete",
+            text: translate("delete"),
             onPress: () => {
               Alert.alert(
-                "Delete patient?",
-                "Are you sure you want to delte this patient?",
+                translate("patientList['deletePatientQuestion']"),
+                translate("patientList.confirmDeletePatient"),
                 [
-                  { text: "Cancel" },
+                  { text: translate("cancel") },
                   {
-                    text: "Delete",
+                    text: translate("delete"),
                     onPress: () => {
                       patientApi.deleteById(patientId)
                     },
@@ -459,7 +459,7 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = observer(
                 }
                 value={searchFilter.query}
                 onChangeText={(query) => setSearchField("query", query)}
-                placeholder="Name Search"
+                placeholderTx="patientList.nameSearch"
               />
 
               <View gap={8}>
@@ -503,7 +503,7 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = observer(
                       <TextField
                         value={searchFilter.yearOfBirth}
                         onChangeText={(yob) => setSearchField("yearOfBirth", yob)}
-                        placeholder="Year of Birth"
+                        placeholderTx="yearOfBirth"
                         keyboardType="number-pad"
                       />
                     </View>
@@ -524,11 +524,20 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = observer(
 
               <View direction="row" justifyContent="space-between" alignItems="flex-end">
                 <Text
-                  text={`Showing ${patients.length} of ${totalPatientsCount.toLocaleString()}`}
+                  text={`${translate("showing")} ${
+                    patients.length
+                  } / ${totalPatientsCount.toLocaleString()}`}
                 />
                 <Pressable onPress={() => setIsExpandedSearch((ex) => !ex)}>
                   <View direction="row" alignItems="flex-end" gap={8}>
-                    <Text size="xs" text={isExpandedSearch ? "Hide Options" : "Search Options"} />
+                    <Text
+                      size="xs"
+                      tx={
+                        isExpandedSearch
+                          ? "patientList.hideSearchOptions"
+                          : "patientList.showSearchOptions"
+                      }
+                    />
                     {!isExpandedSearch ? (
                       <ChevronDownIcon size={18} color={colors.palette.neutral800} />
                     ) : (

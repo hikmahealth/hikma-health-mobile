@@ -3,7 +3,13 @@ const en = {
     signIn: "Sign In",
     email: "Email Address",
     password: "Password",
+    invalidCredentials: "Invalid email or password",
+    errorConnectingToDB: "Error connecting to the database",
     qrCodeRegister: "Register App with QR Code",
+    invalidQRMessage: "Please register the app with a valid QR Code",
+    requiredCameraPermissions: "Camera permission is required to scan the QR code.",
+    qrCodeRegistered: "APP registration completed",
+    invalidQRCode: "Invalid QR Code"
   },
   patientFile: {
     patientView: "Patient View",
@@ -17,6 +23,7 @@ const en = {
     examinationDescription: "Physical examinations performed over the past visits",
     medicine: "Medicine",
     medicineDescription: "Medicine prescribed to the patient",
+    patientNotFound: "Patient not found"
   },
   newVisitScreen: {
     medicalHistory: "Medical History",
@@ -37,14 +44,20 @@ const en = {
     notesDescription: "Notes on the patient",
     covid19Screening: "COVID-19 Screening",
     covid19ScreeningDescription: "COVID-19 screening questionnaire",
+    addEvent: "Add Event"
   },
   patientList: {
     patients: "Patients",
     search: "Search",
+    nameSearch: "Name Search",
+    showSearchOptions: "Show Options",
+    hideSearchOptions: "Hide Options",
     clear: "Clear",
+    managePatient: "Manage Patient",
+    deletePatientQuestion: "Delete Patient?",
+    confirmDeletePatient: "Are you sure you want to delete this patient?",
     newPatient: "New Patient",
     updatePatient: "Update Patient",
-    yearOfBirth: "Year of Birth",
   },
   patientView: {
     newVisit: "New Visit",
@@ -56,6 +69,12 @@ const en = {
     newPatient: "New Patient",
     updatePatient: "Update Patient",
     continueToVisits: "Continue to Visits",
+    invalidPatientId: "Attempting to open a patient file with an invalid patient id",
+    similarFoundPatients: "Similar Existing Patients",
+    govtIdExists: "Government ID already registered",
+    errorSaving: "An error occured while saving the patient record",
+    successfulSave: "Patient record saved successfully",
+    done: "Done"
   },
   summaryStats: {
     summaryStats: "Summary Stats",
@@ -78,6 +97,21 @@ const en = {
     eventDeleted: "Event Deleted",
     errorDeletingEvent: "Error deleting event",
   },
+  settingsScreen: {
+    settings: "Settings",
+    showNotifications: "Show Notifications",
+    lockWhenIdle: "Lock Screen when idle",
+    lockScreen: "Lock Screen",
+    requestPin: "Enter a 4-digit PIN",
+    changePin: "Change PIN",
+    savePin: "Save PIN",
+    quickLinks: "Quick Links",
+    feedback: "Feedback",
+    reports: "Reports",
+    confirmSignOut: "Are you sure you want to sign out?",
+    signOutDescription: "You will be signed out of your account.",
+    privacyPolicy: "Privacy Policy"
+  },
   errorScreen: {
     title: "An error occured in the application.",
     friendlySubtitle:
@@ -98,6 +132,7 @@ const en = {
   DOB: "DOB",
   sex: "Sex",
   gender: "Gender",
+  yearOfBirth: "Year of Birth",
   GENDER: "GENDER",
   patientSummary: "Patient Summary",
   noContent: "No content yet",
@@ -213,12 +248,18 @@ const en = {
   logOut: "Log Out",
   sync: "Sync",
   loading: "Loading",
+  results: "Results",
+  healthcareProvider: "Provider",
+  delete: "Delete",
+  showing: "Showing",
   height: "Height",
   weight: "Weight",
   patientReport: {
     patientMedicalRecord: "Patient Medical Record",
     PatientInformation: "Patient Information",
   },
+  learnMore: "Learn more",
+  providerNotFound: "Healthcare Provider not found",
   downloadPatientHistory: "Download Patient History",
 }
 

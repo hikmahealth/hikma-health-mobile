@@ -1,9 +1,16 @@
-const es = {
+import type { Translations as ENTranslations } from "./en"
+const es: ENTranslations = {
   login: {
     signIn: "Iniciar Sesión",
     email: "Correo electrónico",
     password: "Contraseña",
-    qrCodeRegister: "Registrar aplicación con Código QR",
+    invalidCredentials: "Correo electrónico o contraseña inválidos",
+    errorConnectingToDB: "Error al conectar a la base de datos",
+    qrCodeRegister: "Registrar Aplicación con Código QR",
+    invalidQRMessage: "Por favor, registre la aplicación con un Código QR válido",
+    requiredCameraPermissions: "Se requiere permiso de la cámara para escanear el código QR.",
+    qrCodeRegistered: "Registro de la aplicación completado",
+    invalidQRCode: "Código QR Inválido",
   },
   patientFile: {
     patientView: "Vista del paciente",
@@ -17,6 +24,7 @@ const es = {
     examinationDescription: "Exámenes físicos realizados en las visitas pasadas",
     medicine: "Medicinas",
     medicineDescription: "Medicina prescrita al paciente",
+    patientNotFound: "Registro no encontrado"
   },
   newVisitScreen: {
     medicalHistory: "Historia médica",
@@ -37,13 +45,20 @@ const es = {
     notesDescription: "Notas sobre el paciente",
     covid19Screening: "Preguntas de detección de COVID-19",
     covid19ScreeningDescription: "Preguntas de detección de COVID-19",
+    addEvent: "Añadir evento"
   },
   patientList: {
     patients: "Pacientes",
     search: "Busca",
-    clear: "Borre",
+    nameSearch: "Búsqueda por Nombre",
+    showSearchOptions: "Mostrar Opciones",
+    hideSearchOptions: "Ocultar Opciones",
+    clear: "Limpiar",
+    managePatient: "Gestionar Paciente",
+    deletePatientQuestion: "¿Eliminar Paciente?",
+    confirmDeletePatient: "¿Estás seguro de que quieres eliminar este paciente?",
     newPatient: "Nuevo Paciente",
-    yearOfBirth: "Año de nacimiento",
+    updatePatient: "Actualizar Paciente"
   },
   patientView: {
     newVisit: "Nueva Visita",
@@ -55,6 +70,12 @@ const es = {
     newPatient: "Nuevo Paciente",
     updatePatient: "Actualizar Paciente",
     continueToVisits: "Continuar con las visitas",
+    invalidPatientId: "Intentando abrir un expediente de paciente con un ID de paciente no válido",
+    similarFoundPatients: "Pacientes Existentes Similares",
+    govtIdExists: "Documento de Identidad ya registrado",
+    errorSaving: "Ocurrió un error al guardar el registro del paciente",
+    successfulSave: "Registro del paciente guardado correctamente",
+    done: "Hecho"
   },
   summaryStats: {
     summaryStats: "Rusumen de Datos",
@@ -77,6 +98,21 @@ const es = {
     eventDeleted: "Evento Borrado",
     errorDeletingEvent: "Error al borrar de evento",
   },
+  settingsScreen: {
+    settings: "Ajustes",
+    showNotifications: "Mostrar Notificaciones",
+    lockWhenIdle: "Bloquear Pantalla cuando está inactiva",
+    lockScreen: "Bloquear Pantalla",
+    requestPin: "Ingrese un PIN de 4 dígitos",
+    changePin: "Cambiar PIN",
+    savePin: "Guardar PIN",
+    quickLinks: "Enlaces Rápidos",
+    feedback: "Comentarios",
+    reports: "Informes",
+    confirmSignOut: "¿Estás seguro que quieres cerrar sesión?",
+    signOutDescription: "Se cerrará la sesión de su cuenta.",
+    privacyPolicy: "Política de Privacidad"
+  },
   errorScreen: {
     title: "Se produjo un error en la aplicación.",
     friendlySubtitle:
@@ -97,6 +133,7 @@ const es = {
   DOB: "Fecha de nacimiento",
   sex: "Sexo",
   gender: "Género",
+  yearOfBirth: "Año de Nacimiento",
   GENDER: "GENERO",
   patientSummary: "Resumen del paciente",
   noContent: "No hay contenido todavia",
@@ -212,12 +249,18 @@ const es = {
   logOut: "Cerra Sesión",
   sync: "Sincroniza",
   loading: "Cargando...",
+  results: "Resultados",
+  healthcareProvider: "Proveedor",
+  delete: "Eliminar",
+  showing: "Mostrando",
   height: "Altura",
   weight: "Peso",
   patientReport: {
     patientMedicalRecord: "Historial médico del paciente",
     PatientInformation: "Información del paciente",
   },
+  learnMore: "Más Información",
+  providerNotFound: "Proveedor de atención médica no encontrado",
   downloadPatientHistory: "Descarga historial del paciente",
 }
 export default es

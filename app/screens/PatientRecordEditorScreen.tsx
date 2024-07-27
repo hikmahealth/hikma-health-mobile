@@ -5,14 +5,7 @@ import { AppStackScreenProps } from "app/navigators"
 import { Button, If, Screen, Text, TextField, Toggle, View } from "app/components"
 // import { useNavigation } from "@react-navigation/native"
 import { useStores } from "app/models"
-import { PatientRecord, TranslationObject } from "app/types"
-import RegistrationFormModel, { RegistrationFormField } from "app/db/model/PatientRegistrationForm"
-import database from "app/db"
-import {
-  getDefaultPatientRecord,
-  getPatientFieldById,
-  getPatientFieldByName,
-} from "app/utils/patient"
+import { getPatientFieldByName } from "app/utils/patient"
 import { patientApi } from "app/services/api/patientApi"
 import { LucideArrowRight } from "lucide-react-native"
 import { colors } from "app/theme"
@@ -22,7 +15,6 @@ import { isValid } from "date-fns"
 import { DatePickerButton } from "app/components/DatePicker"
 import { getTranslation } from "app/utils/parsers"
 import { useSimilarPatientsSearch } from "app/hooks/useSimilarPatientsSearch"
-import { initialFormState } from "app/hooks/usePatientRegistrationForm"
 import { usePatientRecordEditor } from "app/hooks/usePatientRecordEditor"
 import { useDebounce } from "app/hooks/useDebounce"
 
@@ -115,13 +107,13 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = obs
             // if there is no patient Id, there is no need to navigate elsewhere.
             return navigation.goBack()
           }
-          Alert.alert("Success", "Patient saved", [
+          Alert.alert(translate("success"), translate("newPatient.successfulSave"), [
             {
-              text: "Done",
+              text: translate("newPatient.done"),
               onPress: () => navigation.goBack(),
             },
             {
-              text: "Continue to Visits",
+              text: translate("newPatient.continueToVisits"),
               onPress: () => {
                 return navigation.replace("NewVisit", {
                   patientId: redirectPatientId,
@@ -134,7 +126,7 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = obs
         })
         .catch((error) => {
           console.error(error)
-          Alert.alert("Error", "An error occurred while saving the patient")
+          Alert.alert(translate("error"), translate("newPatient.errorSaving"))
         })
     }
     const $rtl = language.isRTL ? $rtlStyle : {}
@@ -164,7 +156,7 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = obs
                     />
                   )}
                   <If condition={field.column === "government_id" && existingGovtId}>
-                    <Text text={"Government ID already registered"} />
+                    <Text tx={"newPatient.govtIdExists"} />
                   </If>
 
                   {type === "date" && (
@@ -237,7 +229,7 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = obs
             >
               <Text
                 weight="semiBold"
-                text="Similar Existing Patients"
+                tx="newPatient.similarFoundPatients"
                 style={{ marginBottom: 8 }}
               />
               {similarPatients.slice(0, 5).map((patient) => (

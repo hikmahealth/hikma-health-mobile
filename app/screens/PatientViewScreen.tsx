@@ -1,9 +1,8 @@
 import React, { FC, useEffect, useState } from "react"
 import { observer } from "mobx-react-lite"
-import { ActivityIndicator, Pressable, ViewStyle } from "react-native"
+import { Pressable, ViewStyle } from "react-native"
 import { AppStackScreenProps } from "app/navigators"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { Avatar, Button, If, Screen, Text, View, getHtmlEventDisplay } from "app/components"
+import { Avatar, If, Screen, Text, View, getHtmlEventDisplay } from "app/components"
 import * as Print from "expo-print"
 import { useStores } from "app/models"
 import { shareAsync } from "expo-sharing"
@@ -92,7 +91,7 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
 
   const downloadPatientReport = async () => {
     if (!patient) {
-      return alert("Patient not found")
+      return alert(translate("patientFile.patientNotFound"))
     }
     const visitEvents = await api.fetchPatientReportData(patientId, true)
     const latestSummaryEvent = await api.getLatestPatientEventByType(patientId, "Patient Summary")
@@ -127,7 +126,7 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
   // }
 
   if (!patient) {
-    return <Text text="Patient not found" />
+    return <Text tx="patientFile.patientNotFound" />
   }
 
   // if interaction is not ready yet, show a loading indicator
@@ -296,9 +295,9 @@ async function printHTML(props: PDFReportProps) {
           return `
           <div class="mb-18">
             <p style="color: #1e3a8a; font-weight: bold;" class="m-0">Form: ${ev.eventType}</p>
-            <p class="m-0 mb-4">Provider: ${visit.providerName}</p>
+            <p class="m-0 mb-4">${translate("healthcareProvider")}: ${visit.providerName}</p>
 
-            <p class="m-0 mb-4">Results:</p>
+            <p class="m-0 mb-4">${translate("results")}:</p>
             <div>
               ${evs}
             </div>
