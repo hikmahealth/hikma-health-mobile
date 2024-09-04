@@ -416,6 +416,9 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
                             onValueChange={(value) => {
                               if (value) {
                                 setValue(field.name as never, option.value as never)
+                              } else {
+                                // set the default value to an empty string
+                                setValue(field.name as never, "" as never)
                               }
                             }}
                           />
@@ -462,6 +465,9 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
                             onValueChange={(value) => {
                               if (value) {
                                 setValue(field.name as never, option.value as never)
+                              } else {
+                                // set the default value to an empty string
+                                setValue(field.name as never, "" as never)
                               }
                             }}
                           />

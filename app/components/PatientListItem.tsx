@@ -56,7 +56,8 @@ export const PatientListItem = enhance(
         onLongPress={() => onPatientLongPress(patient.id)}
       >
         <View gap={20} direction={isRTL ? "row-reverse" : "row"}>
-          <Avatar fullName={`${displayName(patient)}`} imageURL={patient.photoUrl} />
+          {/*<Avatar fullName={} imageURL={patient.photoUrl} /> */}
+          <Avatar fullName={`${displayName(patient)}`} />
           <View>
             <Text textDecorationLine="underline" size="xl">
               {displayName(patient)}
@@ -68,7 +69,7 @@ export const PatientListItem = enhance(
                   : ""
               }`}
             />
-            <Text testID="sex">{`${translate("sex")}:  ${upperFirst(
+            <Text testID="sex">{`${translate("sex")}: ${upperFirst(
               translate(patient.sex as TxKeyPath, { defaultValue: patient.sex || "" }),
             )}`}</Text>
             {/*<Text>{localeDate(patient.createdAt, "MMM dd, yyyy", {})}</Text>*/}

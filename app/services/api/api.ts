@@ -20,6 +20,8 @@ import { getHHApiUrl } from "app/utils/storage"
 import PatientAdditionalAttribute from "app/db/model/PatientAdditionalAttribute"
 import { PatientData } from "app/types"
 import { RegistrationFormField } from "app/db/model/PatientRegistrationForm"
+import schema from "app/db/schema"
+import { keys } from "lodash"
 
 /**
  * Configuring the apisauce instance.
@@ -344,6 +346,25 @@ export class Api {
     const syncPushResult = (await result.json()) as SyncPushResult
     return syncPushResult
   }
+
+  /**
+   * Manually push local data to server, regardless of sync status
+   * @param {Date} startDate
+   * @param {Date} endDate
+   * @returns {Promise<void>}
+   */
+  // async manualSyncPush(startDate: Date, endDate: Date): Promise<void> {
+  //   // construct the changeset for all the local collections
+  //   const tables = schema.tables;
+  //   keys(tables).map(key => {
+  //     database.get(key).query(
+  //       // support filter by date range ??
+  //       Q.where("is_del")
+  //     ).fetch();
+  //     database.adapter.getDeletedRecords(key);
+  //     database.adapter.count
+  //   })
+  // }
 }
 
 /**

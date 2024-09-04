@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useState } from "react"
 import { observer } from "mobx-react-lite"
-import { Alert, NativeModules, Pressable, StatusBar, ViewStyle } from "react-native"
+import { Alert, Button, Pressable, StatusBar, ViewStyle } from "react-native"
 import { AppStackScreenProps } from "app/navigators"
 import { If, PatientListItem, Text, TextField, View } from "app/components"
 import { FlashList } from "@shopify/flash-list"
@@ -73,6 +73,7 @@ export function usePatientsList(
   /** Debounced search filters improves performance by reducing the number of queries */
   const debouncedSearchFilter = useDebounce(searchFilter, 750)
 
+  // TOMBSTONE: Aug 14. Whole useEffect block only does the count monitoring
   useEffect(() => {
     const { query, yearOfBirth, sex } = debouncedSearchFilter
     const ref = database.get<PatientModel>("patients")
@@ -242,7 +243,17 @@ export function usePatientsList(
         // all else marked as strings
         val = field.value
       }
-      return Q.where(field.column, Q.like(`%${Q.sanitizeLikeString(val)}%`))
+
+      // fields that are `select` type are dropdowns and/or checkboxes
+      // such as `sex`
+      let likeQuery = `%${Q.sanitizeLikeString(val)}%`
+      if (field.fieldType === "select") {
+        // Select fields only search for matches at end of string not at begining
+        // solves the: "returns 'female' when 'male' is searched for"
+        likeQuery = `${Q.sanitizeLikeString(val)}%`
+      }
+
+      return Q.where(field.column, Q.like(likeQuery))
     })
 
     const patientAttrsQueryConditions = attrFields.map((field) => {
@@ -260,7 +271,15 @@ export function usePatientsList(
         val = field.value
         col = "string_value"
       }
-      return Q.where(col, Q.like(`%${Q.sanitizeLikeString(val)}%`))
+      // fields that are `select` type are dropdowns and/or checkboxes
+      // such as `sex`
+      let likeQuery = `%${Q.sanitizeLikeString(val)}%`
+      if (field.fieldType === "select") {
+        // Select fields only search for matches at end of string not at begining
+        likeQuery = `${Q.sanitizeLikeString(val)}%`
+      }
+
+      return Q.where(col, Q.like(likeQuery))
     })
 
     let ptQueryConditionsWithStr = []
@@ -279,12 +298,17 @@ export function usePatientsList(
       ptQueryConditionsWithStr = patientQueryConditions
     }
 
+    // If the user is doing any kind of search, sort by given name and last name, otherwise show most recent first
+    let ptQueryConditions = []
+    if (ptQueryConditionsWithStr.length > 0) {
+      ptQueryConditions.push(Q.sortBy("given_name", "asc"))
+      ptQueryConditions.push(Q.sortBy("surname", "asc"))
+    } else {
+      ptQueryConditions.push(Q.sortBy("updated_at", "desc"))
+    }
+
     const sub = patientsRef
-      .query(
-        ...ptQueryConditionsWithStr,
-        Q.sortBy("updated_at", "desc"),
-        Q.take(totalShowingResults),
-      )
+      .query(...ptQueryConditionsWithStr, ...ptQueryConditions, Q.take(totalShowingResults))
       .observe()
       .subscribe(async (patientRes) => {
         const patientIds = patientRes.map((p) => p.id)
@@ -439,7 +463,7 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = observer(
           refreshing={false}
           disableAutoLayout={true}
           ListHeaderComponent={
-            <View pb={10} gap={10}>
+            <View pb={10} pt={6} gap={4}>
               <TextField
                 RightAccessory={() =>
                   searchFilter.query.length > 0 ? (
@@ -522,29 +546,31 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = observer(
                 )}
               </View>
 
-              <View direction="row" justifyContent="space-between" alignItems="flex-end">
+              <View direction="row" justifyContent="space-between" alignItems="flex-start">
                 <Text
                   text={`${translate("showing")} ${
                     patients.length
                   } / ${totalPatientsCount.toLocaleString()}`}
                 />
-                <Pressable onPress={() => setIsExpandedSearch((ex) => !ex)}>
-                  <View direction="row" alignItems="flex-end" gap={8}>
-                    <Text
-                      size="xs"
-                      tx={
-                        isExpandedSearch
-                          ? "patientList.hideSearchOptions"
-                          : "patientList.showSearchOptions"
-                      }
-                    />
-                    {!isExpandedSearch ? (
-                      <ChevronDownIcon size={18} color={colors.palette.neutral800} />
-                    ) : (
-                      <ChevronUpIcon size={18} color={colors.palette.neutral800} />
-                    )}
-                  </View>
-                </Pressable>
+                <View alignItems="flex-end">
+                  <Pressable onPress={() => setIsExpandedSearch((ex) => !ex)}>
+                    <View direction="row" alignItems="flex-end" gap={8}>
+                      <Text
+                        size="xs"
+                        tx={
+                          isExpandedSearch
+                            ? "patientList.hideSearchOptions"
+                            : "patientList.showSearchOptions"
+                        }
+                      />
+                      {!isExpandedSearch ? (
+                        <ChevronDownIcon size={18} color={colors.palette.neutral800} />
+                      ) : (
+                        <ChevronUpIcon size={18} color={colors.palette.neutral800} />
+                      )}
+                    </View>
+                  </Pressable>
+                </View>
               </View>
             </View>
           }

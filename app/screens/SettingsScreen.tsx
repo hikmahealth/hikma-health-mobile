@@ -11,7 +11,7 @@ import * as Notifications from "expo-notifications"
 import EncryptedStorage from "react-native-encrypted-storage"
 import { useLockWhenIdleSettings } from "app/hooks/useLockWhenIdleSettings"
 import { generateDummyPatients, insertBenchmarkingData } from "app/utils/benchmarking"
-import { translate } from "i18n-js"
+import { translate } from "app/i18n"
 
 const launchIcon = require("./../assets/images/launch_icon.png")
 

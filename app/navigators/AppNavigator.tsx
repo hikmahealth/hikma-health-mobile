@@ -15,7 +15,13 @@ import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
 import { colors } from "app/theme"
 import { useStores } from "app/models"
 import { translate } from "app/i18n"
-import { ArrowUpDownIcon, AxeIcon, LoaderIcon, Settings2Icon } from "lucide-react-native"
+import {
+  ArrowUpDownIcon,
+  AxeIcon,
+  LoaderIcon,
+  LucideCalendar,
+  Settings2Icon,
+} from "lucide-react-native"
 import { syncDB } from "app/db/sync"
 import { hasUnsyncedChanges } from "@nozbe/watermelondb/sync"
 import database from "app/db"
@@ -74,7 +80,9 @@ export type AppStackParamList = {
   Settings: undefined
   Feedback: undefined
   Reports: undefined
-  // IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
+  AppointmentsList: undefined
+	AppointmentView: undefined
+	// IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
 }
 
 /**
@@ -112,6 +120,7 @@ const AppStack = observer(function AppStack() {
     )
   }
 
+  // TODO: Add check for valid or even existing backend api
   const isSignedIn = provider.isSignedIn
 
   return (
@@ -137,6 +146,9 @@ const AppStack = observer(function AppStack() {
                 <ArrowUpDownIcon size={24} color="black" />
               </Pressable>
             )}
+            <Pressable onPress={() => navigation.navigate("AppointmentsList")}>
+              <LucideCalendar size={24} color="black" />
+            </Pressable>
             <Pressable onPress={() => navigation.navigate("Settings")}>
               <Settings2Icon size={24} color="black" />
             </Pressable>
@@ -209,7 +221,9 @@ const AppStack = observer(function AppStack() {
           />
           <Stack.Screen name="Feedback" component={Screens.FeedbackScreen} />
           <Stack.Screen name="Reports" component={Screens.ReportsScreen} />
-          {/* IGNITE_GENERATOR_ANCHOR_APP_STACK_SCREENS */}
+          <Stack.Screen name="AppointmentsList" component={Screens.AppointmentsListScreen} />
+			<Stack.Screen name="AppointmentView" component={Screens.AppointmentViewScreen} />
+			{/* IGNITE_GENERATOR_ANCHOR_APP_STACK_SCREENS */}
         </Stack.Group>
       )}
       <Stack.Screen
