@@ -130,24 +130,83 @@ const registrationFormSchema = tableSchema({
 })
 
 /**
-CREATE TABLE patient_additional_attributes (
-    id: uuid PRIMARY KEY,
-    patient_id: uuid,
-    form_id: uuid NOT null
-    attribute: TEXT NOT null,
-    number_value: INT default null,
-    string_value: TEXT default null,
-    date_value: timestamp with time zone default null,
-    boolean_value: boolean default null,
-    
-    is_deleted boolean default false,
-    created_at timestamp with time zone default now(),
-    updated_at timestamp with time zone default now(),
-    last_modified timestamp with time zone default now(),
-    server_created_at timestamp with time zone default now(),
-    deleted_at timestamp with time zone default null
-)
+ * FROM THE SERVER SIDE
+    op.create_table(
+        "appointments",
+        sa.Column('id', sa.UUID(), nullable=False),
+        sa.Column('provider_id', sa.UUID(), nullable=True),
+        sa.Column('clinic_id', sa.UUID(), nullable=False),
+        sa.Column('patient_id', sa.UUID(), nullable=False),
+        sa.Column('user_id', sa.UUID(), nullable=False),
+        sa.Column('current_visit_id', sa.UUID(), nullable=False),
+        sa.Column('fulfilled_visit_id', sa.UUID(), nullable=True),
+
+        sa.Column('timestamp', sa.TIMESTAMP(True), nullable=False),
+
+        # Duration in minutes, defaults to 60 minutes
+        sa.Column('duration', sa.SmallInteger(), nullable=False, default=60),
+
+        sa.Column('reason', sa.String(), nullable=False, default=""),
+        sa.Column('notes', sa.String(), nullable=False, default=""),
+
+        # Status can be pending, confirmed, cancelled, or completed
+        sa.Column('status', sa.String(), nullable=False, default="pending"),
+
+        sa.Column('metadata', sa.JSON(), nullable=False,
+                  server_default=sa.text("'{}'::json")),
+        sa.Column('is_deleted', sa.Boolean(), nullable=False, default=False),
+        sa.Column('created_at', sa.TIMESTAMP(True),
+                  nullable=False, default=datetime.now(UTC)),
+        sa.Column('updated_at', sa.TIMESTAMP(True),
+                  nullable=False, default=datetime.now(UTC)),
+        sa.Column('deleted_at', sa.TIMESTAMP(True), nullable=True),
+    )
+
+    op.create_index("ix_timestamp", "appointments", ["timestamp"])
+
+    op.create_primary_key("appointments_pkey", "appointments", ["id"])
+
+    op.create_foreign_key("fk_appointment_clinic",
+                          "appointments", "clinics", ["clinic_id"], ["id"])
+    op.create_foreign_key("fk_appointment_patient",
+                          "appointments", "patients", ["patient_id"], ["id"])
+    op.create_foreign_key("fk_appointment_user",
+                          "appointments", "users", ["user_id"], ["id"])
+    op.create_foreign_key("fk_appointment_provider",
+                          "appointments", "users", ["provider_id"], ["id"])
+    op.create_foreign_key("fk_appointment_current_visit",
+                          "appointments", "visits", ["current_visit_id"], ["id"])
+    op.create_foreign_key("fk_appointment_fulfilled_visit",
+                          "appointments", "visits", ["fulfilled_visit_id"], ["id"])
+
+
 */
+
+const appointmentSchema = tableSchema({
+  name: "appointments",
+  columns: [
+    { name: "provider_id", type: "string", isOptional: true },
+    { name: "clinic_id", type: "string", isIndexed: true },
+    { name: "patient_id", type: "string", isIndexed: true },
+    { name: "user_id", type: "string" },
+    { name: "current_visit_id", type: "string" },
+    { name: "fulfilled_visit_id", type: "string", isOptional: true },
+
+    // Timestamp is indexed to allow for faster read times when filtering by time.
+    { name: "timestamp", type: "number", isIndexed: true },
+    { name: "duration", type: "number", isOptional: true },
+    { name: "reason", type: "string" },
+    { name: "notes", type: "string" },
+
+    // Status can be pending, confirmed, cancelled, or completed
+    { name: "status", type: "string", isOptional: false },
+    { name: "metadata", type: "string" }, // JSON medatadata field
+    { name: "is_deleted", type: "boolean" },
+    { name: "created_at", type: "number" },
+    { name: "updated_at", type: "number" },
+    { name: "deleted_at", type: "number", isOptional: true },
+  ],
+})
 
 const patient_additional_attributes = tableSchema({
   name: "patient_additional_attributes", // Assuming we're going with this table name
@@ -173,7 +232,7 @@ const patient_additional_attributes = tableSchema({
 })
 
 export default appSchema({
-  version: 2, // 🔥 IMPORTANT!! 🔥 when migrating dont forget to change this number
+  version: 3, // 🔥 IMPORTANT!! 🔥 when migrating dont forget to change this number
   tables: [
     patientSchema,
     clinicSchema,
@@ -185,5 +244,8 @@ export default appSchema({
 
     // New tables in V2
     patient_additional_attributes,
+
+    // New tables in V3
+    appointmentSchema,
   ],
 })

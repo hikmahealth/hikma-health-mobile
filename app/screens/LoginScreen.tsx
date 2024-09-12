@@ -39,7 +39,7 @@ function isGoogleTester(email: string, password: string) {
   return email === GOOGLE_TESTER_EMAIL && password === GOOGLE_TESTER_PASSWORD
 }
 
-interface LoginScreenProps extends AppStackScreenProps<"Login"> {}
+interface LoginScreenProps extends AppStackScreenProps<"Login"> { }
 
 export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen({ navigation }) {
   // Pull in one of our MST stores
@@ -121,6 +121,7 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen({
     const isGoogle = isGoogleTester(creds.email, creds.password)
     if (isGoogle) return authAsGoogleTester()
     const HIKMA_API = await getHHApiUrl()
+    console.log({ HIKMA_API })
     if (!HIKMA_API) {
       Alert.alert(translate("login.invalidQRMessage"))
       return

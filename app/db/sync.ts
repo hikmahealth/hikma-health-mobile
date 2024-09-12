@@ -73,7 +73,7 @@ export async function syncDB(
           timestamp = res.timestamp
         }
 
-        console.log("Changes pulled from the server", changes)
+        console.log("Changes pulled from the server", JSON.stringify(changes, null, 2))
 
         // In place update and set dates
         updateDates(changes)
@@ -121,7 +121,7 @@ export async function syncDB(
         console.error(error)
         onSyncError(String(error))
 
-        Promise.reject(error)
+        throw new Error("Error pushing changes to the server")
       }
     },
     migrationsEnabledAtVersion: 1,
@@ -139,6 +139,9 @@ function updateDates(changes: SyncDatabaseChangeSet) {
           record.updated_at = new Date(record.updated_at || defaultDate).getTime()
           if (record.deleted_at) {
             record.deleted_at = new Date(record.deleted_at || defaultDate).getTime()
+          }
+          if (record.timestamp) {
+            record.timestamp = new Date(record.timestamp || defaultDate).getTime()
           }
           // set up metadata
           if (record.metadata && typeof record.metadata !== "string") {

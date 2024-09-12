@@ -3,10 +3,13 @@ import { useEffect, useState } from "react"
 import database from "../db"
 import EventModel from "../db/model/Event"
 
+
+// NOTE: The patientId is not used in the query, since it is already implied by the visitId
+
 /**
  * Get all events for a visit, sorted by created_at
  * @param {string} visitId
- * @param {string} patientId
+ * @param {string} patientId 
  * @returns {EventModel[]}
  */
 export function useDBVisitEvents(visitId: string, patientId: string): EventModel[] {

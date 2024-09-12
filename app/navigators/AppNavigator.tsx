@@ -7,19 +7,21 @@
 import { DarkTheme, DefaultTheme, NavigationContainer } from "@react-navigation/native"
 import { createNativeStackNavigator, NativeStackScreenProps } from "@react-navigation/native-stack"
 import { observer } from "mobx-react-lite"
-import React from "react"
+import React, { useEffect } from "react"
 import { Alert, AppState, NativeModules, Pressable, StatusBar, useColorScheme } from "react-native"
 import * as Screens from "app/screens"
 import Config from "../config"
 import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
-import { colors } from "app/theme"
+import { colors, spacing } from "app/theme"
 import { useStores } from "app/models"
 import { translate } from "app/i18n"
+import { Text } from "app/components"
 import {
   ArrowUpDownIcon,
   AxeIcon,
   LoaderIcon,
   LucideCalendar,
+  LucideTrash2,
   Settings2Icon,
 } from "lucide-react-native"
 import { syncDB } from "app/db/sync"
@@ -30,6 +32,10 @@ import { View } from "app/components"
 import { PatientRecord } from "app/types"
 import PatientModel from "app/db/model/Patient"
 import { SafeAreaView } from "react-native-safe-area-context"
+import AppointmentModel from "app/db/model/Appointment"
+import { api } from "app/services/api"
+import Toast from "react-native-root-toast"
+import { getHHApiUrl } from "app/utils/storage"
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -57,12 +63,14 @@ export type AppStackParamList = {
     patientId: string
     visitId: string | null
     visitDate: number // timestamp
+    appointmentId: string | null // A visit can be created from an appointment
   }
   EventForm: {
     patientId: string
     formId: string
     visitId: string | null
     eventId: string | null
+    appointmentId: string | null // passed if the event is part of an appointment
     visitDate: number // timestamp
   }
   PatientVisitsList: {
@@ -81,8 +89,15 @@ export type AppStackParamList = {
   Feedback: undefined
   Reports: undefined
   AppointmentsList: undefined
-	AppointmentView: undefined
-	// IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
+  AppointmentView: {
+    appointmentId: string
+  }
+  AppointmentEditorForm: {
+    visitId: string | null | undefined
+    patientId: string
+    visitDate: number
+  }
+  // IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
 }
 
 /**
@@ -109,6 +124,14 @@ const AppStack = observer(function AppStack() {
     }
     const hasLocalChangesToPush = await hasUnsyncedChanges({ database })
 
+
+    Toast.show(translate("syncingStarted"), {
+      position: Toast.positions.BOTTOM,
+      containerStyle: {
+        marginBottom: 100,
+      },
+    })
+
     syncDB(
       hasLocalChangesToPush,
       sync.startSync,
@@ -117,11 +140,69 @@ const AppStack = observer(function AppStack() {
       console.log,
       sync.errorSync,
       sync.finishSync,
+    ).catch(err => {
+      sync.setProp("state", "idle")
+      console.log(err)
+      Toast.show("❌ Error syncing. Please make sure you have internet or contact your administrator.", {
+        position: Toast.positions.BOTTOM,
+        containerStyle: {
+          marginBottom: 100,
+        },
+        duration: Toast.durations.LONG,
+      });
+    })
+  }
+
+  const cancelAppointment = (navigation: any, appointmentId: string) => {
+    Alert.alert(
+      "Cancel Appointment",
+      "Are you sure you want to cancel this appointment?",
+      [
+        {
+          text: translate("yes"), onPress: () => {
+            api.cancelAppointment(appointmentId).then(res => {
+              Toast.show("✅ Appointment cancelled", {
+                position: Toast.positions.BOTTOM,
+                containerStyle: {
+                  marginBottom: 100,
+                }
+              });
+              navigation.goBack()
+            }).catch(err => {
+              Toast.show("❌ Error cancelling appointment", {
+                position: Toast.positions.BOTTOM,
+                containerStyle: {
+                  marginBottom: 100,
+                }
+              });
+              console.log(err)
+            })
+          }
+        },
+      ], {
+      cancelable: true,
+    }
     )
   }
 
   // TODO: Add check for valid or even existing backend api
   const isSignedIn = provider.isSignedIn
+
+  useEffect(() => {
+    if (isSignedIn) {
+      getHHApiUrl().then(url => {
+        if (url) {
+          startSync()
+        } else {
+          Alert.alert("Please activate your app on the administrator portal to continue syncing")
+        }
+      }).catch(err => {
+        console.log(err)
+        Alert.alert("Please activate your app on the administrator portal to continue syncing")
+      })
+    }
+  }, [isSignedIn])
+
 
   return (
     <Stack.Navigator
@@ -131,7 +212,7 @@ const AppStack = observer(function AppStack() {
         orientation: "all",
         headerStyle: { backgroundColor: colors.background },
         headerRight: () => (
-          <View direction="row" gap={10}>
+          <View direction="row" gap={12}>
             {isSyncing ? (
               <Pressable
                 onPress={() => {
@@ -221,14 +302,36 @@ const AppStack = observer(function AppStack() {
           />
           <Stack.Screen name="Feedback" component={Screens.FeedbackScreen} />
           <Stack.Screen name="Reports" component={Screens.ReportsScreen} />
-          <Stack.Screen name="AppointmentsList" component={Screens.AppointmentsListScreen} />
-			<Stack.Screen name="AppointmentView" component={Screens.AppointmentViewScreen} />
-			{/* IGNITE_GENERATOR_ANCHOR_APP_STACK_SCREENS */}
+          <Stack.Screen name="AppointmentsList" component={Screens.AppointmentsListScreen}
+            options={{
+              title: translate("appointments"),
+            }}
+          />
+          <Stack.Screen name="AppointmentView" component={Screens.AppointmentViewScreen} options={({ navigation, route }) => {
+            return {
+              presentation: "modal",
+              title: "",
+              headerRight: () => <View>
+                <Pressable
+                  onPress={() => cancelAppointment(navigation, route.params.appointmentId)}
+                >
+                  <View direction="row" gap={spacing.xs} alignItems="center">
+                    <LucideTrash2 color={colors.palette.angry500} size={20} />
+                    <Text tx="cancelAppointment" />
+                  </View>
+                </Pressable>
+              </View>,
+            }
+          }} />
+          <Stack.Screen name="AppointmentEditorForm" options={{
+            title: translate("appointmentEditorForm.title")
+          }} component={Screens.AppointmentEditorFormScreen} />
+          {/* IGNITE_GENERATOR_ANCHOR_APP_STACK_SCREENS */}
         </Stack.Group>
       )}
       <Stack.Screen
         options={{
-          title: "Privacy Policy",
+          title: translate("settingsScreen.privacyPolicy"),
           presentation: "modal",
           headerRight: undefined,
         }}
@@ -240,7 +343,7 @@ const AppStack = observer(function AppStack() {
 })
 
 export interface NavigationProps
-  extends Partial<React.ComponentProps<typeof NavigationContainer>> {}
+  extends Partial<React.ComponentProps<typeof NavigationContainer>> { }
 
 export const AppNavigator = observer(function AppNavigator(props: NavigationProps) {
   const colorScheme = useColorScheme()

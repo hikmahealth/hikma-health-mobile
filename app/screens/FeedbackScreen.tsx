@@ -1,13 +1,14 @@
 import React, { FC } from "react"
 import { observer } from "mobx-react-lite"
-import { ViewStyle } from "react-native"
+import { ViewStyle, Linking } from "react-native"
 import { AppStackScreenProps } from "app/navigators"
 import { Button, Screen, Text, TextField, View } from "app/components"
 // import { useNavigation } from "@react-navigation/native"
 import { useStores } from "app/models"
 import { useImmer } from "use-immer"
+import { api } from "app/services/api"
 
-interface FeedbackScreenProps extends AppStackScreenProps<"Feedback"> {}
+interface FeedbackScreenProps extends AppStackScreenProps<"Feedback"> { }
 
 export const FeedbackScreen: FC<FeedbackScreenProps> = observer(function FeedbackScreen({
   navigation,
@@ -25,7 +26,13 @@ export const FeedbackScreen: FC<FeedbackScreenProps> = observer(function Feedbac
   })
 
   const onSubmit = () => {
-    navigation.goBack()
+    const subject = `Feedback from ${feedbackObj.name}`
+    const body = `Name: ${feedbackObj.name}\nEmail: ${feedbackObj.email}\nPhone: ${feedbackObj.phone}\nRole: ${feedbackObj.role}\nClinic ID: ${feedbackObj.clinic_id}\n\n\nFeedback: ${feedbackObj.feedback}`
+    api.sendEmail("tech@hikmahealth.org", subject, body).catch((error) => {
+      console.error(error)
+    }).finally(() => {
+      navigation.goBack()
+    })
   }
 
   return (

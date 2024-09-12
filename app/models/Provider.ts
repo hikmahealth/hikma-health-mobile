@@ -1,5 +1,6 @@
 import { Instance, SnapshotIn, SnapshotOut, types } from "mobx-state-tree"
 import { withSetPropAction } from "./helpers/withSetPropAction"
+import { api } from "app/services/api"
 
 export const defaultProvider = {
   id: "",
@@ -34,12 +35,27 @@ export const ProviderModel = types
       return self.id && !!self.id
     },
 
-    /** The clinic the current provider is registered to */
     get clinic() {
       return {
         id: self.clinic_id,
-        name: self.clinic_name,
+        name: self.clinic_name || "",
       }
+    },
+
+    /** The clinic the current provider is registered to */
+    get dbClinic() {
+      return api.getClinic(self.clinic_id)
+        .then(clinicFromDb => ({
+          id: self.clinic_id,
+          name: clinicFromDb.name || "",
+        }))
+        .catch(error => {
+          console.error(error)
+          return {
+            id: self.clinic_id,
+            name: self.clinic_name || "",
+          }
+        })
     },
 
     /** Get the providers information */

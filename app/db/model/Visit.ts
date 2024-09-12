@@ -13,6 +13,7 @@ import {
 } from "@nozbe/watermelondb/decorators"
 import PatientModel from "./Patient"
 import EventModel from "./Event"
+import ClinicModel from "./Clinic"
 
 type VisitMetadata = {
   // Add types for any metadata that gets attached to the visit
@@ -23,10 +24,12 @@ export default class VisitModel extends Model {
 
   static associations: Associations = {
     patients: { type: "belongs_to", key: "patient_id" },
+    clinics: { type: "belongs_to", key: "clinic_id" },
     events: { type: "has_many", foreignKey: "visit_id" },
   } as const
 
-  @relation("patients", "patient_id") patient!: PatientModel
+  @immutableRelation("patients", "patient_id") patient!: PatientModel
+  @immutableRelation("clinics", "clinic_id") clinic!: ClinicModel
   @children("events") events!: EventModel[]
   // @relation("events", 'visitId') event
 

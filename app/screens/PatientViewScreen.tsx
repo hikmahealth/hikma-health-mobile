@@ -16,7 +16,9 @@ import { localeDate } from "app/utils/date"
 import {
   ChevronRight,
   DownloadCloudIcon,
+  LucideArrowRight,
   LucideCircleDot,
+  LucidePlus,
   PencilIcon,
   PlusIcon,
 } from "lucide-react-native"
@@ -30,8 +32,10 @@ import VisitModel from "app/db/model/Visit"
 import logoStr from "app/assets/images/logoStr"
 import { useInteractionManager } from "@react-native-community/hooks"
 import { useDebounce } from "usehooks-ts"
+import { useDBPatientAppointments } from "app/hooks/useDBPatientAppointments"
+import AppointmentModel from "app/db/model/Appointment"
 
-interface PatientViewScreenProps extends AppStackScreenProps<"PatientView"> {}
+interface PatientViewScreenProps extends AppStackScreenProps<"PatientView"> { }
 
 /**
  * Hook to subscribe to events from a form that is `is_snapshopt_form`
@@ -80,6 +84,7 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
   const interactionReady = useDebounce(_interactionReady, 500)
   const { patient, isLoading } = usePatientRecord(patientId, defaultPatient)
   const eventForms = useDBEventForms(translate("languageCode"))
+  const appointments = useDBPatientAppointments(patientId, new Date(), 3)
 
   const createNewVisit = () => {
     navigation.navigate("NewVisit", {
@@ -134,11 +139,25 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
   //   return <ActivityIndicator />
   // }
 
+  const openAppointmentView = (appointment: AppointmentModel) => {
+    navigation.navigate("AppointmentView", {
+      appointmentId: appointment.id,
+    })
+  }
+
+  const createNewAppointment = () => {
+    navigation.navigate("AppointmentEditorForm", {
+      patientId,
+      visitId: null,
+      visitDate: Date.now(),
+    })
+  }
+
   return (
     <>
       <Screen style={$root} preset="scroll">
         <View pt={40} pb={40} style={{ backgroundColor: colors.palette.primary50 }}>
-          <PatientProfileSummary patient={patient} onPressEdit={() => {}} />
+          <PatientProfileSummary patient={patient} onPressEdit={() => { }} />
 
           <View direction="row" justifyContent="center" alignItems="center" mt={10} gap={10}>
             <Pressable
@@ -199,6 +218,51 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
               <Text text={"Low: Increased risk of stress & anxiety"} size="xs" />
             </View>
           </If>
+
+          <View gap={10} mb={4} style={{ borderBottomWidth: 1, borderBottomColor: colors.border, paddingBottom: 10 }}>
+            <View direction="row" gap={10} alignItems="center">
+              <Text text="Appointments" />
+              <If condition={appointments.length > 0}>
+                <Pressable onPress={createNewAppointment}>
+                  <LucidePlus color={colors.palette.primary500} size={20} />
+                </Pressable>
+              </If>
+            </View>
+            <If condition={appointments?.length === 0 || !appointments}>
+              <Pressable onPress={createNewAppointment}>
+                <Text textDecorationLine="underline" color={colors.palette.primary500} text="Create New Appointment" />
+              </Pressable>
+            </If>
+            <If condition={appointments.length > 0}>
+              <View direction="row" gap={10} style={{ flexWrap: "wrap" }}>
+                {appointments.map((appointment) => {
+                  return (
+                    <Pressable
+                      onPress={() => openAppointmentView(appointment)}
+                      style={{
+                        padding: 6,
+                        paddingHorizontal: 10,
+                        backgroundColor: colors.palette.primary300,
+                        borderRadius: 10,
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 10,
+                      }}
+                      key={appointment.id}
+                    >
+                      <Text
+                        text={format(new Date(appointment.timestamp), "dd MMM yyyy")}
+                        size="xxs"
+                        color="#fff"
+                      />
+                      <LucideArrowRight color={colors.palette.neutral100} size={16} />
+                    </Pressable>
+                  )
+                })}
+              </View>
+            </If>
+          </View>
 
           <SnapshotFormLink
             onPress={() =>
@@ -324,7 +388,7 @@ async function printHTML(props: PDFReportProps) {
     <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
   </head>
-  <body>
+  <body style="padding: 18px;">
     <div style="">
       <div class="flex justify-between wide">
         <h1>${translate("patientReport.patientMedicalRecord")}</h1>
@@ -338,12 +402,11 @@ async function printHTML(props: PDFReportProps) {
 
               <br>
               <br>
-              ${
-                patient.additionalData &&
-                Object.entries(patient.additionalData)
-                  .map((v) => "<p>" + v[0] + ": " + v[1] + "</p>")
-                  .join("")
-              }
+              ${patient.additionalData &&
+      Object.entries(patient.additionalData)
+        .map((v) => "<p>" + v[0] + ": " + v[1] + "</p>")
+        .join("")
+      }
               <br>
               ${upperFirst(translate((patient.sex as any) || ""))}
 
@@ -481,7 +544,6 @@ const PatientProfileSummary: FC<PatientProfileSummaryProps> = function PatientPr
         <Avatar
           size={80}
           fullName={`${patient.givenName} ${patient.surname}`}
-          imageURL={patient.photoUrl}
         />
       </View>
       <View>
@@ -493,14 +555,13 @@ const PatientProfileSummary: FC<PatientProfileSummaryProps> = function PatientPr
         )}`}</Text>
         <Text
           align="center"
-          text={`${translate("dob")}: ${
-            isValid(new Date(patient.dateOfBirth))
-              ? format(new Date(patient.dateOfBirth), "dd MMM yyyy")
-              : ""
-          }`}
+          text={`${translate("dob")}: ${isValid(new Date(patient.dateOfBirth))
+            ? format(new Date(patient.dateOfBirth), "dd MMM yyyy")
+            : ""
+            }`}
         />
 
-        <Text align="center">Registered: {localeDate(patient.createdAt, "MMM dd, yyyy", {})}</Text>
+        <Text align="center">Registered: {localeDate(patient.createdAt, "dd MMM yyyy", {})}</Text>
       </View>
     </View>
   )

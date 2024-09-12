@@ -45,7 +45,8 @@ const ar: ENTranslations = {
     notesDescription: "ملاحظات على المريض",
     covid19Screening: "تحري COVID-19",
     covid19ScreeningDescription: "فحص COVID-19",
-    addEvent: "إضافة حدث"
+    addEvent: "إضافة حدث",
+    setNewAppointment: "اضبط موعد جديد",
   },
   patientList: {
     patients: "المريض",
@@ -65,6 +66,7 @@ const ar: ENTranslations = {
   },
   newVisit: {
     newVisit: "زياره جديده",
+    completeVisit: "إكمال الزيارة",
   },
   newPatient: {
     newPatient: "مريض جديد",
@@ -92,6 +94,7 @@ const ar: ENTranslations = {
     visitEvents: "احداث الزياره ",
     newEntry: "ادخال جديد",
     eventOptions: "خيارات الحدث",
+    completeVisit: "إكمال الزيارة",
     eventOptionsDescription: "ماذا تريد ان تفعل",
     edit: "تعديل",
     delete: "حذف",
@@ -100,6 +103,7 @@ const ar: ENTranslations = {
   },
   settingsScreen: {
     settings: "الإعدادات",
+    userAccount: "حساب المستخدم",
     showNotifications: "إظهار الإشعارات",
     lockWhenIdle: "قفل الشاشة عند الخمول",
     lockScreen: "قفل الشاشة",
@@ -111,7 +115,7 @@ const ar: ENTranslations = {
     reports: "تقارير",
     confirmSignOut: "هل أنت متأكد أنك تريد تسجيل الخروج؟",
     signOutDescription: "سيتم تسجيل الخروج من حسابك.",
-    privacyPolicy: "سياسة الخصوصية"
+    privacyPolicy: "سياسة الخصوصية",
   },
   errorScreen: {
     title: "حدث خطأ في التطبيق.",
@@ -119,6 +123,25 @@ const ar: ENTranslations = {
       "إذا استمر حدوث هذا الخطأ، فيرجى إرسال بريد إلكتروني إلى فريق الدعم لدينا، أو إرسال مشكلة على github مع الخطوات التي اتخذتها لإنتاج هذا الخطأ.",
     reset: "إعادة تعيين التطبيق",
   },
+  appointmentEditorForm: {
+    title: "محرر الموعد",
+    date: "التاريخ",
+    time: "الوقت",
+    duration: "المدة",
+    reason: "السبب",
+    notes: "الملاحظات",
+  },
+  appointmentView: {
+    markComplete: "وضع علامة مكتمل",
+    markCompleteConfirmation: "هل أنت متأكد أنك تريد وضع علامة اكتمال على هذا الموعد؟",
+    editAppointment: "تعديل الموعد",
+    startNewVisit: "بدء زيارة جديدة",
+    colorTagLabel: "علامة اللون",
+    colorTagDescription: "علامة اللون للموعد",
+  },
+  checkedIn: "تم التحقق",
+  xMinutes: "{{count}} دقيقة",
+  xHours: "{{count}} ساعة",
   success: "نجاح",
   done: "مكتمل",
   error: "خطأ",
@@ -143,6 +166,10 @@ const ar: ENTranslations = {
   save: "حفظ",
   confirm: "تأكيد",
   cancel: "إلغاء",
+  reschedule: "اعادة حجز",
+  cancelAppointment: "إلغاء",
+  appointments: "المواعيد",
+  editAppointment: "تعديل",
   yes: "نعم",
   no: "لا",
   firstName: "الاسم الاول",
@@ -255,6 +282,9 @@ const ar: ENTranslations = {
   showing: "إظهار",
   height: "طول القامة",
   weight: "وزن",
+  clinic: "العيادة",
+  email: "البريد الإلكتروني",
+  clinicName: "اسم العيادة",
   patientReport: {
     patientMedicalRecord: "السجل الطبي للمريض",
     PatientInformation: "معلومات المريض",
@@ -262,6 +292,7 @@ const ar: ENTranslations = {
   learnMore: "تعرف على المزيد",
   providerNotFound: "لم يتم العثور على مقدم الرعاية الصحية",
   downloadPatientHistory: "تحميل تاريخ المريض ",
+  syncingStarted: "جاري مزامنة البيانات مع الخادم",
 }
 
 export default ar

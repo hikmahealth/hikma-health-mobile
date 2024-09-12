@@ -15,13 +15,17 @@ import { MigrationSyncChanges } from "@nozbe/watermelondb/Schema/migrations/getS
 import EventModel from "app/db/model/Event"
 import VisitModel from "app/db/model/Visit"
 import { isValid } from "date-fns"
-import { Q } from "@nozbe/watermelondb"
+import { Model, Q } from "@nozbe/watermelondb"
 import { getHHApiUrl } from "app/utils/storage"
 import PatientAdditionalAttribute from "app/db/model/PatientAdditionalAttribute"
-import { PatientData } from "app/types"
+import { Appointment, PatientData } from "app/types"
 import { RegistrationFormField } from "app/db/model/PatientRegistrationForm"
 import schema from "app/db/schema"
 import { keys } from "lodash"
+import AppointmentModel from "app/db/model/Appointment"
+import { Provider } from "app/models"
+import ClinicModel from "app/db/model/Clinic"
+import { Linking } from "react-native"
 
 /**
  * Configuring the apisauce instance.
@@ -137,6 +141,16 @@ export class Api {
     checkInTimestamp: number,
     eventId?: string | null | undefined,
   ): Promise<{ eventId: string; visitId: string }> {
+
+    console.log({
+      event: JSON.stringify(event, null, 2),
+      visitId,
+      clinicId,
+      providerId,
+      providerName,
+      checkInTimestamp,
+      eventId,
+    })
     /** If there is an event Id, we are updating an existing event */
     if (eventId && eventId !== "" && visitId && visitId !== "") {
       const res = await database.write(async () => {
@@ -158,6 +172,7 @@ export class Api {
     /** If there is no event Id, we are creating a new event */
     return await database.write(async () => {
       let visitQuery: VisitModel | null = null
+      // If there is no visitId, we are creating a new visit
       if (!event.visitId || event.visitId === "" || visitId === null) {
         visitQuery = database.get<VisitModel>("visits").prepareCreate((newVisit) => {
           newVisit.patientId = event.patientId
@@ -346,6 +361,160 @@ export class Api {
     const syncPushResult = (await result.json()) as SyncPushResult
     return syncPushResult
   }
+
+  /**
+   * Create an appointment
+   * @param {Appointment} appointment
+   * @returns {Promise<{appointmentId: string, visitId: string | undefined}>}
+   */
+  async createAppointment(appointment: Appointment, provider: Provider): Promise<{ appointmentId: string, visitId: string | undefined }> {
+    // Check that the patientid, userId, and clinicid are valid strings (shallow test, not a deep check for a valid uuid)
+    if (!appointment.patientId || !appointment.userId || !appointment.clinicId ||
+      typeof appointment.patientId !== 'string' || typeof appointment.userId !== 'string' || typeof appointment.clinicId !== 'string' ||
+      appointment.patientId.length <= 3 || appointment.userId.length <= 3 || appointment.clinicId.length <= 3) {
+      throw new Error("Invalid patientId, userId, or clinicId")
+    }
+
+
+    return await database.write(async () => {
+      // If there is no currentVisitId, we need to create a new visit
+      let visit: VisitModel | null = null
+      let appointmentVisitId: string | null = appointment.currentVisitId
+      if (!appointment.currentVisitId) {
+        visit = await database.get<VisitModel>("visits").prepareCreate((newVisit) => {
+          newVisit.patientId = appointment.patientId
+          newVisit.clinicId = appointment.clinicId
+          newVisit.providerId = provider.id
+          newVisit.providerName = provider.name
+          newVisit.checkInTimestamp = new Date()
+          newVisit.metadata = {}
+        })
+        appointmentVisitId = visit.id
+      }
+
+      const appointmentQuery = await database.get<AppointmentModel>("appointments").prepareCreate((newAppointment) => {
+        newAppointment.currentVisitId = appointmentVisitId
+        newAppointment.patientId = appointment.patientId
+        newAppointment.providerId = appointment.providerId
+        newAppointment.clinicId = appointment.clinicId
+        newAppointment.userId = provider.id
+        newAppointment.timestamp = appointment.timestamp.getTime()
+        newAppointment.duration = appointment.duration
+        newAppointment.reason = appointment.reason || ""
+        newAppointment.notes = appointment.notes || ""
+        newAppointment.status = appointment.status || "pending"
+        newAppointment.metadata = appointment.metadata || {}
+        newAppointment.isDeleted = false
+      })
+
+      // batch create both of them
+      await database.batch([visit, appointmentQuery].filter(Boolean) as Model[])
+
+      return {
+        appointmentId: appointmentQuery.id,
+        visitId: visit?.id,
+      }
+    })
+  }
+
+  /**
+   * Mark an appointment as cancelled
+   * @param {string} appointmentId
+   * @returns {Promise<void>}
+   */
+  async cancelAppointment(appointmentId: string): Promise<void> {
+    return await database.write(async () => {
+      const appointment = await database.get<AppointmentModel>("appointments").find(appointmentId)
+      await appointment.update((appointment) => {
+        appointment.status = "cancelled"
+      })
+    })
+  }
+
+  /**
+   * Mark an appointment as complete
+   * @param {string} appointmentId
+   * Optional visitId to mark appointment as complete with respect to a visit
+   * @param {string} visitId
+   * @returns {Promise<void>}
+   */
+  async markAppointmentComplete(appointmentId: string, visitId?: string): Promise<void> {
+    return await database.write(async () => {
+      const appointment = await database.get<AppointmentModel>("appointments").find(appointmentId)
+      await appointment.update((appointment) => {
+        appointment.status = "completed"
+        appointment.fulfilledVisitId = visitId || null
+      })
+    })
+  }
+
+  /**
+   * Update an appointment
+   * @param {string} appointmentId
+   * @param {Partial<Appointment>} appointment
+   * @returns {Promise<void>}
+   */
+  async updateAppointment(appointmentId: string, appointment: Partial<Appointment>): Promise<void> {
+    await database.write(async () => {
+      const appointmentRecord = await database.get<AppointmentModel>("appointments").find(appointmentId)
+      await appointmentRecord.update((appt) => {
+        if (appointment.timestamp !== undefined) appt.timestamp = new Date(appointment.timestamp).getTime()
+        if (appointment.duration !== undefined) appt.duration = appointment.duration
+        if (appointment.reason !== undefined) appt.reason = appointment.reason
+        if (appointment.notes !== undefined) appt.notes = appointment.notes
+        if (appointment.status !== undefined) appt.status = appointment.status
+        if (appointment.metadata !== undefined) appt.metadata = appointment.metadata
+      })
+    })
+  }
+
+  /**
+   * Get a clinic by id
+   * @param {string} clinicId
+   * @returns {Promise<ClinicModel>}
+   */
+  async getClinic(clinicId: string): Promise<ClinicModel> {
+    const clinic = await database.get<ClinicModel>("clinics").find(clinicId)
+    return clinic
+  }
+
+  /**
+   * Send an email using the local email client
+   * @param {string} to
+   * @param {string} subject
+   * @param {string} body
+   * @param {object} options
+   * @returns {Promise<void>}
+   */
+
+  async sendEmail(to: string, subject: string, body: string, options: { cc?: string, bcc?: string } = {}) {
+    const { cc, bcc } = options;
+
+    let url = `mailto:${to}`;
+
+    // Create email link query using raw JavaScript
+    const queryParams = new URLSearchParams({
+      subject: subject,
+      body: body,
+      ...(cc && { cc }),
+      ...(bcc && { bcc })
+    });
+    const query = queryParams.toString();
+
+    if (query.length) {
+      url += `?${query}`;
+    }
+
+    // check if we can use this link
+    const canOpen = await Linking.canOpenURL(url);
+
+    if (!canOpen) {
+      throw new Error('Provided URL can not be handled');
+    }
+
+    return Linking.openURL(url);
+  }
+
 
   /**
    * Manually push local data to server, regardless of sync status

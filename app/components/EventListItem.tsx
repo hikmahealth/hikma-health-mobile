@@ -9,6 +9,7 @@ import { ICD10RecordLabel } from "./DiagnosisEditor"
 import { upperFirst } from "lodash"
 import { If } from "./If"
 import { ICDEntry } from "../types"
+import { LucideEllipsisVertical } from "lucide-react-native"
 
 export interface EventListItemProps {
   /**
@@ -45,8 +46,11 @@ export const EventListItem = enhanceEvent(function EventListItem(props: EventLis
       <Pressable testID="eventListItem" style={{}} onLongPress={() => openEventOptions(event)}>
         <View style={{}}>
           <View style={{ margin: 10 }}>
-            <View style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
+            <View direction="row" justifyContent="space-between" alignItems="center" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
               <Text preset="subheading">{`${event.eventType}, ${time}`}</Text>
+              <Pressable onPress={() => openEventOptions(event)}>
+                <LucideEllipsisVertical size={20} color={colors.palette.primary400} />
+              </Pressable>
             </View>
             {display}
           </View>

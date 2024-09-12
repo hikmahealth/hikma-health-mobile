@@ -319,13 +319,13 @@ export function usePatientsList(
           patientAttrsQueryConditions.length === 0
             ? []
             : await patientAttrsRef
-                .query(
-                  ...patientAttrsQueryConditions,
-                  ...queryPtIds,
-                  Q.sortBy("updated_at"),
-                  Q.take(totalShowingResults),
-                )
-                .fetch()
+              .query(
+                ...patientAttrsQueryConditions,
+                ...queryPtIds,
+                Q.sortBy("updated_at"),
+                Q.take(totalShowingResults),
+              )
+              .fetch()
         const attrPatientIds = attrRes.map((attrRes) => attrRes.patientId)
 
         const missingPatientIds = attrRes
@@ -336,8 +336,8 @@ export function usePatientsList(
           missingPatientIds.length === 0
             ? []
             : await patientsRef
-                .query(Q.where("id", Q.oneOf(missingPatientIds)), Q.sortBy("updated_at"))
-                .fetch()
+              .query(Q.where("id", Q.oneOf(missingPatientIds)), Q.sortBy("updated_at"))
+              .fetch()
 
         // the subset of patientRes that actually matches the search results for the other parameters;
         const filteredPatients =
@@ -374,7 +374,7 @@ export function usePatientsList(
   }
 }
 
-interface PatientsListScreenProps extends AppStackScreenProps<"PatientsList"> {}
+interface PatientsListScreenProps extends AppStackScreenProps<"PatientsList"> { }
 
 export const PatientsListScreen: FC<PatientsListScreenProps> = observer(
   function PatientsListScreen({ navigation }) {
@@ -548,9 +548,8 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = observer(
 
               <View direction="row" justifyContent="space-between" alignItems="flex-start">
                 <Text
-                  text={`${translate("showing")} ${
-                    patients.length
-                  } / ${totalPatientsCount.toLocaleString()}`}
+                  text={`${translate("showing")} ${patients.length
+                    } / ${totalPatientsCount.toLocaleString()}`}
                 />
                 <View alignItems="flex-end">
                   <Pressable onPress={() => setIsExpandedSearch((ex) => !ex)}>

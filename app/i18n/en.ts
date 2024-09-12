@@ -44,7 +44,8 @@ const en = {
     notesDescription: "Notes on the patient",
     covid19Screening: "COVID-19 Screening",
     covid19ScreeningDescription: "COVID-19 screening questionnaire",
-    addEvent: "Add Event"
+    addEvent: "Add Event",
+    setNewAppointment: "Set New Appointment"
   },
   patientList: {
     patients: "Patients",
@@ -64,6 +65,7 @@ const en = {
   },
   newVisit: {
     newVisit: "New Visit",
+    completeVisit: "Complete Visit",
   },
   newPatient: {
     newPatient: "New Patient",
@@ -96,9 +98,11 @@ const en = {
     delete: "delete",
     eventDeleted: "Event Deleted",
     errorDeletingEvent: "Error deleting event",
+    completeVisit: "Complete Visit",
   },
   settingsScreen: {
     settings: "Settings",
+    userAccount: "User Account",
     showNotifications: "Show Notifications",
     lockWhenIdle: "Lock Screen when idle",
     lockScreen: "Lock Screen",
@@ -118,6 +122,25 @@ const en = {
       "If this error continues to occur, please email our support team, or file an issue on github with the steps you took to produce this error.",
     reset: "Reset the application",
   },
+  appointmentEditorForm: {
+    title: "Appointment Editor",
+    date: "Date",
+    time: "Time",
+    duration: "Duration",
+    reason: "Reason",
+    notes: "Notes",
+  },
+  appointmentView: {
+    markComplete: "Mark Complete",
+    markCompleteConfirmation: "Are you sure you want to mark this appointment as complete?",
+    editAppointment: "Edit Appointment",
+    startNewVisit: "Start New Visit",
+    colorTagLabel: "Color Tag",
+    colorTagDescription: "Color tag for the appointment",
+  },
+  checkedIn: "Checked In",
+  xMinutes: "{{count}} Minutes",
+  xHours: "{{count}} Hours",
   success: "Success",
   done: "Done",
   error: "Error",
@@ -142,8 +165,12 @@ const en = {
   save: "SAVE",
   confirm: "CONFIRM",
   cancel: "CANCEL",
+  reschedule: "Reschedule",
+  cancelAppointment: "Cancel",
+  editAppointment: "Edit",
   yes: "Yes",
   no: "No",
+  appointments: "Appointments",
   firstName: "First Name",
   surname: "Surname",
   country: "Country",
@@ -254,6 +281,9 @@ const en = {
   showing: "Showing",
   height: "Height",
   weight: "Weight",
+  clinic: "Clinic",
+  email: "Email",
+  clinicName: "Clinic Name",
   patientReport: {
     patientMedicalRecord: "Patient Medical Record",
     PatientInformation: "Patient Information",
@@ -261,6 +291,7 @@ const en = {
   learnMore: "Learn more",
   providerNotFound: "Healthcare Provider not found",
   downloadPatientHistory: "Download Patient History",
+  syncingStarted: "Syncing data with the server",
 }
 
 export default en

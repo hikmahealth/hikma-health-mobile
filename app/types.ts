@@ -117,25 +117,26 @@ export type PatientRecord = {
 
 export type PatientValueColumn = "date_value" | "string_value" | "boolean_value" | "number_value"
 
+export type AppointmentStatus = "pending" | "confirmed" | "cancelled" | "completed" | "checked_in"
 
 export type Appointment = {
   id: string
-  provider_id: string | null
-  clinic_id: string
-  patient_id: string
-  user_id: string
-  current_visit_id: string
-  fulfilled_visit_id: string | null
+  providerId: string | null
+  clinicId: string
+  patientId: string
+  userId: string
+  currentVisitId: string
+  fulfilledVisitId: string | null
   timestamp: Date
   duration: number // in minutes
   reason: string
   notes: string
-  status: "pending" | "confirmed" | "cancelled" | "completed"
+  status: AppointmentStatus
   metadata: Record<string, any>
-  is_deleted: boolean
-  created_at: Date
-  updated_at: Date
-  deleted_at: Date | null
+  isDeleted: boolean
+  createdAt: Date
+  updatedAt: Date
+  deletedAt: Date | null
 }
 
 

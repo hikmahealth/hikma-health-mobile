@@ -34,24 +34,24 @@ export interface MedicationEditorProps {
 /** Filter out the medications list using the search query. This supports english and arabic fields. */
 const getMedicationsListFilter =
   (meds: { name: string; name_ar: string; form: string }[], language: string) =>
-  (query: string) => {
-    // if the query is non-existant, dont show any suggestions
-    if (query.length === 0) return []
+    (query: string) => {
+      // if the query is non-existant, dont show any suggestions
+      if (query.length === 0) return []
 
-    const field = language === "ar" ? "name_ar" : "name"
+      const field = language === "ar" ? "name_ar" : "name"
 
-    const searchResults = meds.filter((m) => m[field].toLowerCase().includes(query.toLowerCase()))
+      const searchResults = meds.filter((m) => m[field].toLowerCase().includes(query.toLowerCase()))
 
-    // if there is at least one result and the same one already entered in the search, then return no suggestions
-    if (
-      searchResults.length >= 1 &&
-      searchResults[0][field].toLowerCase() === query.toLowerCase()
-    ) {
-      return []
+      // if there is at least one result and the same one already entered in the search, then return no suggestions
+      if (
+        searchResults.length >= 1 &&
+        searchResults[0][field].toLowerCase() === query.toLowerCase()
+      ) {
+        return []
+      }
+
+      return searchResults
     }
-
-    return searchResults
-  }
 
 const initialValues: MapOrEntries<keyof MedicationEntry, string | number> = [
   ["id", ""],
@@ -124,7 +124,7 @@ export const MedicationEditor = observer(function MedicationEditor(props: Medica
             onChangeText={setValue("name")}
           />
 
-          <View direction="row" gap={4} style={{ flexWrap: "wrap" }}>
+          {/* <View direction="row" gap={4} style={{ flexWrap: "wrap" }}>
             {filterMedSuggestions((map.get("name") || "") as string)
               .slice(0, 5)
               .map((suggestion, idx) => (
@@ -145,7 +145,7 @@ export const MedicationEditor = observer(function MedicationEditor(props: Medica
                   />
                 </Pressable>
               ))}
-          </View>
+          </View> */}
           <Picker selectedValue={map.get("form")} onValueChange={setValue("form")}>
             <Picker.Item label={"Choose medication form"} value="" />
             {stringsListToOptions(medicineFormOptions).map((option) => (

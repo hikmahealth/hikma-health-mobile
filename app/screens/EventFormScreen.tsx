@@ -44,7 +44,7 @@ type ModalState =
   | { activeModal: "medication"; medication: MedicationEntry }
   | { activeModal: "diagnoses" }
 
-interface EventFormScreenProps extends AppStackScreenProps<"EventForm"> {}
+interface EventFormScreenProps extends AppStackScreenProps<"EventForm"> { }
 
 /**
 Hook to manage multiple open pickers by Id
@@ -71,6 +71,7 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
     // formData,
     eventId = null,
     visitDate,
+    appointmentId = null,
   } = route.params
   const { provider, language } = useStores()
 
@@ -214,6 +215,14 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
         visitDate,
         eventId,
       )
+
+      // Update the appointment with the visitId
+      if (appointmentId) {
+        // Function is async and we are not waiting for it, and if it fails we dont care too much and dont want it to block the user from continuing
+        api.markAppointmentComplete(appointmentId, res.visitId).catch((e) => {
+          console.error("Error updating appointment with visitId", e)
+        })
+      }
 
       // React-Navigation 6 shortcut to passing a parameter to the previous screen
       // here we pop the screen and pass the visit ID to the previous screen
@@ -622,24 +631,24 @@ function useEventForm(
     /** Subscribe to the event if it exists. If there is no event, create a new one */
     const eventSub = eventId
       ? database.collections
-          .get<EventModel>("events")
-          .findAndObserve(eventId)
-          .subscribe((event) => {
-            updateFormState((d) => {
-              let draft = d || ({} as any)
-              // if (draft) {
-              draft.formId = event.formId
-              draft.visitId = event.visitId
-              draft.patientId = event.patientId
-              draft.formData = event.formData
-              draft.createdAt = event.createdAt
-              draft.updatedAt = event.updatedAt
-              draft.id = event.id
-              return draft
-              // }
-              // return event
-            })
+        .get<EventModel>("events")
+        .findAndObserve(eventId)
+        .subscribe((event) => {
+          updateFormState((d) => {
+            let draft = d || ({} as any)
+            // if (draft) {
+            draft.formId = event.formId
+            draft.visitId = event.visitId
+            draft.patientId = event.patientId
+            draft.formData = event.formData
+            draft.createdAt = event.createdAt
+            draft.updatedAt = event.updatedAt
+            draft.id = event.id
+            return draft
+            // }
+            // return event
           })
+        })
       : null
 
     return () => {

@@ -1,6 +1,6 @@
-import React, { FC } from "react"
+import React, { FC, useMemo } from "react"
 import { observer } from "mobx-react-lite"
-import { ViewStyle, Image, Pressable, Linking, Alert, ToastAndroid } from "react-native"
+import { ViewStyle, Image, Pressable, Linking, Alert } from "react-native"
 import { AppStackScreenProps } from "app/navigators"
 import { Button, If, LanguageToggle, Screen, Text, TextField, Toggle, View } from "app/components"
 import { colors } from "app/theme"
@@ -12,18 +12,22 @@ import EncryptedStorage from "react-native-encrypted-storage"
 import { useLockWhenIdleSettings } from "app/hooks/useLockWhenIdleSettings"
 import { generateDummyPatients, insertBenchmarkingData } from "app/utils/benchmarking"
 import { translate } from "app/i18n"
+import { useDBProvider } from "app/hooks/useDBProvider"
+import Toast from "react-native-root-toast"
 
 const launchIcon = require("./../assets/images/launch_icon.png")
 
 const HIKMA_URL = "https://www.hikmahealth.org/"
 
-interface SettingsScreenProps extends AppStackScreenProps<"Settings"> {}
+interface SettingsScreenProps extends AppStackScreenProps<"Settings"> { }
 
 export const SettingsScreen: FC<SettingsScreenProps> = observer(function SettingsScreen({
   navigation,
   route,
 }) {
-  const { provider, appState } = useStores()
+  const { appState, provider: providerStore } = useStores()
+  const { clinic, provider, isLoading } = useDBProvider();
+
   const {
     toggleLockWhenIdle,
     state,
@@ -59,7 +63,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = observer(function Setting
           onPress: async () => {
             await EncryptedStorage.removeItem("provider_password")
             await EncryptedStorage.removeItem("provider_email")
-            provider.resetProvider() // navigation will automatically respond to this event and go to home screen directly
+            providerStore.resetProvider() // navigation will automatically respond to this event and go to home screen directly
           },
         },
       ],
@@ -68,6 +72,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = observer(function Setting
       },
     )
   }
+
 
   const toggleNotifications = async (newStatus: boolean) => {
     try {
@@ -94,19 +99,16 @@ export const SettingsScreen: FC<SettingsScreenProps> = observer(function Setting
 
   const createSyntheticPatients = () => {
     const patients = generateDummyPatients(1_000, 3, 2)
-    // ToastAndroid.show("Synthetic patients created: " + patients.length, ToastAndroid.SHORT)
-    // toast showing the total number of patients, visits and events
-    ToastAndroid.show(
-      `Synthetic patients created: ${patients.length} patients, ${patients[0]?.visits.length} visits and ${patients[0]?.events.length} events`,
-      ToastAndroid.SHORT,
+    Toast.show(
+      `Synthetic patients created: ${patients.length} patients, ${patients[0]?.visits.length} visits and ${patients[0]?.events.length} events`
     )
     insertBenchmarkingData(patients)
       .then((res) => {
-        ToastAndroid.show("Synthetic patients created: " + patients.length, ToastAndroid.SHORT)
+        Toast.show("Synthetic patients created: " + patients.length)
       })
       .catch((err) => {
         console.log(err)
-        ToastAndroid.show("Error creating synthetic patients: " + err, ToastAndroid.SHORT)
+        Toast.show("Error creating synthetic patients: " + err)
         Alert.alert("Done")
       })
   }
@@ -134,6 +136,19 @@ export const SettingsScreen: FC<SettingsScreenProps> = observer(function Setting
               tx="learnMore"
             />
           </Pressable>
+        </View>
+      </View>
+
+      <View py={22} gap={10}>
+        <Text tx="settingsScreen.userAccount" size="lg" />
+        <View style={$withBottomBorder} py={12}>
+          <Text tx="email" size="sm" />
+          <Text text={provider?.email || ""} size="sm" />
+        </View>
+
+        <View style={$withBottomBorder} py={12}>
+          <Text tx="clinicName" size="sm" />
+          <Text text={clinic?.name || ""} size="sm" />
         </View>
       </View>
 

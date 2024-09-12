@@ -15,6 +15,7 @@ import User from "./model/User"
 import Clinic from "./model/Clinic"
 import { setGenerator } from "@nozbe/watermelondb/utils/common/randomId"
 import PatientAdditionalAttribute from "./model/PatientAdditionalAttribute"
+import Appointment from "./model/Appointment"
 
 setGenerator(() => uuidv1())
 
@@ -47,6 +48,9 @@ export const database = new Database({
 
     // v2
     PatientAdditionalAttribute,
+
+    // v3
+    Appointment,
   ],
 })
 

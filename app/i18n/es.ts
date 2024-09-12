@@ -45,7 +45,8 @@ const es: ENTranslations = {
     notesDescription: "Notas sobre el paciente",
     covid19Screening: "Preguntas de detección de COVID-19",
     covid19ScreeningDescription: "Preguntas de detección de COVID-19",
-    addEvent: "Añadir evento"
+    addEvent: "Añadir evento",
+    setNewAppointment: "Establecer nuevo evento"
   },
   patientList: {
     patients: "Pacientes",
@@ -65,6 +66,7 @@ const es: ENTranslations = {
   },
   newVisit: {
     newVisit: "Nueva Visita",
+    completeVisit: "Completar Visita",
   },
   newPatient: {
     newPatient: "Nuevo Paciente",
@@ -97,9 +99,11 @@ const es: ENTranslations = {
     delete: "Borre",
     eventDeleted: "Evento Borrado",
     errorDeletingEvent: "Error al borrar de evento",
+    completeVisit: "Completar Visita",
   },
   settingsScreen: {
     settings: "Ajustes",
+    userAccount: "Cuenta de Usuario",
     showNotifications: "Mostrar Notificaciones",
     lockWhenIdle: "Bloquear Pantalla cuando está inactiva",
     lockScreen: "Bloquear Pantalla",
@@ -119,6 +123,25 @@ const es: ENTranslations = {
       "Si este error continúa ocurriendo, envíe un correo electrónico a nuestro equipo de soporte o presente un problema en github con los pasos que siguió para producir este error.",
     reset: "Restablecer la aplicación",
   },
+  appointmentEditorForm: {
+    title: "Editor de Cita",
+    date: "Fecha",
+    duration: "Duración",
+    reason: "Razón",
+    notes: "Notas",
+    time: "Hora",
+  },
+  appointmentView: {
+    markComplete: "Marcar como Completada",
+    markCompleteConfirmation: "¿Estás seguro de que quieres marcar esta cita como completada?",
+    editAppointment: "Editar Cita",
+    startNewVisit: "Iniciar Nueva Visita",
+    colorTagLabel: "Color de etiqueta",
+    colorTagDescription: "Color de etiqueta para la cita",
+  },
+  checkedIn: "Marcado como presente",
+  xMinutes: "{{count}} Minutos",
+  xHours: "{{count}} Horas",
   success: "Exitoso",
   done: "Listo",
   error: "Error",
@@ -143,6 +166,10 @@ const es: ENTranslations = {
   save: "GUARDAR",
   confirm: "CONFIRMAR",
   cancel: "CANCELAR",
+  reschedule: "Reagendar",
+  cancelAppointment: "Cancelar",
+  editAppointment: "Editar",
+  appointments: "Citas",
   yes: "Sí",
   no: "No",
   firstName: "Nombre",
@@ -255,6 +282,9 @@ const es: ENTranslations = {
   showing: "Mostrando",
   height: "Altura",
   weight: "Peso",
+  clinic: "Clínica",
+  email: "Correo electrónico",
+  clinicName: "Nombre de la clínica",
   patientReport: {
     patientMedicalRecord: "Historial médico del paciente",
     PatientInformation: "Información del paciente",
@@ -262,6 +292,7 @@ const es: ENTranslations = {
   learnMore: "Más Información",
   providerNotFound: "Proveedor de atención médica no encontrado",
   downloadPatientHistory: "Descarga historial del paciente",
+  syncingStarted: "Sincronizando datos con el servidor",
 }
 export default es
 export type Translations = typeof es
