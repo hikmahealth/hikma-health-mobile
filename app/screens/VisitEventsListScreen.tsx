@@ -16,13 +16,12 @@ import { sortBy } from "lodash"
 import AppointmentModel from "app/db/model/Appointment"
 import { withObservables } from "@nozbe/watermelondb/react"
 import ClinicModel from "app/db/model/Clinic"
-import { of as of$ } from "rxjs"
+import { catchError, of as of$ } from "rxjs"
 import { format } from "date-fns"
 
-interface VisitEventsListScreenProps extends AppStackScreenProps<"VisitEventsList"> { }
+interface VisitEventsListScreenProps extends AppStackScreenProps<"VisitEventsList"> {}
 
 // TODO: Include appointments in the list of events, if there was an appointment that was created during the visit
-
 
 export const VisitEventsListScreen: FC<VisitEventsListScreenProps> = observer(
   function VisitEventsListScreen({ route, navigation }) {
@@ -90,7 +89,10 @@ export const VisitEventsListScreen: FC<VisitEventsListScreenProps> = observer(
       navigation.navigate("AppointmentView", { appointmentId })
     }
 
-    const eventsAndAppointments = sortBy([...eventsList, ...appointmentsList], (event) => event.createdAt)
+    const eventsAndAppointments = sortBy(
+      [...eventsList, ...appointmentsList],
+      (event) => event.createdAt,
+    )
 
     return (
       <>
@@ -98,15 +100,21 @@ export const VisitEventsListScreen: FC<VisitEventsListScreenProps> = observer(
           data={eventsAndAppointments}
           estimatedItemSize={100}
           contentContainerStyle={{ padding: 10 }}
-          renderItem={({ item }) => isAppointment(item) ? (
-            <AppointmentListItem appointment={item} language={language.current} openAppointmentPage={openAppointmentPage} />
-          ) : (
-            <EventListItem
-              event={item}
-              openEventOptions={openEventOptions}
-              language={language.current}
-            />
-          )}
+          renderItem={({ item }) =>
+            isAppointment(item) ? (
+              <AppointmentListItem
+                appointment={item}
+                language={language.current}
+                openAppointmentPage={openAppointmentPage}
+              />
+            ) : (
+              <EventListItem
+                event={item}
+                openEventOptions={openEventOptions}
+                language={language.current}
+              />
+            )
+          }
           ListFooterComponent={() => <View style={{ height: 60 }} />}
         />
         <Fab Icon={PlusIcon} onPress={goToNewPatientVisit} />
@@ -115,13 +123,12 @@ export const VisitEventsListScreen: FC<VisitEventsListScreenProps> = observer(
   },
 )
 
-
-
 const enhanceAppointment = withObservables(["appointment"], ({ appointment }) => ({
   appointment, // shortcut syntax for `event: event.observe()`
-  clinic: appointment.clinicId ? appointment.clinic.observe() : of$(null)
+  clinic: appointment.clinicId
+    ? appointment.clinic?.observe().pipe(catchError(() => of$(null)))
+    : of$(null),
 }))
-
 
 type AppointmentListItemProps = {
   appointment: AppointmentModel
@@ -130,34 +137,38 @@ type AppointmentListItemProps = {
   openAppointmentPage: (appointmentId: string) => void
 }
 
-const AppointmentListItem = enhanceAppointment(({ appointment, openAppointmentPage, language, clinic }: AppointmentListItemProps) => {
-  const time = new Date(appointment.createdAt).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  })
+const AppointmentListItem = enhanceAppointment(
+  ({ appointment, openAppointmentPage, language, clinic }: AppointmentListItemProps) => {
+    const time = new Date(appointment.createdAt).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
 
-  return (
-    <View>
-      <Pressable testID="appointmentListItem" onPress={() => openAppointmentPage(appointment.id)} style={{}}>
-        <View style={{}}>
-          <View style={{ margin: 10 }}>
-            <View style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
-              <Text preset="subheading">{`Set Appointment, ${time}`}</Text>
-
+    return (
+      <View>
+        <Pressable
+          testID="appointmentListItem"
+          onPress={() => openAppointmentPage(appointment.id)}
+          style={{}}
+        >
+          <View style={{}}>
+            <View style={{ margin: 10 }}>
+              <View style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                <Text preset="subheading">{`Set Appointment, ${time}`}</Text>
+              </View>
+              <Text>{`Appointment Date: ${format(appointment.timestamp, "MMM d, yyyy")}`}</Text>
+              <Text>{`Clinic: ${clinic?.name || "Unknown Clinic"}`}</Text>
+              <Text>{`Reason: ${appointment.reason}`}</Text>
+              <Text>{`Status: ${appointment.status}`}</Text>
+              <Text>{`Notes: \n${appointment.notes}`}</Text>
             </View>
-            <Text>{`Appointment Date: ${format(appointment.timestamp, "MMM d, yyyy")}`}</Text>
-            <Text>{`Clinic: ${clinic?.name || "Unknown Clinic"}`}</Text>
-            <Text>{`Reason: ${appointment.reason}`}</Text>
-            <Text>{`Status: ${appointment.status}`}</Text>
-            <Text>{`Notes: \n${appointment.notes}`}</Text>
           </View>
-        </View>
-      </Pressable>
-    </View>
-  )
-})
-
+        </Pressable>
+      </View>
+    )
+  },
+)
 
 /**
  * Helper function to check if an item is an appointment

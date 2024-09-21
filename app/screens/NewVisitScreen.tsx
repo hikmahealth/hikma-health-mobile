@@ -10,10 +10,12 @@ import { useStores } from "app/models"
 import { ChevronRight, LucideCalendarPlus, LucideCheckCheck } from "lucide-react-native"
 import { colors } from "app/theme"
 import { useDBVisitEvents } from "app/hooks/useDBVisitEvents"
+import { useDBAppointmentsList } from "app/hooks/useAppointmentsList"
+import { useDBVisitAppointments } from "app/hooks/useDBVisitAppointments"
 // import { useNavigation } from "@react-navigation/native"
 // import { useStores } from "app/models"
 
-interface NewVisitScreenProps extends AppStackScreenProps<"NewVisit"> { }
+interface NewVisitScreenProps extends AppStackScreenProps<"NewVisit"> {}
 
 export const NewVisitScreen: FC<NewVisitScreenProps> = observer(function NewVisitScreen({
   route,
@@ -29,6 +31,8 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = observer(function NewVisi
 
   const eventsList = useDBVisitEvents(visitId || "", patientId)
   const forms = useDBEventForms()
+  const appointments = useDBVisitAppointments(visitId)
+  const appointmentsCount = appointments.length
 
   /** If we are updating an existing visit, then we are just adding an event. update the title to reflect this */
   useEffect(() => {
@@ -54,16 +58,23 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = observer(function NewVisi
           onDateChange={(d) => setEventDate(d.getTime())}
         />
         {/** Button to set a new appointment */}
-        <Pressable style={$appointmentButton} onPress={() => {
-          navigation.navigate("AppointmentEditorForm", {
-            visitId,
-            patientId,
-            visitDate: eventDate,
-          })
-        }}>
+        <Pressable
+          style={$appointmentButton}
+          onPress={() => {
+            navigation.navigate("AppointmentEditorForm", {
+              visitId,
+              patientId,
+              visitDate: eventDate,
+            })
+          }}
+        >
           <View direction="row" gap={8}>
             <LucideCalendarPlus color={colors.palette.primary500} size={20} />
-            <Text color={colors.palette.primary500} textDecorationLine="underline" tx={"newVisitScreen.setNewAppointment"}></Text>
+            <Text
+              color={colors.palette.primary500}
+              textDecorationLine="underline"
+              text={`${translate("newVisitScreen.setNewAppointment")} (${appointmentsCount})`}
+            ></Text>
           </View>
         </Pressable>
 
@@ -114,10 +125,7 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = observer(function NewVisi
         })}
       </View>
 
-      <Button
-        tx="newVisit.completeVisit"
-        onPress={() => navigation.goBack()}
-      />
+      <Button tx="newVisit.completeVisit" onPress={() => navigation.goBack()} />
       <View style={{ height: 100 }} />
     </Screen>
   )
@@ -138,7 +146,6 @@ const $formListItem: ViewStyle = {
   borderBottomWidth: 1,
   borderBottomColor: colors.border,
 }
-
 
 const $appointmentButton: ViewStyle = {
   display: "flex",

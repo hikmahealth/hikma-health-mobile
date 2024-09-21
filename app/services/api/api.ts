@@ -65,7 +65,6 @@ export class Api {
    */
   async registerPatient(patient: PatientModelData): Promise<PatientModel> {
     return await database.write(async () => {
-      console.log("Inserting data: ", patient.additionalData)
       const pt = await database.get<PatientModel>("patients").create((newPatient) => {
         newPatient.givenName = patient.givenName
         newPatient.surname = patient.surname

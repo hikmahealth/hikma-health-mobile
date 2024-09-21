@@ -13,6 +13,9 @@ import { PatientRecord } from "app/types"
 import { getAdditionalFieldColumnName, getPatientFieldByName } from "app/utils/patient"
 import { camelCase } from "lodash"
 import { format } from "date-fns"
+import AppointmentModel from "app/db/model/Appointment"
+import VisitModel from "app/db/model/Visit"
+import EventModel from "app/db/model/Event"
 
 /**
 Manage all patient related queries locally
@@ -113,7 +116,6 @@ export class PatientApi {
         .query(Q.where("government_id", governmentId))
         .fetch()
 
-      console.log({ patients })
 
       if (patients.length > 0) {
         return true
@@ -363,8 +365,30 @@ export class PatientApi {
       return attr.prepareMarkAsDeleted()
     })
 
+    const appointmentsRef = (
+      await database
+        .get<AppointmentModel>("appointments")
+        .query(Q.where("patient_id", id))
+        .fetch()
+    ).map((appointment) => appointment.prepareMarkAsDeleted())
+
+    const visitsRef = (
+      await database
+        .get<VisitModel>("visits")
+        .query(Q.where("patient_id", id))
+        .fetch()
+    ).map((visit) => visit.prepareMarkAsDeleted())
+
+    const eventsRef = (
+      await database
+        .get<EventModel>("events")
+        .query(Q.where("patient_id", id))
+        .fetch()
+    ).map((event) => event.prepareMarkAsDeleted())
+
+
     return database.write(async () => {
-      return database.batch([patientRef, ...attrRef])
+      return database.batch([patientRef, ...attrRef, ...appointmentsRef, ...visitsRef, ...eventsRef])
     })
   }
 }

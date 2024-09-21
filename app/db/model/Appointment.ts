@@ -42,7 +42,7 @@ export default class AppointmentModel extends Model {
   @readonly @date("created_at") createdAt!: Date
   @readonly @date("updated_at") updatedAt!: Date
 
-  @immutableRelation("patients", "patient_id") patient!: PatientModel
+  @immutableRelation("patients", "patient_id") patient?: PatientModel
   @immutableRelation("clinics", "clinic_id") clinic!: ClinicModel
   @immutableRelation("providers", "provider_id") provider!: UserModel
   @immutableRelation("visits", "current_visit_id") currentVisit!: VisitModel

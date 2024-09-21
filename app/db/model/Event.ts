@@ -6,8 +6,10 @@ import {
   date,
   readonly,
   json,
+  immutableRelation,
 } from "@nozbe/watermelondb/decorators"
 import { ICDEntry } from "app/types"
+import VisitModel from "./Visit"
 
 // 'CREATE TABLE IF NOT EXISTS events (id varchar(32) PRIMARY KEY, patient_id varchar(32) REFERENCES patients(id) ON DELETE CASCADE, visit_id varchar(32) REFERENCES visits(id) ON DELETE CASCADE, event_type text, event_timestamp text, edited_at text, event_metadata text, deleted integer DEFAULT 0);',
 
@@ -43,6 +45,8 @@ export default class EventModel extends Model {
   @date("deleted_at") deletedAt!: Date
   @readonly @date("created_at") createdAt!: Date
   @readonly @date("updated_at") updatedAt!: Date
+
+  @immutableRelation("visits", "visit_id") visit!: VisitModel
 }
 
 

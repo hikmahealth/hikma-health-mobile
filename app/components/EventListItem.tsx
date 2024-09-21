@@ -46,7 +46,12 @@ export const EventListItem = enhanceEvent(function EventListItem(props: EventLis
       <Pressable testID="eventListItem" style={{}} onLongPress={() => openEventOptions(event)}>
         <View style={{}}>
           <View style={{ margin: 10 }}>
-            <View direction="row" justifyContent="space-between" alignItems="center" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
+            <View
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
+            >
               <Text preset="subheading">{`${event.eventType}, ${time}`}</Text>
               <Pressable onPress={() => openEventOptions(event)}>
                 <LucideEllipsisVertical size={20} color={colors.palette.primary400} />
@@ -128,18 +133,28 @@ const getEventDisplay = (event: EventModel, language: string): JSX.Element => {
                 ))}
             </If>
             <If condition={inputType === "input-group" && fieldType === "medicine"}>
-              {Array.isArray(value) &&
-                value.map((med) => (
-                  <View key={med.id}>
-                    <Text text={upperFirst(String(med.name || ""))} />
-                    <Text text={`${String(med.dose || "")} ${med.doseUnits || ""}`} />
-                    <Text
-                      text={`${upperFirst(med?.route || "")} ${upperFirst(
-                        med?.form || "",
-                      )}: ${String(med?.frequency || "")}`}
-                    />
-                  </View>
-                ))}
+              <View gap={5}>
+                {Array.isArray(value) &&
+                  value.map((med, idx) => (
+                    <View
+                      key={med.id}
+                      style={[
+                        idx + 1 < value.length && {
+                          borderBottomWidth: 1,
+                          borderBottomColor: "#ddd",
+                        },
+                      ]}
+                    >
+                      <Text text={upperFirst(String(med.name || ""))} />
+                      <Text text={`${String(med.dose || "")} ${med.doseUnits || ""}`} />
+                      <Text
+                        text={`${upperFirst(med?.route || "")} ${upperFirst(
+                          med?.form || "",
+                        )}: ${String(med?.frequency || "")}`}
+                      />
+                    </View>
+                  ))}
+              </View>
             </If>
             <If condition={fieldType !== "diagnosis" && inputType !== "input-group"}>
               <Text text={value} />

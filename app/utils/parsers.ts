@@ -52,3 +52,19 @@ export function getTranslation(translations: TranslationObject, language: string
     return translations[translationKeys[0]]
   }
 }
+
+
+/*
+Normalize Arabic text to remove extra characters and spaces
+*/
+export function normalizeArabic(text: string): string {
+  return text
+    .replace(/[يى]/g, 'ی')
+    .replace(/[أإآا]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ئ/g, 'ی')
+    .replace(/ؤ/g, 'و')
+    .replace(/[ءٔ]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}

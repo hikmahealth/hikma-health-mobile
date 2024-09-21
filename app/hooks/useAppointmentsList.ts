@@ -10,7 +10,23 @@ type AppointmentsByDate = {
     appointments: AppointmentModel[]
 }
 
-// TODO: abstract the query string building into a separate function
+/**
+ * Builds a query for appointments based on the provided parameters
+ * @param startDate 
+ * @param endDate 
+ * @param clinicIds 
+ * @param status 
+ * @param limit 
+ * @returns 
+ */
+const buildAppointmentsQuery = (startDate: Date, endDate: Date, clinicIds?: string[], status?: AppointmentStatus | "all", limit?: number) => [
+    Q.where("timestamp", Q.between(startDate.getTime(), endDate.getTime())),
+    clinicIds && Q.where("clinic_id", Q.oneOf(clinicIds)),
+    status && status !== "all" && Q.where("status", status),
+    Q.sortBy("timestamp", Q.asc),
+    Q.sortBy("created_at", Q.asc),
+    limit ? Q.take(limit) : undefined,
+].filter(Boolean)
 
 /**
  * Get a list of appointments within a date range, sorted by start date
@@ -18,12 +34,12 @@ type AppointmentsByDate = {
  * Also takes in an optional filter by status, if no status is provided, all appointments are returned
  * @param {Date} startDate
  * @param {Date} endDate
- * @param {string} clinicId (optional)
+ * @param {string[]} clinicIds (optional)
  * @param {AppointmentStatus | "all"} status (optional)
  * @param {number} limit (optional)
  * @returns {{appointments: AppointmentsByDate[], isLoading: boolean, refresh: () => void}}
  */
-export function useDBAppointmentsList(startDate: Date, endDate: Date, clinicId?: string, status?: AppointmentStatus | "all", limit = 25): {
+export function useDBAppointmentsList(startDate: Date, endDate: Date, clinicIds: string[] = [], status?: AppointmentStatus | "all", limit = 500): {
     appointments: AppointmentsByDate[]
     isLoading: boolean
     refresh: () => void
@@ -36,20 +52,13 @@ export function useDBAppointmentsList(startDate: Date, endDate: Date, clinicId?:
             setAppointments([])
             return
         }
+
+        console.log({ clinicIds })
         setIsLoading(true)
         try {
             const appointmentsCollection = database.get<AppointmentModel>("appointments")
             const fetchedAppointments = await appointmentsCollection.query(
-                ...[
-                    // Q.where("timestamp", Q.between(startDate.getTime(), endDate.getTime())),
-                    // Q.where("timestamp", Q.gte(startDate.getTime())),
-                    // Q.where("timestamp", Q.lte(endDate.getTime())),
-                    clinicId && Q.where("clinic_id", clinicId),
-                    status && status !== "all" && Q.where("status", status),
-                    Q.sortBy("timestamp", Q.asc),
-                    Q.sortBy("created_at", Q.asc),
-                    limit ? Q.take(limit) : undefined,
-                ].filter(Boolean)
+                ...buildAppointmentsQuery(startDate, endDate, clinicIds, status, limit)
             ).fetch()
 
             // Fetch related patients (assuming there's a patients collection)
@@ -62,7 +71,7 @@ export function useDBAppointmentsList(startDate: Date, endDate: Date, clinicId?:
         } finally {
             setIsLoading(false)
         }
-    }, [startDate, endDate, clinicId, status, limit])
+    }, [startDate, endDate, clinicIds, status, limit])
 
     useEffect(() => {
         // if startDate or endDate are not provided, return an empty array
@@ -70,22 +79,15 @@ export function useDBAppointmentsList(startDate: Date, endDate: Date, clinicId?:
             setAppointments([])
             return
         }
+        console.log({ clinicIds })
+
         fetchAppointments();
 
         // FIXME: add support for incremental loading ...
         // Set up subscription for real-time updates
         let sub = database
             .get<AppointmentModel>("appointments")
-            .query(
-                ...[
-                    Q.where("timestamp", Q.between(startDate.getTime(), endDate.getTime())),
-                    clinicId && Q.where("clinic_id", clinicId),
-                    status && status !== "all" && Q.where("status", status),
-                    Q.sortBy("timestamp", Q.asc),
-                    Q.sortBy("created_at", Q.asc),
-                    limit ? Q.take(limit) : undefined,
-                ].filter(Boolean),
-            )
+            .query(...buildAppointmentsQuery(startDate, endDate, clinicIds, status, limit))
             .observeWithColumns(["timestamp", "status", "patient_id", "provider_id", "clinic_id", "created_at", "updated_at", "is_deleted"])
             .subscribe((events) => {
                 setAppointments(events)

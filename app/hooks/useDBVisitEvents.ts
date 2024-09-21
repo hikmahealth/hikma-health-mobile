@@ -8,15 +8,15 @@ import EventModel from "../db/model/Event"
 
 /**
  * Get all events for a visit, sorted by created_at
- * @param {string} visitId
+ * @param {string | null | undefined} visitId
  * @param {string} patientId 
  * @returns {EventModel[]}
  */
-export function useDBVisitEvents(visitId: string, patientId: string): EventModel[] {
+export function useDBVisitEvents(visitId: string | null | undefined, patientId: string | null | undefined): EventModel[] {
   const [events, setEvents] = useState<EventModel[]>([])
 
   useEffect(() => {
-    if (typeof visitId !== "string" || visitId.length === 0) {
+    if (!visitId || typeof visitId !== "string" || visitId.length === 0) {
       setEvents([])
       return
     }

@@ -73,7 +73,7 @@ export async function syncDB(
           timestamp = res.timestamp
         }
 
-        console.log("Changes pulled from the server", JSON.stringify(changes, null, 2))
+        // console.log("Changes pulled from the server", JSON.stringify(changes, null, 2))
 
         // In place update and set dates
         updateDates(changes)

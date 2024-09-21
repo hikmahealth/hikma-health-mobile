@@ -126,8 +126,6 @@ export const PatientRegistrationFormScreen: FC<PatientRegistrationFormScreenProp
 
     const $rtl = language.isRTL ? $rtlStyle : {}
 
-    console.log({ form, fields: form.fields })
-
     const fields = sortBy(form.fields, ["position"])
 
     if (isLoading && editPatientId && editPatientId.length > 0) {

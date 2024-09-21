@@ -65,8 +65,6 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = obs
         return setExistingGovtId(false)
       }
 
-      console.log({ govtId })
-
       patientApi
         .checkGovtIdExists(govtId)
         .then((res) => {

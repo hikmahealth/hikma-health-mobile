@@ -39,7 +39,7 @@ function isGoogleTester(email: string, password: string) {
   return email === GOOGLE_TESTER_EMAIL && password === GOOGLE_TESTER_PASSWORD
 }
 
-interface LoginScreenProps extends AppStackScreenProps<"Login"> { }
+interface LoginScreenProps extends AppStackScreenProps<"Login"> {}
 
 export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen({ navigation }) {
   // Pull in one of our MST stores
@@ -76,13 +76,21 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen({
   const handleBarCodeScanned = async ({ type, data }: { data: string; type: number }) => {
     setScanned(true)
 
-    // is the link openable?
-    const canOpen = await Linking.canOpenURL(data)
+    let canOpen = false
+    try {
+      await fetch(data, { method: "HEAD" })
+      canOpen = true
+    } catch (error) {
+      console.error("Error checking URL:", error)
+      canOpen = false
+    }
+
     if (canOpen) {
       await EncryptedStorage.setItem("HIKMA_API", data)
       setCameraActive(false)
       Alert.alert(translate("login.qrCodeRegistered"))
     } else {
+      await EncryptedStorage.removeItem("HIKMA_API")
       Alert.alert(translate("login.invalidQRCode"))
       setCameraActive(false)
     }
@@ -121,7 +129,6 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen({
     const isGoogle = isGoogleTester(creds.email, creds.password)
     if (isGoogle) return authAsGoogleTester()
     const HIKMA_API = await getHHApiUrl()
-    console.log({ HIKMA_API })
     if (!HIKMA_API) {
       Alert.alert(translate("login.invalidQRMessage"))
       return

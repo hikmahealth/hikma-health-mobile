@@ -44,7 +44,7 @@ type ModalState =
   | { activeModal: "medication"; medication: MedicationEntry }
   | { activeModal: "diagnoses" }
 
-interface EventFormScreenProps extends AppStackScreenProps<"EventForm"> { }
+interface EventFormScreenProps extends AppStackScreenProps<"EventForm"> {}
 
 /**
 Hook to manage multiple open pickers by Id
@@ -388,6 +388,7 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
                         zIndex: 990000,
                         flex: 1,
                       }}
+                      mode="BADGE"
                       searchPlaceholder={translate("search", { defaultValue: "Search" }) + "..."}
                       searchTextInputStyle={$inputWrapperStyle}
                       closeOnBackPressed
@@ -631,24 +632,24 @@ function useEventForm(
     /** Subscribe to the event if it exists. If there is no event, create a new one */
     const eventSub = eventId
       ? database.collections
-        .get<EventModel>("events")
-        .findAndObserve(eventId)
-        .subscribe((event) => {
-          updateFormState((d) => {
-            let draft = d || ({} as any)
-            // if (draft) {
-            draft.formId = event.formId
-            draft.visitId = event.visitId
-            draft.patientId = event.patientId
-            draft.formData = event.formData
-            draft.createdAt = event.createdAt
-            draft.updatedAt = event.updatedAt
-            draft.id = event.id
-            return draft
-            // }
-            // return event
+          .get<EventModel>("events")
+          .findAndObserve(eventId)
+          .subscribe((event) => {
+            updateFormState((d) => {
+              let draft = d || ({} as any)
+              // if (draft) {
+              draft.formId = event.formId
+              draft.visitId = event.visitId
+              draft.patientId = event.patientId
+              draft.formData = event.formData
+              draft.createdAt = event.createdAt
+              draft.updatedAt = event.updatedAt
+              draft.id = event.id
+              return draft
+              // }
+              // return event
+            })
           })
-        })
       : null
 
     return () => {
