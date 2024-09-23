@@ -2,7 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
   <dict>
-    <key>CADisableMinimumFrameDurationOnPhone</key>
     <true/>
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
@@ -20,8 +19,6 @@
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
     <key>CFBundleShortVersionString</key>
     <string>1.0.0</string>
-    <key>CFBundleSignature</key>
-    <string>????</string>
     <key>CFBundleURLTypes</key>
     <array>
       <dict>
@@ -45,15 +42,7 @@
     <key>NSAppTransportSecurity</key>
     <dict>
       <key>NSAllowsArbitraryLoads</key>
-      <true/>
-      <key>NSExceptionDomains</key>
-      <dict>
-        <key>localhost</key>
-        <dict>
-          <key>NSExceptionAllowsInsecureHTTPLoads</key>
-          <true/>
-        </dict>
-      </dict>
+      <false/>
     </dict>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
@@ -61,10 +50,10 @@
     <array>
       <string>armv7</string>
     </array>
+    <key>UIStatusBarStyle</key>
+  	<string>UIStatusBarStyleDefault</string>
     <key>UIRequiresFullScreen</key>
     <false/>
-    <key>UIStatusBarStyle</key>
-    <string>UIStatusBarStyleDefault</string>
     <key>UISupportedInterfaceOrientations</key>
     <array>
       <string>UIInterfaceOrientationPortrait</string>

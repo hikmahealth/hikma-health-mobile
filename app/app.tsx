@@ -16,6 +16,7 @@ if (__DEV__) {
   // to only execute this in development.
   require("./devtools/ReactotronConfig.ts")
 }
+import "react-native-get-random-values"
 import "./i18n"
 import "./utils/ignoreWarnings"
 import { useFonts } from "expo-font"
@@ -30,8 +31,7 @@ import { customFontsToLoad } from "./theme"
 import Config from "./config"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
 import { ViewStyle } from "react-native"
-import { RootSiblingParent } from 'react-native-root-siblings';
-
+import { RootSiblingParent } from "react-native-root-siblings"
 
 export const NAVIGATION_PERSISTENCE_KEY = "NAVIGATION_STATE"
 
