@@ -14,10 +14,11 @@ import {
 } from "react-native"
 import { colors } from "../theme"
 import { ExtendedEdge, useSafeAreaInsetsStyle } from "../utils/useSafeAreaInsetsStyle"
+import { SearchScreen } from "./SearchScreen";
 
 interface BaseScreenProps {
   /**
-   * Children components.
+   * Children components. 
    */
   children?: React.ReactNode
   /**
@@ -187,7 +188,7 @@ function ScreenWithScrolling(props: ScreenProps) {
   )
 }
 
-export function Screen(props: ScreenProps) {
+export function Screen(props: ScreenProps & { showSearchScreen?: boolean }) {
   const {
     backgroundColor = colors.background,
     KeyboardAvoidingViewProps,
@@ -195,9 +196,10 @@ export function Screen(props: ScreenProps) {
     safeAreaEdges = ["bottom"],
     StatusBarProps,
     statusBarStyle = "dark",
-  } = props
+    showSearchScreen, // Custom prop
+  } = props;
 
-  const $containerInsets = useSafeAreaInsetsStyle(safeAreaEdges)
+  const $containerInsets = useSafeAreaInsetsStyle(safeAreaEdges);
 
   return (
     <View style={[$containerStyle, { backgroundColor }, $containerInsets]}>
@@ -209,14 +211,16 @@ export function Screen(props: ScreenProps) {
         {...KeyboardAvoidingViewProps}
         style={[$keyboardAvoidingViewStyle, KeyboardAvoidingViewProps?.style]}
       >
-        {isNonScrolling(props.preset) ? (
+        {showSearchScreen ? (
+          <SearchScreen /> // Include SearchScreen here
+        ) : isNonScrolling(props.preset) ? (
           <ScreenWithoutScrolling {...props} />
         ) : (
           <ScreenWithScrolling {...props} />
         )}
       </KeyboardAvoidingView>
     </View>
-  )
+  );
 }
 
 const $containerStyle: ViewStyle = {
