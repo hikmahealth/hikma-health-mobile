@@ -84,7 +84,7 @@
     "react-native-device-info": "^14.0.2",
     "react-native-dropdown-picker": "^5.4.6",
     "react-native-encrypted-storage": "^4.0.3",
-    "react-native-gesture-handler": "~2.14.0",
+    "react-native-gesture-handler": "^2.16.1",
     "react-native-get-random-values": "^1.11.0",
     "react-native-reanimated": "^3.16.7",
     "react-native-root-toast": "^3.6.0",
