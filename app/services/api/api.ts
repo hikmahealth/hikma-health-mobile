@@ -8,25 +8,23 @@
 import { ApisauceInstance, create } from "apisauce"
 import Config from "../../config"
 import type { ApiConfig } from "./api.types"
-import PatientModel, { PatientModelData } from "app/db/model/Patient"
-import { database } from "app/db"
+import PatientModel, { PatientModelData } from "../../db/model/Patient"
+import { database } from "../../db"
 import { SyncDatabaseChangeSet, SyncPullResult, SyncPushResult } from "@nozbe/watermelondb/sync"
 import { MigrationSyncChanges } from "@nozbe/watermelondb/Schema/migrations/getSyncChanges"
-import EventModel from "app/db/model/Event"
-import VisitModel from "app/db/model/Visit"
+import EventModel from "../../db/model/Event"
+import VisitModel from "../../db/model/Visit"
 import { isValid } from "date-fns"
 import { Model, Q } from "@nozbe/watermelondb"
-import { getHHApiUrl } from "app/utils/storage"
-import PatientAdditionalAttribute from "app/db/model/PatientAdditionalAttribute"
-import { Appointment, PatientData } from "app/types"
-import { RegistrationFormField } from "app/db/model/PatientRegistrationForm"
-import schema from "app/db/schema"
-import { keys } from "lodash"
-import AppointmentModel from "app/db/model/Appointment"
-import { Provider } from "app/models"
-import ClinicModel from "app/db/model/Clinic"
+import { getHHApiUrl } from "../../utils/storage"
+import { Appointment } from "../../types"
+import AppointmentModel from "../../db/model/Appointment"
+import { Provider } from "../../models"
+import ClinicModel from "../../db/model/Clinic"
 import { Linking } from "react-native"
-
+import * as Sentry from '@sentry/react-native';
+import { PrescriptionForm } from "../../screens"
+import PrescriptionModel from "../../db/model/Prescription"
 /**
  * Configuring the apisauce instance.
  */
@@ -65,7 +63,6 @@ export class Api {
    */
   async registerPatient(patient: PatientModelData): Promise<PatientModel> {
     return await database.write(async () => {
-      console.log("Inserting data: ", patient.additionalData)
       const pt = await database.get<PatientModel>("patients").create((newPatient) => {
         newPatient.givenName = patient.givenName
         newPatient.surname = patient.surname
@@ -142,15 +139,15 @@ export class Api {
     eventId?: string | null | undefined,
   ): Promise<{ eventId: string; visitId: string }> {
 
-    console.log({
-      event: JSON.stringify(event, null, 2),
-      visitId,
-      clinicId,
-      providerId,
-      providerName,
-      checkInTimestamp,
-      eventId,
-    })
+    // console.log({
+    //   event: JSON.stringify(event, null, 2),
+    //   visitId,
+    //   clinicId,
+    //   providerId,
+    //   providerName,
+    //   checkInTimestamp,
+    //   eventId,
+    // })
     /** If there is an event Id, we are updating an existing event */
     if (eventId && eventId !== "" && visitId && visitId !== "") {
       const res = await database.write(async () => {
@@ -184,6 +181,26 @@ export class Api {
             : new Date()
           newVisit.metadata = event.metadata
         })
+      } else {
+        try {
+          const visit = await database.get<VisitModel>("visits").find(visitId)
+          visitQuery = visit.prepareUpdate((visit) => {
+            visit.metadata = {
+              ...visit.metadata,
+              lastEventAddedTimestamp: new Date().toISOString()
+            }
+          })
+        } catch (error) {
+          console.error(error)
+          Sentry.captureException(error, {
+            level: "error",
+            extra: {
+              visitId,
+              eventId,
+              event,
+            }
+          })
+        }
       }
       const eventQuery = database.get<EventModel>("events").prepareCreate((newEvent) => {
         newEvent.patientId = event.patientId
@@ -191,7 +208,11 @@ export class Api {
         newEvent.visitId = visitQuery !== null ? visitQuery.id : event.visitId
         newEvent.eventType = event.eventType
         newEvent.formData = event.formData
-        newEvent.metadata = event.metadata
+        newEvent.metadata = {
+          ...event.metadata,
+          providerId,
+          providerName,
+        }
         newEvent.isDeleted = event.isDeleted
       })
 
@@ -203,6 +224,35 @@ export class Api {
         visitId: visitQuery !== null ? visitQuery.id : event.visitId,
       }
     })
+  }
+
+  /**
+   * Get the providerId and providerName for an event
+   * @param {string} eventId
+   * @returns {Promise<{providerId: string, providerName: string} | null>}
+   */
+  async getEventProvider(eventId: string): Promise<{ providerId: string, providerName: string } | null> {
+    const event = await database.get<EventModel>("events").find(eventId)
+    if (!event) {
+      return null
+    }
+    // check if the event has a providerId and providerName in its metadata
+    if (event.metadata && event.metadata.providerId && event.metadata.providerName) {
+      return {
+        providerId: event.metadata.providerId,
+        providerName: event.metadata.providerName,
+      }
+    }
+
+    // if not, we need to find the visit and get the providerId and providerName from there
+    const visit = await database.get<VisitModel>("visits").find(event.visitId)
+    if (visit) {
+      return {
+        providerId: visit.providerId,
+        providerName: visit.providerName,
+      }
+    }
+    return null
   }
 
   /**
@@ -227,11 +277,23 @@ export class Api {
    */
   async deleteVisit(visitId: string): Promise<void> {
     return await database.write(async () => {
+      // Visits
       const visit = await database.get<VisitModel>("visits").find(visitId)
-      const deletedVisit = await visit.update((visit) => {
+      const deletedVisit = await visit.prepareUpdate((visit) => {
         visit.isDeleted = true
       })
-      return await deletedVisit.markAsDeleted()
+      const deletedVisitRef = await deletedVisit.prepareMarkAsDeleted()
+
+      // Events
+      const events = await database.get<EventModel>("events").query(Q.where("visit_id", visitId)).fetch()
+      const deletedEvents = events.map((event) => event.prepareMarkAsDeleted())
+
+      // appointments
+      const appointments = await database.get<AppointmentModel>("appointments").query(Q.where("current_visit_id", visitId)).fetch()
+      const deletedAppointments = appointments.map((appointment) => appointment.prepareMarkAsDeleted())
+
+      // batch delete them
+      return await database.batch([deletedVisitRef, ...deletedEvents, ...deletedAppointments])
     })
   }
 
@@ -407,8 +469,22 @@ export class Api {
         newAppointment.isDeleted = false
       })
 
+
+      // Update the patient metadata with lastAppointmentTimestamp value
+      // This makes sure the patient is always synced with the server when an appointment is created
+      const patient = await database.get<PatientModel>("patients").find(appointment.patientId)
+      let patientUpdate: PatientModel | undefined = undefined
+      if (patient) {
+        patientUpdate = await patient.prepareUpdate((updatedPatient) => {
+          updatedPatient.metadata = {
+            ...updatedPatient.metadata,
+            lastAppointmentTimestamp: appointment.timestamp.toISOString()
+          }
+        })
+      }
+
       // batch create both of them
-      await database.batch([visit, appointmentQuery].filter(Boolean) as Model[])
+      await database.batch([visit, appointmentQuery, patientUpdate].filter(Boolean) as Model[])
 
       return {
         appointmentId: appointmentQuery.id,
@@ -467,6 +543,139 @@ export class Api {
       })
     })
   }
+
+  /**
+   * Create a prescription
+   * @param {PrescriptionForm} prescription
+   * @param {Provider} provider
+   * @returns {Promise<{visitId: string | null, prescriptionId: string}>}
+   */
+  async createPrescription(prescription: PrescriptionForm, provider: Provider): Promise<{ visitId: string | null, prescriptionId: string }> {
+    return await database.write(async () => {
+      // If there is no visitId, we need to create a new visit
+      let visit: VisitModel | null = null
+      let visitId: string | null = prescription.visitId
+      if (!prescription.visitId) {
+        const visitClinicId = prescription.pickupClinicId || provider.clinic_id || undefined
+        visit = await database.get<VisitModel>("visits").prepareCreate((newVisit) => {
+          newVisit.patientId = prescription.patientId
+          if (visitClinicId !== undefined) newVisit.clinicId = visitClinicId
+          newVisit.providerId = provider.id
+          newVisit.providerName = provider.name
+          newVisit.checkInTimestamp = new Date()
+          newVisit.metadata = {}
+        })
+        visitId = visit.id
+      }
+
+      const prescriptionQuery = await database.get<PrescriptionModel>("prescriptions").prepareCreate((newPrescription) => {
+        newPrescription.patientId = prescription.patientId
+        newPrescription.providerId = provider.id
+        newPrescription.pickupClinicId = prescription.pickupClinicId || null
+        newPrescription.visitId = visitId || null
+        newPrescription.priority = prescription.priority
+        newPrescription.status = prescription.status
+        newPrescription.filledBy = prescription.filledBy
+        newPrescription.expirationDate = prescription.expirationDate
+        newPrescription.prescribedAt = prescription.prescribedAt
+        newPrescription.filledAt = prescription.filledAt
+        newPrescription.notes = prescription.notes
+        // newPrescription.items = JSON.stringify(prescription.items)
+        newPrescription.items = prescription.items
+        newPrescription.metadata = {
+          ...(prescription.metadata || {}),
+          providerId: provider.id,
+          providerName: provider.name,
+        }
+      })
+
+      await database.batch([visit, prescriptionQuery].filter(Boolean) as Model[])
+      return {
+        visitId,
+        prescriptionId: prescriptionQuery.id,
+      }
+    })
+  }
+
+  /**
+   * Update a prescription
+   * @param {string} prescriptionId
+   * @param {Partial<PrescriptionForm>} prescription
+   * @param {Provider} provider
+   * @returns {Promise<{visitId: string | null, prescriptionId: string}>}
+   */
+  async updatePrescription(
+    prescriptionId: string,
+    prescription: Partial<PrescriptionForm>,
+    provider: Provider
+  ): Promise<{ visitId: string | null; prescriptionId: string }> {
+    return await database.write(async () => {
+      const prescriptionRecord = await database.get<PrescriptionModel>("prescriptions").find(prescriptionId);
+
+      const updatedPrescription = await prescriptionRecord.prepareUpdate((updatedPrescription) => {
+        // The commented fields should be immutable after creation. Left here for reference.
+        // updatedPrescription.patientId = prescription.patientId
+        // updatedPrescription.providerId = provider.id
+        // updatedPrescription.clinicId = prescription.clinicId
+        // updatedPrescription.visitId = prescription.visitId || null
+        // Update only the fields that are present in the partial prescription object
+        if (prescription.pickupClinicId !== undefined) updatedPrescription.pickupClinicId = prescription.pickupClinicId;
+        if (prescription.priority !== undefined) updatedPrescription.priority = prescription.priority;
+        if (prescription.status !== undefined) updatedPrescription.status = prescription.status;
+        if (prescription.expirationDate !== undefined) updatedPrescription.expirationDate = prescription.expirationDate;
+        if (prescription.prescribedAt !== undefined) updatedPrescription.prescribedAt = prescription.prescribedAt;
+        if (prescription.filledAt !== undefined) updatedPrescription.filledAt = prescription.filledAt;
+        if (prescription.notes !== undefined) updatedPrescription.notes = prescription.notes;
+        if (prescription.items !== undefined) updatedPrescription.items = prescription.items;
+
+        // TODO: Determine how to handle the filledBy field
+        // updatedPrescription.filledBy = provider.id;
+        updatedPrescription.metadata = {
+          ...(prescription.metadata || {}),
+          lastUpdatedBy: provider.id,
+          lastUpdatedByName: provider.name,
+        }
+      });
+
+      // Prepare update for the visit
+      let visitUpdate: VisitModel | null = null
+      try {
+        if (updatedPrescription.visitId) {
+          const visitRecord = await database.get<VisitModel>("visits").find(updatedPrescription.visitId);
+          if (visitRecord) {
+            visitUpdate = await visitRecord.prepareUpdate((updatedVisit) => {
+              updatedVisit.metadata = Object.assign({}, updatedVisit.metadata, {
+                lastUpdatedBy: provider.id,
+                lastUpdatedByName: provider.name,
+              });
+            });
+          }
+        }
+      } catch (error) {
+        console.error(error)
+        Sentry.captureException(error, {
+          level: "error",
+          extra: {
+            prescriptionId,
+            prescription,
+            visitId: updatedPrescription.visitId,
+          }
+        })
+      }
+
+      // Batch update both prescription and visit (if applicable)
+      const updateBatch = [updatedPrescription, visitUpdate].filter(Boolean) as Model[];
+      await database.batch(updateBatch);
+
+      return {
+        visitId: visitUpdate?.id || null,
+        prescriptionId: updatedPrescription.id,
+      }
+    })
+  }
+
+
+
 
   /**
    * Get a clinic by id

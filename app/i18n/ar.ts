@@ -116,6 +116,7 @@ const ar: ENTranslations = {
     confirmSignOut: "هل أنت متأكد أنك تريد تسجيل الخروج؟",
     signOutDescription: "سيتم تسجيل الخروج من حسابك.",
     privacyPolicy: "سياسة الخصوصية",
+    checkOTAForUpdates: "التحقق من التحديثات السريعة",
   },
   errorScreen: {
     title: "حدث خطأ في التطبيق.",

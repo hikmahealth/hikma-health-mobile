@@ -231,8 +231,34 @@ const patient_additional_attributes = tableSchema({
   ],
 })
 
+
+// V4
+const prescriptionSchema = tableSchema({
+  name: "prescriptions",
+  columns: [
+    { name: "patient_id", type: "string", isIndexed: true },
+    { name: "provider_id", type: "string" },
+    { name: "filled_by", type: "string", isOptional: true }, // doctor, nurse, pharmacist, other
+    { name: "pickup_clinic_id", type: "string", isOptional: true }, // clinic id where the prescription is to be picked up
+    { name: "visit_id", type: "string", isOptional: true }, // visit id when the prescription was filled
+    { name: "priority", type: "string" }, // high, low, normal, emergency
+    { name: "expiration_date", type: "number" }, // when the prescription expires
+    { name: "prescribed_at", type: "number" }, // date 
+    { name: "filled_at", type: "number", isOptional: true }, // date when the prescription was filled
+    { name: "status", type: "string" }, // pending, prepared, picked-up, not-picked-up, cancelled
+    { name: "items", type: "string" }, // JSON field containing the medications
+    { name: "notes", type: "string" }, // notes about the prescription
+
+    { name: "metadata", type: "string" }, // JSON medatadata field
+    { name: "is_deleted", type: "boolean" },
+    { name: "created_at", type: "number" },
+    { name: "updated_at", type: "number" },
+    { name: "deleted_at", type: "number", isOptional: true },
+  ]
+})
+
 export default appSchema({
-  version: 3, // 🔥 IMPORTANT!! 🔥 when migrating dont forget to change this number
+  version: 4, // 🔥 IMPORTANT!! 🔥 when migrating dont forget to change this number
   tables: [
     patientSchema,
     clinicSchema,
@@ -247,5 +273,9 @@ export default appSchema({
 
     // New tables in V3
     appointmentSchema,
+
+
+    // New tables in v4
+    prescriptionSchema,
   ],
 })

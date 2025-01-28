@@ -2,7 +2,7 @@
 import * as ReactNative from "react-native"
 // import '@testing-library/jest-native/extend-expect';
 import mockFile from "./mockFile"
-jest.mock('@nozbe/watermelondb/utils/common/randomId/randomId', () => { });
+jest.mock("@nozbe/watermelondb/utils/common/randomId/randomId", () => {})
 
 // libraries to mock
 jest.doMock("react-native", () => {
@@ -38,7 +38,6 @@ jest.mock("react-native-encrypted-storage", () => {
     clear: jest.fn(),
   }
 })
-
 
 jest.mock("i18n-js", () => ({
   currentLocale: () => "en",

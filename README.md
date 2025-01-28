@@ -1,4 +1,5 @@
 # Hikma Health Mobile Application
+
 The Hikma Health platform is a mobile electronic health record system designed for organizations working in low-resource settings to collect and access patient health information. The repository contains the mobile application (Android tested, iOS support can be includes) that supports offline functionality, thousands of patients and multiple languages including Arabic, Spanish, and English. Other languages can be added trivially.
 
 The platform is designed to be intuitive and allow for efficient patient workflows for patient registration, data entry, and data download. You can see a user demo here: https://drive.google.com/file/d/1ssBdEPShWCu3ZXNCXnoodbwWgqlTncJb/view?usp=drive_link
@@ -7,10 +8,9 @@ This repository contains the client-side code for Hikma Health's mobile applicat
 
 This app is built using React Native and can be compiled for either iOS or Android, although we do most of our testing on Android.
 
-
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 
-![check-code-coverage](https://img.shields.io/badge/code--coverage-10.45%25-red)
+![check-code-coverage](https://img.shields.io/badge/code--coverage-11.41%25-red)
 
 ## Quick Start
 
@@ -22,7 +22,7 @@ Clone this project
   git clone git@github.com:hikmahealth/hikma-health-mobile.git
 ```
 
-Set up the backend either locally or remotely by following the instructions on the backend repository: https://github.com/hikmahealth/hikma-health-backend 
+Set up the backend either locally or remotely by following the instructions on the backend repository: https://github.com/hikmahealth/hikma-health-backend
 
 Go to the project directory
 
@@ -31,28 +31,32 @@ Go to the project directory
 ```
 
 Install the dependencies - depending on your internet connection, this could take a few minutes.
+
 ```bash
   npm install
 ```
 
 Run the application on mobile application on a connected device and/or emulator
+
 ```bash
   npm run android
 ```
 
-
 ## Environment Variables
 
-To run this project, you will need to add the following environment variable to your .env file
+To run this project, you will need to add the following environment variable to yours .env file
 
-`HIKMA_API`
-
-This is the endpoint for where your backend is hosted. This file is by default already ignored in the `.gitignore` file, make sure it remains there.
+1. `HIKMA_API`: This is the endpoint for where your backend is hosted. This file is by default already ignored in the `.gitignore` file, make sure it remains there.
+2. `SENTRY_DNS`: (Optional) If you are using Sentry for error reporting, add your DNS endpoint here
+3. `SENTRY_AUTH_TOKEN`: (Optional) If you are using Sentry for error reporting, add your auth token here
 
 🔥 DO NOT COMMIT THIS INFORMATION TO YOUR VERSION CONTROL (GITHUB) OR SHARE IT WITH UNAUTHORIZED PERSONEL 🔥
+
 ## Technology Stack
+
 Hikma Health mobile application is built on the open source community, key technologies used are:
-- **React Native (v0.71):** Cross platform development framework developed by Facebook 
+
+- **React Native (v0.71):** Cross platform development framework developed by Facebook
 - **React (v18):** Declarative UI Framework
 - **React Native Paper (v5.10):** Material design theming component library
 - **TypeScript (v4.8):** Adding types support to JavaScript
@@ -70,7 +74,9 @@ Hikma Health mobile application is built on the open source community, key techn
 - **Jest (v26):** Test runner
 - **Maestro:** Automated End-to-End UI testing library
 - **date-fns (v2):** Simple declarative date library
+
 ## Features
+
 - Offline Patient Registration
 - Offline patient visits and workflows
 - Fast sync of data to backend
@@ -80,7 +86,6 @@ Hikma Health mobile application is built on the open source community, key techn
 - Cross platform (Android tested, iOS can be added)
 - Easily extendable
 - Supports custom workflows and forms
-
 
 The Hikma Health App project's structure will look similar to this:
 
@@ -175,7 +180,6 @@ This is a great place to put miscellaneous helpers and utilities. Things like da
 
 **app.tsx** This is the entry point to your app. This is where you will find the main App component which renders the rest of the application.
 
-
 ### ./ignite directory
 
 The `ignite` directory stores all things Ignite, including CLI and boilerplate items. Here you will find templates you can customize to help you get started with React Native.
@@ -188,7 +192,6 @@ This directory will hold your Jest configs and mocks.
 
 Follow our [Maestro Setup](https://ignitecookbook.com/docs/recipes/MaestroSetup) recipe from the [Ignite Cookbook](https://ignitecookbook.com/)!
 
-
 ## Screenshots
 
 <div style="display: flex">
@@ -199,7 +202,6 @@ Follow our [Maestro Setup](https://ignitecookbook.com/docs/recipes/MaestroSetup)
   <img src="https://drive.google.com/uc?export=view&id=10-ihEwudiCo_ozOa_5TlRtVaL-jdhaLR" style="width: 200px; height:auto;" alt="Hikma Health" />
   <img src="https://drive.google.com/uc?export=view&id=1Xcu6_-3cHqRTLfhuiFZmxeSvApd4tEEK" style="width: 200px; height:auto" alt="Hikma Health" />
 </div>
-
 
 ## FAQ
 
@@ -219,7 +221,6 @@ You can add new language by creating a new file with your translations and updat
 
 (If you are old enough to remember the nightmare of translations just 10 years ago, its a new world!)
 
-
 #### How do I get help?
 
 If you are stuck for more than 10 minutes, please open an issue or email our head of development at `ally[at]hikmahealth.org` with your questions and concerns.
@@ -227,15 +228,16 @@ If you are stuck for more than 10 minutes, please open an issue or email our hea
 We are constantly looking for ways to build THE best portable electronic health record system and are constantly looking for feedback.
 
 ## Roadmap
+
 Features on the roadmap represent the vision for the mobile app over the coming versions, but none are guaranteed. If there is a feature you would love to see supported, open a feature-request / issue with more details and we can prioritize features with the most requests.
 
-- [ ]  Improve online only support (for areas with guaranteed internet access)
-- [ ]  Improve test coverage (priority to 80%)
-- [ ]  Faster boot time on lower end devices
-- [x]  Official iOS support (add documentation for this support)
-- [ ]  Memory & performance profiling
-- [ ]  Automated CI pipeline for tests (add coveralls)
-
+- [ ] Improve online only support (for areas with guaranteed internet access)
+- [ ] Improve test coverage (priority to 80%)
+- [ ] Faster boot time on lower end devices
+- [x] Official iOS support (add documentation for this support)
+- [ ] Memory & performance profiling
+- [ ] Automated CI pipeline for tests (add coveralls)
 
 ## Credits
+
 This project, like many other open source works, relies heavily on the open source community and their contributions. We have built this EHR system on the shoulders of great projects such as the [Ignite](https://github.com/infinitered/ignite) boilerplate, WatermelonDB, and many others.

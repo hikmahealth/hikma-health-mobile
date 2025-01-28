@@ -58,7 +58,7 @@ describe("i18n", () => {
           expect(allTranslationsDefined).toContainEqual(allTranslationsUsed[i])
         }
       }
-      done()
+      // done()
     })
   }, 240000)
 })

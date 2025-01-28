@@ -1,17 +1,15 @@
 import * as React from "react"
-import { Pressable, StyleProp, TextStyle, ViewStyle, Image } from "react-native"
+import { Pressable, StyleProp, ViewStyle, Image } from "react-native"
 import { observer } from "mobx-react-lite"
-import { colors, typography } from "../theme"
+import { colors } from "../theme"
 import { Text } from "../components/Text"
 import { View } from "../components/View"
 import Patient from "../db/model/Patient"
-import { displayName, displayNameAvatar, getInitials } from "../utils/patient"
+import { displayName, getInitials } from "../utils/patient"
 import { useStores } from "../models"
 import { TxKeyPath, translate } from "../i18n"
 import { format, isValid } from "date-fns"
 import { upperFirst } from "lodash"
-import { localeDate } from "../utils/date"
-import { Button } from "./Button"
 import { withObservables } from "@nozbe/watermelondb/react"
 
 export interface PatientListItemProps {
@@ -63,10 +61,11 @@ export const PatientListItem = enhance(
               {displayName(patient)}
             </Text>
             <Text
-              text={`${translate("dob")}: ${isValid(new Date(patient.dateOfBirth))
+              text={`${translate("dob")}: ${
+                isValid(new Date(patient.dateOfBirth))
                   ? format(new Date(patient.dateOfBirth), "dd MMM yyyy")
                   : ""
-                }`}
+              }`}
             />
             <Text testID="sex">{`${translate("sex")}: ${upperFirst(
               translate(patient.sex as TxKeyPath, { defaultValue: patient.sex || "" }),

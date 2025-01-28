@@ -73,7 +73,7 @@ export async function syncDB(
           timestamp = res.timestamp
         }
 
-        console.log("Changes pulled from the server", JSON.stringify(changes, null, 2))
+        // console.log("Changes pulled from the server", JSON.stringify(changes, null, 2))
 
         // In place update and set dates
         updateDates(changes)
@@ -128,7 +128,8 @@ export async function syncDB(
   })
 }
 
-function updateDates(changes: SyncDatabaseChangeSet) {
+// FIXME: Needs documentation & tests
+export function updateDates(changes: SyncDatabaseChangeSet) {
   const defaultDate = new Date()
   const changeType = ["created", "updated", "deleted"] as unknown as (keyof SyncTableChangeSet)[]
   for (const type of Object.keys(changes)) {
@@ -143,6 +144,18 @@ function updateDates(changes: SyncDatabaseChangeSet) {
           if (record.timestamp) {
             record.timestamp = new Date(record.timestamp || defaultDate).getTime()
           }
+          // handle prescription and appointment timestamps
+          if (record.prescribed_at) {
+            record.prescribed_at = new Date(record.prescribed_at || defaultDate).getTime()
+          }
+          if (record.filled_at) {
+            record.filled_at = new Date(record.filled_at || defaultDate).getTime()
+          }
+
+          if (record.expiration_date) {
+            record.expiration_date = new Date(record.expiration_date || defaultDate).getTime()
+          }
+
           // set up metadata
           if (record.metadata && typeof record.metadata !== "string") {
             record.metadata = JSON.stringify(record.metadata)

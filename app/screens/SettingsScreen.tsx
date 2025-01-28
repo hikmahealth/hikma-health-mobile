@@ -1,32 +1,36 @@
 import React, { FC, useMemo } from "react"
 import { observer } from "mobx-react-lite"
 import { ViewStyle, Image, Pressable, Linking, Alert } from "react-native"
-import { AppStackScreenProps } from "app/navigators"
-import { Button, If, LanguageToggle, Screen, Text, TextField, Toggle, View } from "app/components"
-import { colors } from "app/theme"
-import { ChevronRight, LockIcon, UndoIcon } from "lucide-react-native"
+import { AppStackScreenProps } from "../navigators"
+import { Button, If, LanguageToggle, Screen, Text, TextField, Toggle, View } from "../components"
+import { colors } from "../theme"
+import { ChevronRight, LockIcon, LucideRefreshCcw, UndoIcon } from "lucide-react-native"
 // import { useNavigation } from "@react-navigation/native"
-import { useStores } from "app/models"
+import { useStores } from "../models"
 import * as Notifications from "expo-notifications"
 import EncryptedStorage from "react-native-encrypted-storage"
-import { useLockWhenIdleSettings } from "app/hooks/useLockWhenIdleSettings"
-import { generateDummyPatients, insertBenchmarkingData } from "app/utils/benchmarking"
-import { translate } from "app/i18n"
-import { useDBProvider } from "app/hooks/useDBProvider"
+import { useLockWhenIdleSettings } from "../hooks/useLockWhenIdleSettings"
+import { generateDummyPatients, insertBenchmarkingData } from "../utils/benchmarking"
+import { translate } from "../i18n"
+import { useDBProvider } from "../hooks/useDBProvider"
+import codePush from "react-native-code-push"
+import * as Sentry from "@sentry/react-native"
 import Toast from "react-native-root-toast"
+import { useOTAVersion } from "../hooks/useOTAVersion"
 
 const launchIcon = require("./../assets/images/launch_icon.png")
 
 const HIKMA_URL = "https://www.hikmahealth.org/"
 
-interface SettingsScreenProps extends AppStackScreenProps<"Settings"> { }
+interface SettingsScreenProps extends AppStackScreenProps<"Settings"> {}
 
 export const SettingsScreen: FC<SettingsScreenProps> = observer(function SettingsScreen({
   navigation,
   route,
 }) {
   const { appState, provider: providerStore } = useStores()
-  const { clinic, provider, isLoading } = useDBProvider();
+  const { clinic, provider, isLoading } = useDBProvider()
+  const { appVersion } = useOTAVersion()
 
   const {
     toggleLockWhenIdle,
@@ -73,7 +77,6 @@ export const SettingsScreen: FC<SettingsScreenProps> = observer(function Setting
     )
   }
 
-
   const toggleNotifications = async (newStatus: boolean) => {
     try {
       const { status: existingStatus } = await Notifications.getPermissionsAsync()
@@ -100,16 +103,117 @@ export const SettingsScreen: FC<SettingsScreenProps> = observer(function Setting
   const createSyntheticPatients = () => {
     const patients = generateDummyPatients(1_000, 3, 2)
     Toast.show(
-      `Synthetic patients created: ${patients.length} patients, ${patients[0]?.visits.length} visits and ${patients[0]?.events.length} events`
+      `Synthetic patients created: ${patients.length} patients, ${patients[0]?.visits.length} visits and ${patients[0]?.events.length} events`,
+      {
+        duration: Toast.durations.LONG,
+        containerStyle: {
+          marginBottom: 100,
+        },
+      },
     )
     insertBenchmarkingData(patients)
       .then((res) => {
-        Toast.show("Synthetic patients created: " + patients.length)
+        Toast.show("Synthetic patients created: " + patients.length, {
+          duration: Toast.durations.LONG,
+          containerStyle: {
+            marginBottom: 100,
+          },
+        })
       })
       .catch((err) => {
         console.log(err)
-        Toast.show("Error creating synthetic patients: " + err)
+        Toast.show("Error creating synthetic patients: " + err, {
+          duration: Toast.durations.LONG,
+          containerStyle: {
+            marginBottom: 100,
+          },
+        })
         Alert.alert("Done")
+      })
+  }
+
+  const checkForUpdates = () => {
+    const updateToast = Toast.show("Checking for updates...", {
+      duration: Toast.durations.LONG,
+      containerStyle: {
+        marginBottom: 100,
+      },
+    })
+    codePush
+      .checkForUpdate()
+      .then((res) => {
+        if (res) {
+          codePush
+            .sync({
+              updateDialog: true,
+              installMode: codePush.InstallMode.IMMEDIATE,
+            })
+            .then((res) => {
+              if (res === codePush.SyncStatus.UP_TO_DATE) {
+                Toast.show("Already up to date", {
+                  duration: Toast.durations.LONG,
+                  containerStyle: {
+                    marginBottom: 100,
+                  },
+                })
+              } else if (res === codePush.SyncStatus.UPDATE_INSTALLED) {
+                Toast.show("Update installed", {
+                  duration: Toast.durations.LONG,
+                  containerStyle: {
+                    marginBottom: 100,
+                  },
+                })
+              } else if (res === codePush.SyncStatus.UPDATE_IGNORED) {
+                Toast.show("Update ignored", {
+                  duration: Toast.durations.LONG,
+                  containerStyle: {
+                    marginBottom: 100,
+                  },
+                })
+              } else if (res === codePush.SyncStatus.UNKNOWN_ERROR) {
+                Toast.show("Unknown error", {
+                  duration: Toast.durations.LONG,
+                  containerStyle: {
+                    marginBottom: 100,
+                  },
+                })
+              } else if (res === codePush.SyncStatus.CHECKING_FOR_UPDATE) {
+                Toast.show("Checking for update", {
+                  duration: Toast.durations.LONG,
+                  containerStyle: {
+                    marginBottom: 100,
+                  },
+                })
+              }
+            })
+            .catch((fail) => {
+              Toast.show("Error checking for updates: " + fail, {
+                duration: Toast.durations.LONG,
+                containerStyle: {
+                  marginBottom: 100,
+                },
+              })
+              Sentry.captureException(fail)
+            })
+        } else {
+          Toast.hide(updateToast)
+          Toast.show("No new updates", {
+            duration: Toast.durations.LONG,
+            containerStyle: {
+              marginBottom: 100,
+            },
+          })
+        }
+      })
+      .catch((err) => {
+        console.log(err)
+        Toast.show("Error checking for updates: " + err, {
+          duration: Toast.durations.LONG,
+          containerStyle: {
+            marginBottom: 100,
+          },
+        })
+        Sentry.captureException(err)
       })
   }
 
@@ -121,7 +225,10 @@ export const SettingsScreen: FC<SettingsScreenProps> = observer(function Setting
       <View py={12} style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
         <Image source={launchIcon} style={{ height: 80, width: 80 }} resizeMode="contain" />
         <View style={{ flexShrink: 1 }}>
-          <Text text="Hikma Health" size="lg" />
+          <View direction="row" gap={4} alignItems="baseline">
+            <Text text={`Hikma Health`} size="lg" />
+            <Text text={`(v${appVersion})`} size="xs" />
+          </View>
           <Text
             size="xs"
             text="Hikma Health is an independent 501(c)(3) nonprofit and is not affiliated with Hikma
@@ -201,6 +308,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = observer(function Setting
               onValueChange={toggleLockWhenIdle}
             />
           </View>
+
           {state === "setting-pin" && (
             <View gap={4}>
               <TextField
@@ -242,6 +350,15 @@ export const SettingsScreen: FC<SettingsScreenProps> = observer(function Setting
               </Pressable>
             </View>
           )}
+        </View>
+
+        <View style={$withBottomBorder} py={12}>
+          <Pressable onPress={checkForUpdates}>
+            <View direction="row" justifyContent="space-between">
+              <Text tx="settingsScreen.checkOTAForUpdates" size="sm" />
+              <LucideRefreshCcw size={16} color={colors.palette.neutral600} />
+            </View>
+          </Pressable>
         </View>
 
         <If condition={false}>

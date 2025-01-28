@@ -1,6 +1,6 @@
-import { PatientRecord, PatientValueColumn } from "app/types"
+import { PatientRecord, PatientValueColumn } from "../types"
 import Patient from "../db/model/Patient"
-import RegistrationFormModel, { RegistrationFormField } from "app/db/model/PatientRegistrationForm"
+import RegistrationFormModel, { RegistrationFormField } from "../db/model/PatientRegistrationForm"
 
 /**
  * Display the patient name that would show in the avatar (usually in the case of no image)

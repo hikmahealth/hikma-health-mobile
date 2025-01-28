@@ -13,9 +13,15 @@
     "noUnusedLocals": false,
     "sourceMap": true,
     "target": "esnext",
-    "lib": ["esnext", "dom"],
+    "lib": [
+      "esnext",
+      "dom"
+    ],
     "skipLibCheck": true,
     "resolveJsonModule": true
   },
-  "include": ["**/*.test.ts", "**/*.test.tsx"]
+  "include": [
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
 }

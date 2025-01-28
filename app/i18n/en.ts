@@ -114,7 +114,8 @@ const en = {
     reports: "Reports",
     confirmSignOut: "Are you sure you want to sign out?",
     signOutDescription: "You will be signed out of your account.",
-    privacyPolicy: "Privacy Policy"
+    privacyPolicy: "Privacy Policy",
+    checkOTAForUpdates: "Check for Quick Updates",
   },
   errorScreen: {
     title: "An error occured in the application.",

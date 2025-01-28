@@ -1,15 +1,15 @@
 import React, { FC, useEffect, useMemo, useState } from "react"
 import { observer } from "mobx-react-lite"
 import { ViewStyle } from "react-native"
-import { AppStackScreenProps } from "app/navigators"
-import { Screen, Text, View, getDiagnosesFromFormData } from "app/components"
-import EventModel from "app/db/model/Event"
-import database from "app/db"
-import PatientModel from "app/db/model/Patient"
+import { AppStackScreenProps } from "../navigators"
+import { Screen, Text, View, getDiagnosesFromFormData } from "../components"
+import EventModel from "../db/model/Event"
+import database from "../db"
+import PatientModel from "../db/model/Patient"
 import { Q } from "@nozbe/watermelondb"
 import { useImmer } from "use-immer"
 import { subDays } from "date-fns"
-// import { useStores } from "app/models"
+// import { useStores } from "../models"
 
 type DBSimpleReports = {
   reports: {

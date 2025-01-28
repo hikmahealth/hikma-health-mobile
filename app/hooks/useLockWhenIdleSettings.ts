@@ -1,4 +1,4 @@
-import { useStores } from "app/models"
+import { useStores } from "../models"
 import { useEffect, useState } from "react"
 import { Alert } from "react-native"
 import EncryptedStorage from "react-native-encrypted-storage"

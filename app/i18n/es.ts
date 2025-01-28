@@ -115,7 +115,8 @@ const es: ENTranslations = {
     reports: "Informes",
     confirmSignOut: "¿Estás seguro que quieres cerrar sesión?",
     signOutDescription: "Se cerrará la sesión de su cuenta.",
-    privacyPolicy: "Política de Privacidad"
+    privacyPolicy: "Política de Privacidad",
+    checkOTAForUpdates: "Buscar actualizaciones rápidas",
   },
   errorScreen: {
     title: "Se produjo un error en la aplicación.",

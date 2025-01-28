@@ -1,18 +1,18 @@
 import { ApisauceInstance, create } from "apisauce"
-import Config from "../../config"
 import type { ApiConfig } from "./api.types"
-import PatientModel, { PatientModelData } from "app/db/model/Patient"
-import { database } from "app/db"
-import { SyncDatabaseChangeSet, SyncPullResult, SyncPushResult } from "@nozbe/watermelondb/sync"
-import { MigrationSyncChanges } from "@nozbe/watermelondb/Schema/migrations/getSyncChanges"
+import PatientModel from "../../db/model/Patient"
+import { database } from "../../db"
 import { Q } from "@nozbe/watermelondb"
-import PatientAdditionalAttribute from "app/db/model/PatientAdditionalAttribute"
-import RegistrationFormModel, { RegistrationFormField } from "app/db/model/PatientRegistrationForm"
+import PatientAdditionalAttribute from "../../db/model/PatientAdditionalAttribute"
+import { RegistrationFormField } from "../../db/model/PatientRegistrationForm"
 import { DEFAULT_API_CONFIG } from "./api"
-import { PatientRecord } from "app/types"
-import { getAdditionalFieldColumnName, getPatientFieldByName } from "app/utils/patient"
+import { PatientRecord } from "../../types"
+import { getAdditionalFieldColumnName, getPatientFieldByName } from "../../utils/patient"
 import { camelCase } from "lodash"
 import { format } from "date-fns"
+import AppointmentModel from "../../db/model/Appointment"
+import VisitModel from "../../db/model/Visit"
+import EventModel from "../../db/model/Event"
 
 /**
 Manage all patient related queries locally
@@ -113,7 +113,6 @@ export class PatientApi {
         .query(Q.where("government_id", governmentId))
         .fetch()
 
-      console.log({ patients })
 
       if (patients.length > 0) {
         return true
@@ -363,8 +362,30 @@ export class PatientApi {
       return attr.prepareMarkAsDeleted()
     })
 
+    const appointmentsRef = (
+      await database
+        .get<AppointmentModel>("appointments")
+        .query(Q.where("patient_id", id))
+        .fetch()
+    ).map((appointment) => appointment.prepareMarkAsDeleted())
+
+    const visitsRef = (
+      await database
+        .get<VisitModel>("visits")
+        .query(Q.where("patient_id", id))
+        .fetch()
+    ).map((visit) => visit.prepareMarkAsDeleted())
+
+    const eventsRef = (
+      await database
+        .get<EventModel>("events")
+        .query(Q.where("patient_id", id))
+        .fetch()
+    ).map((event) => event.prepareMarkAsDeleted())
+
+
     return database.write(async () => {
-      return database.batch([patientRef, ...attrRef])
+      return database.batch([patientRef, ...attrRef, ...appointmentsRef, ...visitsRef, ...eventsRef])
     })
   }
 }

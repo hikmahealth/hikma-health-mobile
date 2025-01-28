@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from "react"
 import { ErrorDetails } from "./ErrorDetails"
+import * as Sentry from "@sentry/react-native"
 
 interface Props {
   children: ReactNode
@@ -61,14 +62,23 @@ export class ErrorBoundary extends Component<Props, State> {
 
   // Render an error UI if there's an error; otherwise, render children
   render() {
-    return this.isEnabled() && this.state.error ? (
-      <ErrorDetails
-        onReset={this.resetError}
-        error={this.state.error}
-        errorInfo={this.state.errorInfo}
-      />
-    ) : (
-      this.props.children
+    return (
+      <Sentry.ErrorBoundary
+        fallback={({ error, resetError, componentStack }) => (
+          <ErrorDetails onReset={resetError} error={error} errorInfo={{ componentStack }} />
+        )}
+      >
+        {this.props.children}
+      </Sentry.ErrorBoundary>
     )
+    // return this.isEnabled() && this.state.error ? (
+    //   <ErrorDetails
+    //     onReset={this.resetError}
+    //     error={this.state.error}
+    //     errorInfo={this.state.errorInfo}
+    //   />
+    // ) : (
+    //   this.props.children
+    // )
   }
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { database } from "../db"
 import PatientModel, { PatientModelData } from "../db/model/Patient"
 import RegistrationFormModel from "../db/model/PatientRegistrationForm"
-import { TranslationObject } from "app/types"
+import { TranslationObject } from "../types"
 
 const inputTypes = ["number", "text", "select", "date", "boolean"] as const
 

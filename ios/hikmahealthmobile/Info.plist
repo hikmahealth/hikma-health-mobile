@@ -2,12 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
   <dict>
-    <key>CADisableMinimumFrameDurationOnPhone</key>
-    <true/>
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
-    <string>hikma-health-mobile</string>
+    <string>Hikma Health</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -19,9 +17,7 @@
     <key>CFBundlePackageType</key>
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
-    <key>CFBundleSignature</key>
-    <string>????</string>
+    <string>1.1.3</string>
     <key>CFBundleURLTypes</key>
     <array>
       <dict>
@@ -39,21 +35,18 @@
       </dict>
     </array>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>3</string>
     <key>LSRequiresIPhoneOS</key>
-    <true/>
+    <true />
+    <key>NSCameraUsageDescription</key>
+    <string>We need access to your camera to scan the QR code for app activation and for taking
+      photos of physical documents.</string>
+    <key>MinimumOSVersion</key>
+    <string>15.5</string>
     <key>NSAppTransportSecurity</key>
     <dict>
       <key>NSAllowsArbitraryLoads</key>
-      <true/>
-      <key>NSExceptionDomains</key>
-      <dict>
-        <key>localhost</key>
-        <dict>
-          <key>NSExceptionAllowsInsecureHTTPLoads</key>
-          <true/>
-        </dict>
-      </dict>
+      <false />
     </dict>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
@@ -61,10 +54,10 @@
     <array>
       <string>armv7</string>
     </array>
-    <key>UIRequiresFullScreen</key>
-    <false/>
     <key>UIStatusBarStyle</key>
     <string>UIStatusBarStyleDefault</string>
+    <key>UIRequiresFullScreen</key>
+    <false />
     <key>UISupportedInterfaceOrientations</key>
     <array>
       <string>UIInterfaceOrientationPortrait</string>
@@ -80,6 +73,8 @@
     <key>UIUserInterfaceStyle</key>
     <string>Light</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
-    <false/>
+    <false />
+    <key>CodePushDeploymentKey</key>
+    <string>$(CODE_PUSH_DEPLOYMENT_KEY_IOS)</string>
   </dict>
 </plist>

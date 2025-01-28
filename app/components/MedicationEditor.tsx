@@ -17,8 +17,8 @@ import {
   medicineRouteOptions,
 } from "../types"
 import medicationsList from "../data/medicationsList"
-import { useNavigation } from "@react-navigation/native"
 import { PlusIcon } from "lucide-react-native"
+import { useEffect, useState } from "react"
 
 export interface MedicationEditorProps {
   /**
@@ -29,39 +29,51 @@ export interface MedicationEditorProps {
   onSubmit: (medication: MedicationEntry) => void
 
   medication?: MedicationEntry
+
+  /**
+   * An optional list of medicine options to filter the search results
+   */
+  medicineOptions?: string[]
 }
 
 /** Filter out the medications list using the search query. This supports english and arabic fields. */
 const getMedicationsListFilter =
   (meds: { name: string; name_ar: string; form: string }[], language: string) =>
-    (query: string) => {
-      // if the query is non-existant, dont show any suggestions
-      if (query.length === 0) return []
+  (query: string) => {
+    // if the query is non-existant, dont show any suggestions
+    if (query.length === 0) return []
 
-      const field = language === "ar" ? "name_ar" : "name"
+    const field = language === "ar" ? "name_ar" : "name"
 
-      const searchResults = meds.filter((m) => m[field].toLowerCase().includes(query.toLowerCase()))
+    const searchResults = meds.filter((m) => m[field].toLowerCase().includes(query.toLowerCase()))
 
-      // if there is at least one result and the same one already entered in the search, then return no suggestions
-      if (
-        searchResults.length >= 1 &&
-        searchResults[0][field].toLowerCase() === query.toLowerCase()
-      ) {
-        return []
-      }
-
-      return searchResults
+    // if there is at least one result and the same one already entered in the search, then return no suggestions
+    if (
+      searchResults.length >= 1 &&
+      searchResults[0][field].toLowerCase() === query.toLowerCase()
+    ) {
+      return []
     }
+
+    return searchResults
+  }
+
+/** Filter out the medications list of strings using the search query. This only supports a list of meidcation names in whatever language they were entern in */
+const getMedicationsListFilterSimple = (meds: string[]) => (query: string) => {
+  if (query.length === 0) return []
+
+  return meds.filter((m) => m.toLowerCase().includes(query.toLowerCase()))
+}
 
 const initialValues: MapOrEntries<keyof MedicationEntry, string | number> = [
   ["id", ""],
   ["name", ""],
-  ["route", ""],
-  ["form", ""],
-  ["frequency", 0],
-  ["intervals", 0],
+  ["route", "oral"],
+  ["form", "tablet"],
+  ["frequency", ""],
+  ["intervals", ""],
   ["dose", 0],
-  ["doseUnits", ""],
+  ["doseUnits", "mg"],
   ["duration", 0],
   ["durationUnits", ""],
 ]
@@ -74,18 +86,19 @@ export const MedicationEditor = observer(function MedicationEditor(props: Medica
   const $styles = [$container, style]
   const { language } = useStores()
 
+  const [isSearching, setIsSearching] = useState(false)
   const [map, actions] = useMap<keyof MedicationEntry, string | number>(initialValues)
 
   // on mount, set the initial values to the medication if one exists, else set the ID to a random string
-  React.useEffect(() => {
+  useEffect(() => {
     if (medication) {
       actions.setAll([
         ["id", medication.id || ""],
         ["name", medication.name || ""],
         ["route", medication.route || ""],
         ["form", medication.form || ""],
-        ["frequency", medication.frequency || 0],
-        ["intervals", medication.intervals || 0],
+        ["frequency", medication.frequency || ""],
+        ["intervals", medication.intervals || ""],
         ["dose", medication.dose || 0],
         ["doseUnits", medication.doseUnits || ""],
         ["duration", medication.duration || 0],
@@ -105,7 +118,7 @@ export const MedicationEditor = observer(function MedicationEditor(props: Medica
     return map.get(key)
   }
 
-  const filterMedSuggestions = getMedicationsListFilter(medicationsList, language.current)
+  const filterMedSuggestions = getMedicationsListFilterSimple(props.medicineOptions || [])
 
   const submit = () => {
     // console.log({ map: Object.fromEntries(map.entries()) })
@@ -120,32 +133,29 @@ export const MedicationEditor = observer(function MedicationEditor(props: Medica
         <View style={$medicineInputRow}>
           <TextField
             label="Medicine Name"
+            onFocus={() => setIsSearching(true)}
             value={map.get("name")?.toString()}
             onChangeText={setValue("name")}
           />
 
-          {/* <View direction="row" gap={4} style={{ flexWrap: "wrap" }}>
-            {filterMedSuggestions((map.get("name") || "") as string)
-              .slice(0, 5)
-              .map((suggestion, idx) => (
-                <Pressable
-                  onPress={() => {
-                    setValue("name")(
-                      language.current === "ar" ? suggestion.name_ar : suggestion.name,
-                    )
-                  }}
-                  key={suggestion.name + String(idx)}
-                  style={{ padding: 8, backgroundColor: "#ccc", borderRadius: 8 }}
-                >
-                  <Text
-                    size="sm"
-                    text={upperFirst(
-                      language.current === "ar" ? suggestion.name_ar : suggestion.name,
-                    )}
-                  />
-                </Pressable>
-              ))}
-          </View> */}
+          {isSearching && (
+            <View direction="row" gap={4} style={{ flexWrap: "wrap" }}>
+              {filterMedSuggestions((map.get("name") || "") as string)
+                .slice(0, 5)
+                .map((suggestion, idx) => (
+                  <Pressable
+                    onPress={() => {
+                      setIsSearching(false)
+                      setValue("name")(suggestion)
+                    }}
+                    key={suggestion + String(idx)}
+                    style={{ padding: 8, backgroundColor: "#ccc", borderRadius: 8 }}
+                  >
+                    <Text size="sm" text={upperFirst(suggestion)} />
+                  </Pressable>
+                ))}
+            </View>
+          )}
           <Picker selectedValue={map.get("form")} onValueChange={setValue("form")}>
             <Picker.Item label={"Choose medication form"} value="" />
             {stringsListToOptions(medicineFormOptions).map((option) => (
@@ -158,6 +168,7 @@ export const MedicationEditor = observer(function MedicationEditor(props: Medica
             value={getValue("dose") === 0 ? "" : getValue("dose")?.toString()}
             label="Dose (Concentration)"
             style={{ flex: 5 }}
+            keyboardType="number-pad"
             onChangeText={(v) => {
               // verify that it is a number
               if (isNaN(Number(v))) return

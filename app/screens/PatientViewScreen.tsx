@@ -1,18 +1,18 @@
 import React, { FC, useEffect, useState } from "react"
 import { observer } from "mobx-react-lite"
 import { Pressable, ViewStyle } from "react-native"
-import { AppStackScreenProps } from "app/navigators"
-import { Avatar, If, Screen, Text, View, getHtmlEventDisplay } from "app/components"
+import { AppStackScreenProps } from "../navigators"
+import { Avatar, If, Screen, Text, View, getHtmlEventDisplay } from "../components"
 import * as Print from "expo-print"
-import { useStores } from "app/models"
+import { useStores } from "../models"
 import { shareAsync } from "expo-sharing"
-import PatientModel from "app/db/model/Patient"
-import database from "app/db"
-import { displayName } from "app/utils/patient"
-import { TxKeyPath, translate } from "app/i18n"
-import { format, isValid } from "date-fns"
+import PatientModel from "../db/model/Patient"
+import database from "../db"
+import { displayName } from "../utils/patient"
+import { TxKeyPath, translate } from "../i18n"
+import { format, isValid, startOfDay } from "date-fns"
 import { upperFirst } from "lodash"
-import { localeDate } from "app/utils/date"
+import { localeDate } from "../utils/date"
 import {
   ChevronRight,
   DownloadCloudIcon,
@@ -22,20 +22,20 @@ import {
   PencilIcon,
   PlusIcon,
 } from "lucide-react-native"
-import { colors } from "app/theme"
-import { usePatientRecord } from "app/hooks/usePatientRecord"
-import EventModel from "app/db/model/Event"
-import EventFormModel from "app/db/model/EventForm"
-import { useDBEventForms } from "app/hooks/useDBEventForms"
-import { api } from "app/services/api"
-import VisitModel from "app/db/model/Visit"
-import logoStr from "app/assets/images/logoStr"
+import { colors } from "../theme"
+import { usePatientRecord } from "../hooks/usePatientRecord"
+import EventModel from "../db/model/Event"
+import EventFormModel from "../db/model/EventForm"
+import { useDBEventForms } from "../hooks/useDBEventForms"
+import { api } from "../services/api"
+import VisitModel from "../db/model/Visit"
+import logoStr from "../assets/images/logoStr"
 import { useInteractionManager } from "@react-native-community/hooks"
 import { useDebounce } from "usehooks-ts"
-import { useDBPatientAppointments } from "app/hooks/useDBPatientAppointments"
-import AppointmentModel from "app/db/model/Appointment"
+import { useDBPatientAppointments } from "../hooks/useDBPatientAppointments"
+import AppointmentModel from "../db/model/Appointment"
 
-interface PatientViewScreenProps extends AppStackScreenProps<"PatientView"> { }
+interface PatientViewScreenProps extends AppStackScreenProps<"PatientView"> {}
 
 /**
  * Hook to subscribe to events from a form that is `is_snapshopt_form`
@@ -84,7 +84,7 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
   const interactionReady = useDebounce(_interactionReady, 500)
   const { patient, isLoading } = usePatientRecord(patientId, defaultPatient)
   const eventForms = useDBEventForms(translate("languageCode"))
-  const appointments = useDBPatientAppointments(patientId, new Date(), 3)
+  const appointments = useDBPatientAppointments(patientId, startOfDay(new Date()), 5)
 
   const createNewVisit = () => {
     navigation.navigate("NewVisit", {
@@ -157,7 +157,7 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
     <>
       <Screen style={$root} preset="scroll">
         <View pt={40} pb={40} style={{ backgroundColor: colors.palette.primary50 }}>
-          <PatientProfileSummary patient={patient} onPressEdit={() => { }} />
+          <PatientProfileSummary patient={patient} onPressEdit={() => {}} />
 
           <View direction="row" justifyContent="center" alignItems="center" mt={10} gap={10}>
             <Pressable
@@ -219,7 +219,11 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
             </View>
           </If>
 
-          <View gap={10} mb={4} style={{ borderBottomWidth: 1, borderBottomColor: colors.border, paddingBottom: 10 }}>
+          <View
+            gap={10}
+            mb={4}
+            style={{ borderBottomWidth: 1, borderBottomColor: colors.border, paddingBottom: 10 }}
+          >
             <View direction="row" gap={10} alignItems="center">
               <Text text="Appointments" />
               <If condition={appointments.length > 0}>
@@ -230,7 +234,11 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
             </View>
             <If condition={appointments?.length === 0 || !appointments}>
               <Pressable onPress={createNewAppointment}>
-                <Text textDecorationLine="underline" color={colors.palette.primary500} text="Create New Appointment" />
+                <Text
+                  textDecorationLine="underline"
+                  color={colors.palette.primary500}
+                  text="Create New Appointment"
+                />
               </Pressable>
             </If>
             <If condition={appointments.length > 0}>
@@ -252,7 +260,7 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
                       key={appointment.id}
                     >
                       <Text
-                        text={format(new Date(appointment.timestamp), "dd MMM yyyy")}
+                        text={`${format(new Date(appointment.timestamp), "dd MMM yyyy")}`}
                         size="xxs"
                         color="#fff"
                       />
@@ -402,11 +410,12 @@ async function printHTML(props: PDFReportProps) {
 
               <br>
               <br>
-              ${patient.additionalData &&
-      Object.entries(patient.additionalData)
-        .map((v) => "<p>" + v[0] + ": " + v[1] + "</p>")
-        .join("")
-      }
+              ${
+                patient.additionalData &&
+                Object.entries(patient.additionalData)
+                  .map((v) => "<p>" + v[0] + ": " + v[1] + "</p>")
+                  .join("")
+              }
               <br>
               ${upperFirst(translate((patient.sex as any) || ""))}
 
@@ -541,10 +550,7 @@ const PatientProfileSummary: FC<PatientProfileSummaryProps> = function PatientPr
   return (
     <View alignItems="center">
       <View direction="row" justifyContent="center" pb={10}>
-        <Avatar
-          size={80}
-          fullName={`${patient.givenName} ${patient.surname}`}
-        />
+        <Avatar size={80} fullName={`${patient.givenName} ${patient.surname}`} />
       </View>
       <View>
         <Text align="center" textDecorationLine="underline" size="xl">
@@ -555,10 +561,11 @@ const PatientProfileSummary: FC<PatientProfileSummaryProps> = function PatientPr
         )}`}</Text>
         <Text
           align="center"
-          text={`${translate("dob")}: ${isValid(new Date(patient.dateOfBirth))
-            ? format(new Date(patient.dateOfBirth), "dd MMM yyyy")
-            : ""
-            }`}
+          text={`${translate("dob")}: ${
+            isValid(new Date(patient.dateOfBirth))
+              ? format(new Date(patient.dateOfBirth), "dd MMM yyyy")
+              : ""
+          }`}
         />
 
         <Text align="center">Registered: {localeDate(patient.createdAt, "dd MMM yyyy", {})}</Text>

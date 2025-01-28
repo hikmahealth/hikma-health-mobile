@@ -1,10 +1,10 @@
 import React, { FC } from "react"
 import { observer } from "mobx-react-lite"
 import { TextStyle } from "react-native"
-import { AppStackScreenProps } from "app/navigators"
-import { Divider, Screen, Text, View } from "app/components"
+import { AppStackScreenProps } from "../navigators"
+import { Divider, Screen, Text, View } from "../components"
 // import { useNavigation } from "@react-navigation/native"
-// import { useStores } from "app/models"
+// import { useStores } from "../models"
 
 interface PrivacyPolicyScreenProps extends AppStackScreenProps<"PrivacyPolicy"> {}
 

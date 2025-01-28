@@ -1,6 +1,5 @@
 import React, { FC, useEffect, useState } from "react"
 import { observer } from "mobx-react-lite"
-import { v4 as uuidv4 } from "uuid"
 import { BarCodeScanner } from "expo-barcode-scanner"
 import {
   ViewStyle,
@@ -13,33 +12,34 @@ import {
   BackHandler,
   Linking,
 } from "react-native"
-import { AppStackScreenProps } from "app/navigators"
+import { AppStackScreenProps } from "../navigators"
 import EncryptedStorage from "react-native-encrypted-storage"
-import { Button, LanguageToggle, Screen, Text, TextField, View } from "app/components"
-import { translate } from "app/i18n"
+import { Button, LanguageToggle, Screen, Text, TextField, View } from "../components"
+import { translate } from "../i18n"
 import { hasUnsyncedChanges } from "@nozbe/watermelondb/sync"
 import { InfoIcon, QrCodeIcon } from "lucide-react-native"
 import { useImmer } from "use-immer"
-import { colors } from "app/theme"
-import { useStores } from "app/models"
-import database from "app/db/"
+import { colors } from "../theme"
+import { useStores } from "../models"
+import database from "../db/"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { getHHApiUrl } from "app/utils/storage"
+import { getHHApiUrl } from "../utils/storage"
+import Config from "react-native-config"
 
 const { height, width } = Dimensions.get("window")
 
-// const HIKMA_API = Config.HIKMA_API
+const HIKMA_API_TESTING = Config.HIKMA_API_TESTING
 // import { useNavigation } from "@react-navigation/native"
-// import { useStores } from "app/models"
+// import { useStores } from "../models"
 
-const GOOGLE_TESTER_EMAIL = "tester.g@gmail.com"
-const GOOGLE_TESTER_PASSWORD = "tester"
+const GOOGLE_TESTER_EMAIL = "test-user@hikmahealth.org"
+const GOOGLE_TESTER_PASSWORD = "HikmaTester4"
 
 function isGoogleTester(email: string, password: string) {
   return email === GOOGLE_TESTER_EMAIL && password === GOOGLE_TESTER_PASSWORD
 }
 
-interface LoginScreenProps extends AppStackScreenProps<"Login"> { }
+interface LoginScreenProps extends AppStackScreenProps<"Login"> {}
 
 export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen({ navigation }) {
   // Pull in one of our MST stores
@@ -76,52 +76,68 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen({
   const handleBarCodeScanned = async ({ type, data }: { data: string; type: number }) => {
     setScanned(true)
 
-    // is the link openable?
-    const canOpen = await Linking.canOpenURL(data)
+    let canOpen = false
+    try {
+      await fetch(data, { method: "HEAD" })
+      canOpen = true
+    } catch (error) {
+      console.error("Error checking URL:", error)
+      canOpen = false
+    }
+
     if (canOpen) {
       await EncryptedStorage.setItem("HIKMA_API", data)
       setCameraActive(false)
       Alert.alert(translate("login.qrCodeRegistered"))
     } else {
+      await EncryptedStorage.removeItem("HIKMA_API")
       Alert.alert(translate("login.invalidQRCode"))
       setCameraActive(false)
     }
   }
 
-  const authAsGoogleTester = () => {
-    Alert.alert(
-      "You are about to sign in as a Tester",
-      "Authenticating as a tester will allow you to use the app without a valid QR code, and you do not need to connect to your own server as users are expected to do. This also means you will not be able to sync data from your backend to our app. Do you want to continue?",
-      [
-        {
-          text: "Cancel",
-          onPress: () => console.log("Cancel Pressed"),
-          style: "cancel",
-        },
-        {
-          text: "OK",
-          onPress: () => {
-            provider.setProvider({
-              id: "google_tester",
-              name: "Google Tester",
-              email: GOOGLE_TESTER_EMAIL,
-              clinic_id: uuidv4(),
-              clinic_name: "Test Clinic",
-              isSignedIn: true,
-            })
+  /**
+   * Handle the user sign in process depending on the type of sign in
+   * @returns
+   */
+  const handleSignIn = async () => {
+    if (isLoading) return
+    const isGoogle = isGoogleTester(creds.email, creds.password)
+    if (isGoogle) {
+      Alert.alert(
+        "You are about to sign in as a Tester",
+        "Authenticating as a tester will allow you to use the app using our testing backend, meanin you do not need your own server. Please do not attempt to enter real patient data, as test data is regularly cleared out the test server. Do you want to continue?",
+        [
+          {
+            text: "Cancel",
+            onPress: () => console.log("Cancel Pressed"),
+            style: "cancel",
           },
-        },
-      ],
-      { cancelable: false },
-    )
+          {
+            text: "Continue as Tester",
+            onPress: () => {
+              // User wants to continue as a tester
+              if (typeof HIKMA_API_TESTING === "string") {
+                handleBarCodeScanned({ data: HIKMA_API_TESTING, type: 0 }).then(() => {
+                  signIn()
+                })
+              } else {
+                Alert.alert(
+                  "No testing backend URL found. Please refer to our documentation for more information at https://docs.hikmahealth.org/docs/try-demo",
+                )
+              }
+            },
+          },
+        ],
+        { cancelable: false },
+      )
+    } else {
+      signIn()
+    }
   }
 
   const signIn = async () => {
-    if (isLoading) return
-    const isGoogle = isGoogleTester(creds.email, creds.password)
-    if (isGoogle) return authAsGoogleTester()
     const HIKMA_API = await getHHApiUrl()
-    console.log({ HIKMA_API })
     if (!HIKMA_API) {
       Alert.alert(translate("login.invalidQRMessage"))
       return
@@ -250,7 +266,7 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen({
 
           <LanguageToggle />
 
-          <Button disabled={isLoading} onPress={signIn}>
+          <Button disabled={isLoading} onPress={handleSignIn}>
             <Text tx={!isLoading ? "login.signIn" : "loading"} />
           </Button>
 

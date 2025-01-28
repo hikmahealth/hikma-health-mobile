@@ -1,22 +1,22 @@
 import React, { FC, useEffect, useMemo, useState } from "react"
 import { observer } from "mobx-react-lite"
 import { Alert, Pressable, ViewStyle } from "react-native"
-import { AppStackScreenProps } from "app/navigators"
-import { Button, If, Screen, Text, TextField, Toggle, View } from "app/components"
+import { AppStackScreenProps } from "../navigators"
+import { Button, If, Screen, Text, TextField, Toggle, View } from "../components"
 // import { useNavigation } from "@react-navigation/native"
-import { useStores } from "app/models"
-import { getPatientFieldByName } from "app/utils/patient"
-import { patientApi } from "app/services/api/patientApi"
+import { useStores } from "../models"
+import { getPatientFieldByName } from "../utils/patient"
+import { patientApi } from "../services/api/patientApi"
 import { LucideArrowRight } from "lucide-react-native"
-import { colors } from "app/theme"
-import { translate } from "app/i18n"
+import { colors } from "../theme"
+import { translate } from "../i18n"
 import { upperFirst } from "lodash"
 import { isValid } from "date-fns"
-import { DatePickerButton } from "app/components/DatePicker"
-import { getTranslation } from "app/utils/parsers"
-import { useSimilarPatientsSearch } from "app/hooks/useSimilarPatientsSearch"
-import { usePatientRecordEditor } from "app/hooks/usePatientRecordEditor"
-import { useDebounce } from "app/hooks/useDebounce"
+import { DatePickerButton } from "../components/DatePicker"
+import { getTranslation } from "../utils/parsers"
+import { useSimilarPatientsSearch } from "../hooks/useSimilarPatientsSearch"
+import { usePatientRecordEditor } from "../hooks/usePatientRecordEditor"
+import { useDebounce } from "../hooks/useDebounce"
 
 interface PatientRecordEditorScreenProps extends AppStackScreenProps<"PatientRecordEditor"> {}
 
@@ -64,8 +64,6 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = obs
         // TODO: check against incoming patientId
         return setExistingGovtId(false)
       }
-
-      console.log({ govtId })
 
       patientApi
         .checkGovtIdExists(govtId)

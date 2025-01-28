@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - dev
+
+  pull_request:
+    branches:
+      - dev
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "lts/*" # Use the latest LTS version of Node.js
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Run unit tests
+        run: npm test
+
+      # TODO: Add test for build
+      # TODO: Add lint tests
+      # TODO: Add typecheck tests
+      # TODO: Add audits with npm audit (maybe using synk?)
+      # TODO: Add a check for code coverage to ensure coverage meets a minimum threshold
+
+      # TODO: Add end-to-end tests
+      # This will involve starting an emulator/simulator and running Detox.
+      # We might need to use a service like BrowserStack or AWS Device Farm for real devices.
+      # - name: Run end-to-end tests (Detox)
+      # - run: npm start &
+      # - run: npm run detox build --configuration ios.sim.debug
+      # - run: npm run detox test --configuration ios.sim.debug
+
+      - name: Merge to main on success
+        if: success()
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.repos.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              base: 'main',
+              head: 'dev'
+            })

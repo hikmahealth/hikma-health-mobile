@@ -1,7 +1,8 @@
 import { Q } from "@nozbe/watermelondb"
-import database from "app/db"
-import PatientModel from "app/db/model/Patient"
-import { levenshtein } from "app/utils/levenshtein"
+import database from "../db"
+import PatientModel from "../db/model/Patient"
+import { levenshtein } from "../utils/levenshtein"
+import { extendedSanitizeLikeString } from "../utils/parsers"
 import { sortBy } from "lodash"
 import { useEffect, useState } from "react"
 
@@ -23,8 +24,8 @@ export function useSimilarPatientsSearch(givenName: string, surname: string): Pa
       .get<PatientModel>("patients")
       .query(
         Q.or(
-          Q.where("given_name", Q.like(`%${Q.sanitizeLikeString(givenName)}%`)),
-          Q.where("surname", Q.like(`%${Q.sanitizeLikeString(surname)}%`)),
+          Q.where("given_name", Q.like(`%${extendedSanitizeLikeString(givenName)}%`)),
+          Q.where("surname", Q.like(`%${extendedSanitizeLikeString(surname)}%`)),
         ),
         Q.take(10),
       )

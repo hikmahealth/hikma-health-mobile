@@ -1,4 +1,4 @@
-import { TranslationObject } from "app/types"
+import { TranslationObject } from "../types"
 
 /**
 Method standardizes object and string metadata and returns the expected type T
@@ -50,5 +50,41 @@ export function getTranslation(translations: TranslationObject, language: string
     return translations.en
   } else {
     return translations[translationKeys[0]]
+  }
+}
+
+
+/*
+Normalize Arabic text to remove extra characters and spaces
+*/
+export function normalizeArabic(text: string): string {
+  return text
+    .replace(/[يى]/g, 'ی')
+    .replace(/[أإآا]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ئ/g, 'ی')
+    .replace(/ؤ/g, 'و')
+    .replace(/[ءٔ]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/**
+ * Sanitize a string to be used in a LIKE query
+ * @param value - The string to sanitize
+ * @returns The sanitized string
+ */
+const safeLikeCharsRegexp = /[^\p{L}\p{N}]/gu
+
+export function extendedSanitizeLikeString(value: string): string {
+  invariant(typeof value === 'string', 'Value passed to Q.sanitizeLikeString() is not a string')
+  return value.replace(safeLikeCharsRegexp, '_')
+}
+
+export default function invariant(condition: any, errorMessage?: string): void {
+  if (!condition) {
+    const error: any = new Error(errorMessage || 'Broken invariant')
+    error.framesToPop = 1
+    throw error
   }
 }

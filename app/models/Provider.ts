@@ -1,6 +1,6 @@
 import { Instance, SnapshotIn, SnapshotOut, types } from "mobx-state-tree"
 import { withSetPropAction } from "./helpers/withSetPropAction"
-import { api } from "app/services/api"
+import { api } from "../services/api"
 
 export const defaultProvider = {
   id: "",

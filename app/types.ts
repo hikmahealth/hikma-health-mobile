@@ -98,6 +98,19 @@ export type MedicationEntry = {
   durationUnits: DurationUnit
 }
 
+export const priorityValues = ["high", "low", "normal", "emergency"] as const
+export const statusValues = ["pending", "prepared", "picked-up", "not-picked-up", "partially-picked-up", "cancelled", "other"] as const
+
+
+export type PrescriptionItem = MedicationEntry & {
+  medicationId: string
+  quantity: number,
+  status: (typeof statusValues)[number]
+  priority: (typeof priorityValues)[number]
+  filledAt: Date | null
+  filledByUserId: string | null
+}
+
 export type ICDEntry = {
   code: string
   desc: string
