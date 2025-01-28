@@ -189,7 +189,7 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
         />
       )}
 
-      <View style={$inputWrapperStyles}>
+      <View style={$inputWrapperStyles} testID="input-wrapper">
         {!!LeftAccessory && (
           <LeftAccessory
             style={$leftAccessoryStyle}

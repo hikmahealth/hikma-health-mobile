@@ -1,19 +1,20 @@
 import React, { FC, useEffect, useState } from "react"
 import { observer } from "mobx-react-lite"
 import { Pressable, ViewStyle } from "react-native"
-import { AppStackParamList, AppStackScreenProps } from "app/navigators"
-import { Button, If, Screen, Text, View } from "app/components"
-import { DatePickerButton } from "app/components/DatePicker"
-import { translate } from "app/i18n"
-import { useDBEventForms } from "app/hooks/useDBEventForms"
-import { useStores } from "app/models"
+import { AppStackParamList, AppStackScreenProps } from "../navigators"
+import { Button, If, Screen, Text, View } from "../components"
+import { DatePickerButton } from "../components/DatePicker"
+import { translate } from "../i18n"
+import { useDBEventForms } from "../hooks/useDBEventForms"
+import { useStores } from "../models"
 import { ChevronRight, LucideCalendarPlus, LucideCheckCheck } from "lucide-react-native"
-import { colors } from "app/theme"
-import { useDBVisitEvents } from "app/hooks/useDBVisitEvents"
-import { useDBAppointmentsList } from "app/hooks/useAppointmentsList"
-import { useDBVisitAppointments } from "app/hooks/useDBVisitAppointments"
+import { colors } from "../theme"
+import { useDBVisitEvents } from "../hooks/useDBVisitEvents"
+import { useDBAppointmentsList } from "../hooks/useAppointmentsList"
+import { useDBVisitAppointments } from "../hooks/useDBVisitAppointments"
+import EventFormModel from "../db/model/EventForm"
 // import { useNavigation } from "@react-navigation/native"
-// import { useStores } from "app/models"
+// import { useStores } from "../models"
 
 interface NewVisitScreenProps extends AppStackScreenProps<"NewVisit"> {}
 
@@ -78,11 +79,31 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = observer(function NewVisi
           </View>
         </Pressable>
 
+        <EventFormItem
+          form={
+            {
+              language: "en",
+              description: "A form to add prescriptions to the patient",
+              name: "Prescriptions",
+            } as EventFormModel
+          }
+          isCompleted={false}
+          onPress={() => {
+            navigation.navigate("PrescriptionEditorForm", {
+              visitId,
+              patientId,
+              visitDate: eventDate,
+            })
+          }}
+        />
+
         {forms.map((form, idx) => {
           return (
-            <Pressable
+            <EventFormItem
               key={`formItem-${idx}`}
-              onPress={() =>
+              form={form}
+              isCompleted={eventsList.find((ev) => ev.formId === form.id) !== undefined}
+              onPress={() => {
                 navigation.navigate("EventForm", {
                   visitId,
                   patientId,
@@ -91,36 +112,8 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = observer(function NewVisi
                   appointmentId,
                   eventId: null,
                 })
-              }
-              style={$formListItem}
-            >
-              <View>
-                <View direction="row" gap={8}>
-                  {eventsList.find((ev) => ev.formId === form.id) !== undefined && (
-                    <LucideCheckCheck color="green" />
-                  )}
-                  <Text weight="bold">{form.name}</Text>
-                  <Text></Text>
-                  <View justifyContent="flex-end">
-                    <View
-                      alignContent="center"
-                      justifyContent="center"
-                      alignItems="center"
-                      style={{
-                        backgroundColor: colors.palette.primary400,
-                        paddingVertical: 0,
-                        borderRadius: 5,
-                        paddingHorizontal: 5,
-                      }}
-                    >
-                      <Text text={form.language} color="white" size="xxs" />
-                    </View>
-                  </View>
-                </View>
-                <Text size="xs">{form.description}</Text>
-              </View>
-              <ChevronRight color={colors.palette.neutral500} />
-            </Pressable>
+              }}
+            />
           )
         })}
       </View>
@@ -130,6 +123,46 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = observer(function NewVisi
     </Screen>
   )
 })
+
+type EventFormItemProps = {
+  form: EventFormModel
+  isCompleted: boolean
+  onPress: () => void
+}
+
+/**
+ * EventForm Item
+ */
+function EventFormItem({ form, onPress, isCompleted }: EventFormItemProps) {
+  return (
+    <Pressable onPress={onPress} style={$formListItem}>
+      <View>
+        <View direction="row" gap={8}>
+          {isCompleted && <LucideCheckCheck color="green" />}
+          <Text weight="bold">{form.name}</Text>
+          <Text></Text>
+          <View justifyContent="flex-end">
+            <View
+              alignContent="center"
+              justifyContent="center"
+              alignItems="center"
+              style={{
+                backgroundColor: colors.palette.primary400,
+                paddingVertical: 0,
+                borderRadius: 5,
+                paddingHorizontal: 5,
+              }}
+            >
+              <Text text={form.language} color="white" size="xxs" />
+            </View>
+          </View>
+        </View>
+        <Text size="xs">{form.description}</Text>
+      </View>
+      <ChevronRight color={colors.palette.neutral500} />
+    </Pressable>
+  )
+}
 
 const $root: ViewStyle = {
   flex: 1,

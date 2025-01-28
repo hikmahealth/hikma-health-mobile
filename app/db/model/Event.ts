@@ -8,7 +8,7 @@ import {
   json,
   immutableRelation,
 } from "@nozbe/watermelondb/decorators"
-import { ICDEntry } from "app/types"
+import { ICDEntry } from "../../types"
 import VisitModel from "./Visit"
 
 // 'CREATE TABLE IF NOT EXISTS events (id varchar(32) PRIMARY KEY, patient_id varchar(32) REFERENCES patients(id) ON DELETE CASCADE, visit_id varchar(32) REFERENCES visits(id) ON DELETE CASCADE, event_type text, event_timestamp text, edited_at text, event_metadata text, deleted integer DEFAULT 0);',
@@ -40,7 +40,7 @@ export default class EventModel extends Model {
   @text("event_type") eventType!: string
   @text("form_id") formId!: string
   @json("form_data", sanitizeFormData) formData!: FormDataItem[]
-  @json("metadata", sanitizeMetadata) metadata!: Object
+  @json("metadata", sanitizeMetadata) metadata!: Record<string, any>
   @field("is_deleted") isDeleted!: boolean
   @date("deleted_at") deletedAt!: Date
   @readonly @date("created_at") createdAt!: Date

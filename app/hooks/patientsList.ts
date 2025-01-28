@@ -1,5 +1,5 @@
 import { useState } from "react"
-import Patient from "app/db/model/Patient"
+import Patient from "../db/model/Patient"
 import { useImmer } from "use-immer"
 
 type PatientsListResult = {

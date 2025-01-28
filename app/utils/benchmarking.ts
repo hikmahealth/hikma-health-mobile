@@ -10,7 +10,7 @@ import VisitModel from "../db/model/Visit"
 import database from "../db"
 import { faker } from "@faker-js/faker"
 import { times } from "lodash"
-import PatientAdditionalAttribute from "app/db/model/PatientAdditionalAttribute"
+import PatientAdditionalAttribute from "../db/model/PatientAdditionalAttribute"
 
 type PatientBenchmarkingData = Array<{
   patient: PatientModel

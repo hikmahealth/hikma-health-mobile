@@ -17,17 +17,21 @@ export interface FabProps {
    * The icon to display for the `Fab`.
    */
   Icon: LucideIcon
+  /**
+   * An optional test ID to locate this component in tests.
+   */
+  testID?: string
 }
 
 /**
  * Floating Action Button Component
  */
 export const Fab = observer(function Fab(props: FabProps) {
-  const { style, onPress, Icon } = props
+  const { style, onPress, Icon, testID = "fab" } = props
   const $styles = [$container, style]
 
   return (
-    <Pressable style={$styles} onPress={onPress}>
+    <Pressable style={$styles} onPress={onPress} testID={testID}>
       <Icon size={24} color={colors.palette.neutral100} />
     </Pressable>
   )

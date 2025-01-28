@@ -97,9 +97,17 @@ web-build/
 gradle.properties
 
 
+hikmahealthdb.db
+
+
 .yarn
 
 
 coverage
 /lib/
 .bsb.lock
+
+.env.local
+
+
+notes.txt

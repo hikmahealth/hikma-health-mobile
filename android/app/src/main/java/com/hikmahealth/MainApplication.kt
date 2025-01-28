@@ -22,7 +22,8 @@ import expo.modules.ReactNativeHostWrapper
 import com.nozbe.watermelondb.jsi.WatermelonDBJSIPackage;
 import com.facebook.react.bridge.JSIModulePackage;
 
- 
+import com.microsoft.codepush.react.CodePush
+
 class MainApplication : Application(), ReactApplication {
  
   override val reactNativeHost: ReactNativeHost = ReactNativeHostWrapper(
@@ -44,7 +45,11 @@ class MainApplication : Application(), ReactApplication {
           override fun getJSIModulePackage(): JSIModulePackage {
             return WatermelonDBJSIPackage();
           }
-        
+
+          // Override the getJSBundleFile method to use CodePush
+          override fun getJSBundleFile(): String {
+            return CodePush.getJSBundleFile() 
+          }
       }
   )
  

@@ -1,8 +1,8 @@
-import database from "app/db"
-import RegistrationFormModel, { RegistrationFormField } from "app/db/model/PatientRegistrationForm"
-import { patientApi } from "app/services/api/patientApi"
-import { PatientRecord, TranslationObject } from "app/types"
-import { getDefaultPatientRecord, getPatientFieldById } from "app/utils/patient"
+import database from "../db"
+import RegistrationFormModel, { RegistrationFormField } from "../db/model/PatientRegistrationForm"
+import { patientApi } from "../services/api/patientApi"
+import { PatientRecord, TranslationObject } from "../types"
+import { getDefaultPatientRecord, getPatientFieldById } from "../utils/patient"
 import { useEffect, useMemo, useState } from "react"
 import { initialFormState } from "./usePatientRegistrationForm"
 

@@ -53,4 +53,4 @@ type RecursiveKeyOfHandleValue<TValue, Text extends string> = TValue extends any
   ? Text | `${Text}${RecursiveKeyOfInner<TValue>}`
   : Text
 
-export { isRTL, i18n }
+export { i18n }

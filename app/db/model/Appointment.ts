@@ -8,7 +8,7 @@ import {
   json,
   immutableRelation,
 } from "@nozbe/watermelondb/decorators"
-import { Appointment, AppointmentStatus } from "app/types"
+import { Appointment, AppointmentStatus } from "../../types"
 import PatientModel from "./Patient"
 import ClinicModel from "./Clinic"
 import UserModel from "./User"

@@ -1,22 +1,23 @@
 import React, { FC, useState } from "react"
 import { observer } from "mobx-react-lite"
 import { Pressable, ViewStyle } from "react-native"
-import { AppStackScreenProps } from "app/navigators"
-import { Button, Screen, Text, TextField, View } from "app/components"
+import { AppStackScreenProps } from "../navigators"
+import { Button, Screen, Text, TextField, View } from "../components"
 import { Controller, useForm } from "react-hook-form"
-import { Appointment } from "app/types"
-import { defaultAppointment } from "app/db/model/Appointment"
-import { cloneDeep } from "lodash"
-import { colors, spacing } from "app/theme"
-import { useStores } from "app/models"
-import { DatePickerButton } from "app/components/DatePicker"
+import { Appointment } from "../types"
+import { defaultAppointment } from "../db/model/Appointment"
+import { cloneDeep, sortBy } from "lodash"
+import { colors, spacing } from "../theme"
+import { useStores } from "../models"
+import { DatePickerButton } from "../components/DatePicker"
 import { Picker } from "@react-native-picker/picker"
-import { api } from "app/services/api"
-import { translate } from "app/i18n"
+import { api } from "../services/api"
+import { translate } from "../i18n"
 import DatePicker from "react-native-date-picker"
 import { format, set, setHours } from "date-fns"
 import Toast from "react-native-root-toast"
-import { useDBClinicsList } from "app/hooks/useDBClinicsList"
+import { useDBClinicsList } from "../hooks/useDBClinicsList"
+import { CommonActions } from "@react-navigation/native"
 
 interface AppointmentEditorFormScreenProps extends AppStackScreenProps<"AppointmentEditorForm"> {}
 
@@ -37,6 +38,7 @@ const reasonOptions = [
   { label: "Walk-in", value: "walk-in" },
   { label: "Doctor's Visit", value: "doctor-visit" },
   { label: "Screening", value: "screening" },
+  { label: "Referral", value: "referral" },
   { label: "Checkup", value: "checkup" },
   { label: "Follow-up", value: "follow-up" },
   { label: "Counselling", value: "counselling" },
@@ -75,7 +77,7 @@ export const AppointmentEditorFormScreen: FC<AppointmentEditorFormScreenProps> =
         patientId,
         reason: "other",
         status: "pending",
-        timestamp: set(new Date(), { hours: 8, minutes: 0, seconds: 0, milliseconds: 0 }),
+        timestamp: set(new Date(), { hours: 17, minutes: 0, seconds: 0, milliseconds: 0 }),
         fulfilledVisitId: null,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -92,7 +94,7 @@ export const AppointmentEditorFormScreen: FC<AppointmentEditorFormScreenProps> =
         createdAt: new Date(),
         updatedAt: new Date(),
       }
-      console.log(data)
+      // console.log(data)
       try {
         const res = await api.createAppointment(data, provider)
         Toast.show("✅ Appointment created", {
@@ -101,8 +103,19 @@ export const AppointmentEditorFormScreen: FC<AppointmentEditorFormScreenProps> =
             marginBottom: 100,
           },
         })
-        console.log(res)
-        navigation.goBack()
+        // React-Navigation 6 shortcut to passing a parameter to the previous screen
+        // here we pop the screen and pass the visit ID to the previous screen
+        navigation.dispatch((state) => {
+          const prevRoute = state.routes[state.routes.length - 2]
+          return CommonActions.navigate({
+            name: prevRoute.name,
+            params: {
+              ...prevRoute.params,
+              visitId: res.visitId,
+            },
+            merge: true,
+          })
+        })
       } catch (error) {
         console.error("Failed to create appointment:", error)
         Toast.show("❌ Failed to create appointment", {
@@ -131,7 +144,7 @@ export const AppointmentEditorFormScreen: FC<AppointmentEditorFormScreenProps> =
                 <Text preset="formLabel" text="Clinic" />
                 <View style={$pickerContainer}>
                   <Picker selectedValue={field.value} onValueChange={field.onChange}>
-                    {clinics.map((clinic) => (
+                    {sortBy(clinics, "name").map((clinic) => (
                       <Picker.Item key={clinic.id} label={clinic.name} value={clinic.id} />
                     ))}
                   </Picker>
@@ -242,7 +255,7 @@ const $root: ViewStyle = {
   padding: spacing.md,
 }
 
-const $pickerContainer: ViewStyle = {
+export const $pickerContainer: ViewStyle = {
   width: "100%",
   flex: 1,
   backgroundColor: colors.palette.neutral200,

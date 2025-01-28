@@ -4,6 +4,9 @@ const { defaults: tsjPreset } = require("ts-jest/presets")
 module.exports = {
   ...tsjPreset,
   preset: "jest-expo",
+  verbose: true,
+  reporters: ["default"],
+  testEnvironment: "node",
   transformIgnorePatterns: [
     "<rootDir>/node_modules/(react-clone-referenced-element|@react-native-community|react-navigation|@react-navigation/.*|@unimodules/.*|native-base|react-native-code-push)",
     "jest-runner",
@@ -27,7 +30,7 @@ module.exports = {
   ],
   collectCoverage: true,
   coverageReporters: ['clover', 'json', 'lcov'],
-  reporters: ['summary'],
+  // reporters: ['summary'],
   // moduleNameMapper: {
   //   "app/(.*)": "<rootDir>/app/$1",
   // },

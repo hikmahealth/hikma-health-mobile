@@ -1,8 +1,8 @@
 import { Q } from "@nozbe/watermelondb"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import database from "../db"
-import AppointmentModel from "app/db/model/Appointment"
-import { AppointmentStatus } from "app/types"
+import AppointmentModel from "../db/model/Appointment"
+import { AppointmentStatus } from "../types"
 import { startOfDay } from "date-fns"
 
 type AppointmentsByDate = {
@@ -36,16 +36,22 @@ const buildAppointmentsQuery = (startDate: Date, endDate: Date, clinicIds?: stri
  * @param {Date} endDate
  * @param {string[]} clinicIds (optional)
  * @param {AppointmentStatus | "all"} status (optional)
- * @param {number} limit (optional)
- * @returns {{appointments: AppointmentsByDate[], isLoading: boolean, refresh: () => void}}
+ * @param {number} pageSize (optional)
+ * @returns {{appointments: AppointmentsByDate[], isLoading: boolean, refresh: () => void, loadMore: () => void, appointmentsCount: number, loadedAppointmentsCount: number}}
  */
-export function useDBAppointmentsList(startDate: Date, endDate: Date, clinicIds: string[] = [], status?: AppointmentStatus | "all", limit = 500): {
+export function useDBAppointmentsList(startDate: Date, endDate: Date, clinicIds: string[] = [], status?: AppointmentStatus | "all", pageSize = 200): {
     appointments: AppointmentsByDate[]
     isLoading: boolean
     refresh: () => void
+    loadMore: () => void
+    appointmentsCount: number
+    loadedAppointmentsCount: number
 } {
     const [appointments, setAppointments] = useState<AppointmentModel[]>([])
     const [isLoading, setIsLoading] = useState(false)
+    const [page, setPage] = useState(1)
+    const [totalAppointmentsCount, setTotalAppointmentsCount] = useState(0)
+
 
     const fetchAppointments = useCallback(async () => {
         if (!startDate || !endDate) {
@@ -53,12 +59,11 @@ export function useDBAppointmentsList(startDate: Date, endDate: Date, clinicIds:
             return
         }
 
-        console.log({ clinicIds })
         setIsLoading(true)
         try {
             const appointmentsCollection = database.get<AppointmentModel>("appointments")
             const fetchedAppointments = await appointmentsCollection.query(
-                ...buildAppointmentsQuery(startDate, endDate, clinicIds, status, limit)
+                ...buildAppointmentsQuery(startDate, endDate, clinicIds, status, pageSize * page)
             ).fetch()
 
             // Fetch related patients (assuming there's a patients collection)
@@ -71,7 +76,7 @@ export function useDBAppointmentsList(startDate: Date, endDate: Date, clinicIds:
         } finally {
             setIsLoading(false)
         }
-    }, [startDate, endDate, clinicIds, status, limit])
+    }, [startDate, endDate, clinicIds, status, pageSize, page])
 
     useEffect(() => {
         // if startDate or endDate are not provided, return an empty array
@@ -79,7 +84,6 @@ export function useDBAppointmentsList(startDate: Date, endDate: Date, clinicIds:
             setAppointments([])
             return
         }
-        console.log({ clinicIds })
 
         fetchAppointments();
 
@@ -87,7 +91,7 @@ export function useDBAppointmentsList(startDate: Date, endDate: Date, clinicIds:
         // Set up subscription for real-time updates
         let sub = database
             .get<AppointmentModel>("appointments")
-            .query(...buildAppointmentsQuery(startDate, endDate, clinicIds, status, limit))
+            .query(...buildAppointmentsQuery(startDate, endDate, clinicIds, status, pageSize * page))
             .observeWithColumns(["timestamp", "status", "patient_id", "provider_id", "clinic_id", "created_at", "updated_at", "is_deleted"])
             .subscribe((events) => {
                 setAppointments(events)
@@ -95,9 +99,33 @@ export function useDBAppointmentsList(startDate: Date, endDate: Date, clinicIds:
         return () => {
             return sub?.unsubscribe()
         }
-    }, [fetchAppointments])
+    }, [fetchAppointments, page])
+
+    /**
+     * Subscribe to the total count of appointments
+     */
+    useEffect(() => {
+        const sub = database
+            .get<AppointmentModel>("appointments")
+            .query(...buildAppointmentsQuery(startDate, endDate, clinicIds, status))
+            .observeCount()
+            .subscribe((count) => {
+                setTotalAppointmentsCount(count)
+            })
+        return () => {
+            return sub?.unsubscribe()
+        }
+    }, [startDate, endDate, clinicIds, status])
 
 
+    /**
+     * Groups appointments by date.
+     * 
+     * @returns {AppointmentsByDate[]} An array of objects, each containing a date and an array of appointments for that date.
+     * 
+     * It reduces the appointments array into a new structure where appointments are grouped by their date.
+     * Each group contains a date object and an array of appointments for that date.
+     */
     const appointmentsByDate = useMemo(() => {
         return appointments.reduce((prev, appointment) => {
             const date = startOfDay(appointment.timestamp).getTime() // Use timestamp for comparison
@@ -116,15 +144,21 @@ export function useDBAppointmentsList(startDate: Date, endDate: Date, clinicIds:
                 return [...prev, { date: new Date(date), appointments: [appointment] }]
             }
         }, [] as AppointmentsByDate[])
-    }, [appointments])
+    }, [appointments, page])
 
     const refresh = useCallback(async () => {
         await fetchAppointments()
-    }, [fetchAppointments])
+    }, [fetchAppointments, page])
 
-
-
+    /**
+     * Incrementally load more appointments
+     */
+    const loadMore = () => {
+        if (appointments.length < totalAppointmentsCount) {
+            setPage(page => page + 1)
+        }
+    }
     return {
-        appointments: appointmentsByDate, isLoading, refresh
+        appointments: appointmentsByDate, isLoading, refresh, loadMore, appointmentsCount: totalAppointmentsCount, loadedAppointmentsCount: appointments.length
     }
 }

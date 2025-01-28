@@ -1,23 +1,23 @@
 import React, { FC, useEffect } from "react"
 import { observer } from "mobx-react-lite"
 import { Alert, Pressable, ViewStyle } from "react-native"
-import { AppStackScreenProps } from "app/navigators"
-import { If, Screen, Text, View } from "app/components"
-import { useDBPatientVisits } from "app/hooks/useDBPatientVisits"
+import { AppStackScreenProps } from "../navigators"
+import { If, Screen, Text, View } from "../components"
+import { useDBPatientVisits } from "../hooks/useDBPatientVisits"
 import { FlashList } from "@shopify/flash-list"
-import { translate } from "app/i18n"
+import { translate } from "../i18n"
 import { format, isValid } from "date-fns"
-import VisitModel from "app/db/model/Visit"
-import { api } from "app/services/api"
+import VisitModel from "../db/model/Visit"
+import { api } from "../services/api"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { LucideTrash2 } from "lucide-react-native"
-import { colors } from "app/theme"
+import { colors } from "../theme"
 import { withObservables } from "@nozbe/watermelondb/react"
-import ClinicModel from "app/db/model/Clinic"
+import ClinicModel from "../db/model/Clinic"
 // import { useNavigation } from "@react-navigation/native"
-// import { useStores } from "app/models"
+// import { useStores } from "../models"
 
-interface PatientVisitsListScreenProps extends AppStackScreenProps<"PatientVisitsList"> { }
+interface PatientVisitsListScreenProps extends AppStackScreenProps<"PatientVisitsList"> {}
 
 export const PatientVisitsListScreen: FC<PatientVisitsListScreenProps> = observer(
   function PatientVisitsListScreen({ route, navigation }) {
@@ -44,30 +44,44 @@ export const PatientVisitsListScreen: FC<PatientVisitsListScreenProps> = observe
     }
 
     const onDeleteVisit = (visitId: string) => {
-      Alert.alert("Delete Visit", "Are you sure you want to delete this visit?", [
-        {
-          text: "Cancel",
-          onPress: () => console.log("Cancel Pressed"),
-          style: "cancel",
-        },
-        {
-          text: "Confirm",
-          onPress: () => {
-            api.deleteVisit(visitId).catch((error) => {
-              console.error(error)
-              Alert.alert("Error", "There was an error deleting this visit. Please try again")
-            })
+      return Alert.alert(
+        "Not allowed",
+        "Deleting visits is currently not allowed",
+        [
+          {
+            text: "OK",
+            onPress: () => console.log("OK Pressed"),
           },
-        },
-      ], { cancelable: true })
+        ],
+        { cancelable: true },
+      )
+
+      Alert.alert(
+        "Delete Visit",
+        "Are you sure you want to delete this visit?",
+        [
+          {
+            text: "Cancel",
+            onPress: () => console.log("Cancel Pressed"),
+            style: "cancel",
+          },
+          {
+            text: "Confirm",
+            onPress: () => {
+              api.deleteVisit(visitId).catch((error) => {
+                console.error(error)
+                Alert.alert("Error", "There was an error deleting this visit. Please try again")
+              })
+            },
+          },
+        ],
+        { cancelable: true },
+      )
     }
 
-    const renderItem = ({ item }: { item: VisitModel }) =>
-      <PatientVisitItem
-        visit={item}
-        onPress={onVisitPress}
-        onDelete={onDeleteVisit}
-      />
+    const renderItem = ({ item }: { item: VisitModel }) => (
+      <PatientVisitItem visit={item} onPress={onVisitPress} onDelete={onDeleteVisit} />
+    )
 
     if (patientVisits.length === 0) {
       return (
@@ -81,12 +95,16 @@ export const PatientVisitsListScreen: FC<PatientVisitsListScreenProps> = observe
 
     return (
       <SafeAreaView style={$root}>
-        <FlashList data={patientVisits} contentContainerStyle={{ paddingHorizontal: 14 }} renderItem={renderItem} estimatedItemSize={137} />
+        <FlashList
+          data={patientVisits}
+          contentContainerStyle={{ paddingHorizontal: 14 }}
+          renderItem={renderItem}
+          estimatedItemSize={137}
+        />
       </SafeAreaView>
     )
   },
 )
-
 
 type PatientVisitItemProps = {
   visit: VisitModel
@@ -95,52 +113,53 @@ type PatientVisitItemProps = {
   onDelete: (visitId: string) => void
 }
 
-
 const enhanceVisitItem = withObservables(["visit"], ({ visit }) => ({
   visit, // shortcut for visit.observe
   clinic: visit.clinic,
 }))
 
-const PatientVisitItem: FC<PatientVisitItemProps> = enhanceVisitItem(({ visit, clinic, onPress, onDelete }: PatientVisitItemProps) => {
-  return (
-    <Pressable
-      style={{ marginBottom: 32 }}
-      testID="visitItem"
-      onPress={() => onPress(visit)}
-      onLongPress={() => onDelete(visit.id)}
-    >
-      <View style={{}}>
-        <View direction="row" gap={10} justifyContent="space-between" alignItems="center">
-          <Text style={{ fontSize: 18 }} text={format(visit.checkInTimestamp, "dd MMM yyyy")} />
+const PatientVisitItem: FC<PatientVisitItemProps> = enhanceVisitItem(
+  ({ visit, clinic, onPress, onDelete }: PatientVisitItemProps) => {
+    return (
+      <Pressable
+        style={{ marginBottom: 32 }}
+        testID="visitItem"
+        onPress={() => onPress(visit)}
+        onLongPress={() => onDelete(visit.id)}
+      >
+        <View style={{}}>
+          <View direction="row" gap={10} justifyContent="space-between" alignItems="center">
+            <Text style={{ fontSize: 18 }} text={format(visit.checkInTimestamp, "dd MMM yyyy")} />
 
-          <Pressable onPress={() => onDelete(visit.id)}>
-            <LucideTrash2 size={18} color={colors.palette.angry400} />
-          </Pressable>
+            <Pressable onPress={() => onDelete(visit.id)}>
+              <LucideTrash2 size={18} color={colors.palette.angry400} />
+            </Pressable>
+          </View>
+          <View
+            style={{
+              marginVertical: 5,
+              borderBottomColor: "#ccc",
+              borderBottomWidth: 1,
+            }}
+          />
+          <If condition={!!clinic}>
+            <Text>
+              {translate("clinic")}: {clinic.name}
+            </Text>
+          </If>
+          <If condition={visit.checkInTimestamp && isValid(visit.checkInTimestamp)}>
+            <Text>
+              {translate("checkedIn")}: {format(visit.checkInTimestamp, "HH:mm a")}
+            </Text>
+          </If>
+          <Text>
+            {translate("provider")}: {visit.providerName}
+          </Text>
         </View>
-        <View
-          style={{
-            marginVertical: 5,
-            borderBottomColor: "#ccc",
-            borderBottomWidth: 1,
-          }}
-        />
-        <If condition={!!clinic}>
-          <Text>
-            {translate("clinic")}: {clinic.name}
-          </Text>
-        </If>
-        <If condition={visit.checkInTimestamp && isValid(visit.checkInTimestamp)}>
-          <Text>
-            {translate("checkedIn")}: {format(visit.checkInTimestamp, "HH:mm a")}
-          </Text>
-        </If>
-        <Text>
-          {translate("provider")}: {visit.providerName}
-        </Text>
-      </View>
-    </Pressable>
-  )
-})
+      </Pressable>
+    )
+  },
+)
 
 const $root: ViewStyle = {
   flex: 1,

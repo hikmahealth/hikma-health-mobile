@@ -1,36 +1,28 @@
 import React, { FC, useEffect, useMemo, useState } from "react"
 import { observer } from "mobx-react-lite"
-import {
-  Dimensions,
-  Pressable,
-  RefreshControl,
-  SectionList,
-  SectionListData,
-  TextStyle,
-  ViewStyle,
-} from "react-native"
-import { AppStackScreenProps } from "app/navigators"
-import { $inputWrapperStyle, If, Screen, Text, View } from "app/components"
+import { Dimensions, Pressable, RefreshControl, ViewStyle } from "react-native"
+import { AppStackScreenProps } from "../navigators"
+import { $inputWrapperStyle, If, Text, View } from "../components"
 import { withObservables } from "@nozbe/watermelondb/react"
-import { colors } from "app/theme/colors"
-import { addDays, addMonths, endOfDay, format, startOfDay, subDays } from "date-fns"
-import { Appointment, AppointmentStatus } from "app/types"
+import { colors } from "../theme/colors"
+import { addDays, endOfDay, format, startOfDay, subDays } from "date-fns"
+import { AppointmentStatus } from "../types"
 import { FlashList } from "@shopify/flash-list"
 import { useNavigation } from "@react-navigation/native"
-import { useDBAppointmentsList } from "app/hooks/useAppointmentsList"
-import AppointmentModel from "app/db/model/Appointment"
-import { useStores } from "app/models"
-import PatientModel from "app/db/model/Patient"
-import UserModel from "app/db/model/User"
-import ClinicModel from "app/db/model/Clinic"
-import { displayName } from "app/utils/patient"
+import { useDBAppointmentsList } from "../hooks/useAppointmentsList"
+import AppointmentModel from "../db/model/Appointment"
+import { useStores } from "../models"
+import PatientModel from "../db/model/Patient"
+import ClinicModel from "../db/model/Clinic"
+import { displayName } from "../utils/patient"
 import { sortBy, upperFirst } from "lodash"
-import { useDBClinicsList } from "app/hooks/useDBClinicsList"
-import { LucideChevronDown, LucideChevronUp, LucideDot, LucideListTodo } from "lucide-react-native"
+import { useDBClinicsList } from "../hooks/useDBClinicsList"
+import { LucideChevronDown, LucideChevronUp, LucideListTodo } from "lucide-react-native"
 import { Picker } from "@react-native-picker/picker"
 import DropDownPicker from "react-native-dropdown-picker"
-import { translate } from "app/i18n"
+import { translate } from "../i18n"
 import { catchError, of as of$ } from "rxjs"
+import usePersistedState, { useAsyncPersistedState } from "../hooks/usePersistedState"
 
 const { height } = Dimensions.get("screen")
 
@@ -55,6 +47,10 @@ export const AppointmentsListScreen: FC<AppointmentsListScreenProps> = observer(
     const [dateRangeName, setDateRangeName] = useState<"today" | "so_far" | "upcoming">("today")
     const [activeClinicId, setActiveClinicId] = useState<string | "all">("all")
     const [showOptions, setShowOptions] = useState(false)
+    const [selectedClinicIds, setSelectedClinicIds] = useAsyncPersistedState<string[]>(
+      "selectedClinicIds",
+      [provider.clinic_id],
+    )
     const [filters, setFilters] = useState<AppointmentsFilters>({
       status: "pending",
       startDate: startOfDay(new Date()),
@@ -87,12 +83,15 @@ export const AppointmentsListScreen: FC<AppointmentsListScreenProps> = observer(
       appointments: appointmentsByDate,
       isLoading,
       refresh: refreshAppointments,
+      loadMore: loadMoreAppointments,
+      appointmentsCount,
+      loadedAppointmentsCount,
     } = useDBAppointmentsList(
       filters.startDate,
       filters.endDate,
-      filters.clinicId,
+      selectedClinicIds,
       filters.status,
-      300,
+      400,
     )
     const { clinics, isLoading: isLoadingClinics } = useDBClinicsList()
 
@@ -100,21 +99,44 @@ export const AppointmentsListScreen: FC<AppointmentsListScreenProps> = observer(
     const sectionedAppointments: (string | AppointmentModel)[] = useMemo(() => {
       const data: (string | AppointmentModel)[] = []
       appointmentsByDate.forEach((appointmentByDate) => {
-        data.push(format(appointmentByDate.date, "MMM dd, yyyy"))
-        appointmentByDate.appointments.forEach((appointment) => {
-          if (activeClinicId === "all") {
+        const filteredAppointments =
+          activeClinicId === "all"
+            ? appointmentByDate.appointments
+            : appointmentByDate.appointments.filter((appt) => appt.clinicId === activeClinicId)
+        if (filteredAppointments.length > 0) {
+          data.push(
+            `${format(appointmentByDate.date, "MMM dd, yyyy")} (${filteredAppointments.length})`,
+          )
+          filteredAppointments.forEach((appointment) => {
             data.push(appointment)
-          } else if (activeClinicId === appointment.clinicId) {
-            data.push(appointment)
-          }
-        })
+          })
+        }
       })
       return data
-    }, [appointmentsByDate, activeClinicId])
+    }, [appointmentsByDate, activeClinicId, loadedAppointmentsCount, appointmentsCount])
 
     const getClinicName = (clinicId: string) => {
       const clinic = clinics.find((clinic) => clinic.id === clinicId)
       return clinic?.name || "All"
+    }
+
+    const clinicAppointmentsCount = (clinicId: string) => {
+      if (clinicId === "all") {
+        return appointmentsCount
+      }
+      return appointmentsByDate.reduce((acc, item) => {
+        const length = item.appointments.filter((appt) => appt.clinicId === clinicId).length
+        return acc + length
+      }, 0)
+      // return sectionedAppointments.reduce((acc, item) => {
+      //   if (typeof item === "string") {
+      //     return acc
+      //   }
+      //   if (item.clinicId === clinicId) {
+      //     return acc + 1
+      //   }
+      //   return acc
+      // }, 0)
     }
 
     return (
@@ -130,7 +152,7 @@ export const AppointmentsListScreen: FC<AppointmentsListScreenProps> = observer(
           />
         }
         contentContainerStyle={{ paddingTop: 20 }}
-        ListHeaderComponentStyle={{ paddingBottom: 24 }}
+        ListHeaderComponentStyle={{ paddingBottom: 8 }}
         ListHeaderComponent={
           <View>
             <View
@@ -169,15 +191,21 @@ export const AppointmentsListScreen: FC<AppointmentsListScreenProps> = observer(
                   searchPlaceholder={translate("search", { defaultValue: "Search" }) + "..."}
                   searchTextInputStyle={$inputWrapperStyle}
                   closeOnBackPressed
-                  value={filters.clinicId}
+                  value={selectedClinicIds}
                   listMode="MODAL"
-                  items={clinics.map((clinic) => ({ label: clinic.name, value: clinic.id }))}
+                  items={sortBy(
+                    clinics.map((clinic) => ({ label: clinic.name, value: clinic.id })),
+                    ["label"],
+                  )}
                   setOpen={setOpenDropdown}
+                  // setValue={(callback) => {
+                  //   setFilters((prevFilters) => {
+                  //     const data = callback(prevFilters.clinicId)
+                  //     return { ...prevFilters, clinicId: data }
+                  //   })
+                  // }}
                   setValue={(callback) => {
-                    setFilters((prevFilters) => {
-                      const data = callback(prevFilters.clinicId)
-                      return { ...prevFilters, clinicId: data }
-                    })
+                    setSelectedClinicIds(callback)
                   }}
                 />
               </View>
@@ -189,6 +217,10 @@ export const AppointmentsListScreen: FC<AppointmentsListScreenProps> = observer(
                     onValueChange={(itemValue, itemIndex) =>
                       setFilters({ ...filters, status: itemValue })
                     }
+                    style={{
+                      padding: 0,
+                      margin: 0,
+                    }}
                   >
                     <Picker.Item label="All" value="all" />
                     <Picker.Item label="Checked-in" value="checked_in" />
@@ -232,7 +264,7 @@ export const AppointmentsListScreen: FC<AppointmentsListScreenProps> = observer(
                 </View>
               </View>
 
-              <If condition={filters.clinicId.length > 1}>
+              <If condition={selectedClinicIds.length > 1}>
                 <View px={10} py={6}>
                   <Text text="Clinic Options" preset="formLabel" />
 
@@ -249,10 +281,10 @@ export const AppointmentsListScreen: FC<AppointmentsListScreenProps> = observer(
                         setActiveClinicId("all")
                       }}
                     >
-                      <Text size="xs" text="All" />
+                      <Text size="xs" text={`All (${clinicAppointmentsCount("all")})`} />
                     </Pressable>
 
-                    {filters.clinicId.map((clinicId) => {
+                    {selectedClinicIds.map((clinicId) => {
                       return (
                         <Pressable
                           key={clinicId}
@@ -261,7 +293,12 @@ export const AppointmentsListScreen: FC<AppointmentsListScreenProps> = observer(
                             setActiveClinicId(clinicId)
                           }}
                         >
-                          <Text size="xs" text={getClinicName(clinicId)} />
+                          <Text
+                            size="xs"
+                            text={`${getClinicName(clinicId)} (${clinicAppointmentsCount(
+                              clinicId,
+                            )})`}
+                          />
                         </Pressable>
                       )
                     })}
@@ -283,6 +320,10 @@ export const AppointmentsListScreen: FC<AppointmentsListScreenProps> = observer(
                 )}
               </Pressable>
             </View>
+
+            {/* <View direction="row" justifyContent="flex-end" px={10} style={{}} pt={6}>
+              <Text text={`Count: ${appointmentsCount}`} />
+            </View> */}
           </View>
         }
         ListEmptyComponent={
@@ -311,7 +352,32 @@ export const AppointmentsListScreen: FC<AppointmentsListScreenProps> = observer(
           }
         }}
         // Add some space at the bottom of the list
-        ListFooterComponent={<View style={{ height: 64 }}></View>}
+        ListFooterComponent={<View mb={64}></View>}
+        // ListFooterComponent={
+        //   <View my={10}>
+        //     <If condition={loadedAppointmentsCount < appointmentsCount}>
+        //       <Pressable
+        //         style={{ padding: 10 }}
+        //         onPress={() => {
+        //           loadMoreAppointments()
+        //         }}
+        //       >
+        //         <Text
+        //           text="Load more"
+        //           size="md"
+        //           align="center"
+        //           textDecorationLine="underline"
+        //           color={colors.palette.primary500}
+        //         />
+        //       </Pressable>
+        //     </If>
+        //   </View>
+        // }
+        onEndReached={() => {
+          loadMoreAppointments()
+        }}
+        onEndReachedThreshold={0.5}
+        extraData={appointmentsCount * loadedAppointmentsCount}
       />
     )
   },
@@ -404,6 +470,7 @@ const $pickerContainer: ViewStyle = {
   borderWidth: 1,
   borderRadius: 4,
   padding: 0,
+  margin: 0,
   justifyContent: "center",
 }
 

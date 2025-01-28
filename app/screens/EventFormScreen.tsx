@@ -1,7 +1,7 @@
 import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { observer } from "mobx-react-lite"
 import { Alert, ViewStyle } from "react-native"
-import { AppStackScreenProps } from "app/navigators"
+import { AppStackScreenProps } from "../navigators"
 import {
   $inputWrapperStyle,
   Button,
@@ -15,28 +15,29 @@ import {
   TextField,
   Toggle,
   View,
-} from "app/components"
+} from "../components"
 import { useImmer } from "use-immer"
-import database from "app/db"
-import EventFormModel from "app/db/model/EventForm"
-import EventModel from "app/db/model/Event"
+import database from "../db"
+import EventFormModel from "../db/model/EventForm"
+import EventModel from "../db/model/Event"
 import { Controller, useForm } from "react-hook-form"
-import { translate } from "app/i18n"
-import { colors } from "app/theme"
-import { api } from "app/services/api"
-import { useStores } from "app/models"
+import { translate } from "../i18n"
+import { colors } from "../theme"
+import { api } from "../services/api"
+import { useStores } from "../models"
 import { CommonActions, useFocusEffect } from "@react-navigation/native"
 import {
   BottomSheetModal,
   BottomSheetModalProvider,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet"
-import { ICDEntry, MedicationEntry } from "app/types"
-import { DatePickerButton } from "app/components/DatePicker"
+import { ICDEntry, MedicationEntry } from "../types"
+import { DatePickerButton } from "../components/DatePicker"
 import { isValid } from "date-fns"
 import _ from "lodash"
 import DropDownPicker from "react-native-dropdown-picker"
 import { LucideAlertCircle } from "lucide-react-native"
+import * as Sentry from "@sentry/react-native"
 
 // type ModalState = { activeModal: "medication" | "diagnosis" | null, medication: MedicationEntry | null, diagnoses: any[] }
 type ModalState =
@@ -60,6 +61,27 @@ export function useOpenDialogue() {
   }
 }
 
+/**
+ * Hook to get the provider for an event
+ * @param eventId
+ * @returns
+ */
+export function useEventProvider(
+  eventId?: string | null,
+): { providerId: string; providerName: string } | null {
+  const [provider, setProvider] = useState<{ providerId: string; providerName: string } | null>(
+    null,
+  )
+  useEffect(() => {
+    if (eventId) {
+      api.getEventProvider(eventId).then(setProvider)
+    } else {
+      setProvider(null)
+    }
+  }, [eventId])
+  return provider
+}
+
 export const EventFormScreen: FC<EventFormScreenProps> = observer(function EventFormScreen({
   route,
   navigation,
@@ -75,6 +97,8 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
   } = route.params
   const { provider, language } = useStores()
 
+  // get the provider/user who created the form or the event
+  const eventProvider = useEventProvider(eventId)
   const { control, handleSubmit, setValue, getValues, watch } = useForm<
     Record<string, string | number | Date | any[]>
   >({
@@ -221,6 +245,7 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
         // Function is async and we are not waiting for it, and if it fails we dont care too much and dont want it to block the user from continuing
         api.markAppointmentComplete(appointmentId, res.visitId).catch((e) => {
           console.error("Error updating appointment with visitId", e)
+          Sentry.captureException(e)
         })
       }
 
@@ -240,6 +265,15 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
     } catch (e) {
       console.error(e)
       Alert.alert("Error connecting to the database")
+      Sentry.captureException(e, {
+        level: "error",
+        extra: {
+          formId,
+          visitId,
+          patientId,
+          eventId,
+        },
+      })
     }
 
     // setLoading(true)
@@ -308,6 +342,10 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
       draft.activeModal = null
     })
   }
+
+  const medicineOptions = useMemo(() => {
+    return form?.formFields.find((field) => field.fieldType === "medicine")?.options || []
+  }, [form?.formFields])
 
   if (isLoading) return <Text>Loading...</Text>
   if (!form) {
@@ -513,6 +551,14 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
             )
           })}
 
+          {/* Information about the user who filled out the form or the user who created the event in the first place as a fallback */}
+          <If condition={eventProvider !== null}>
+            <View gap={4} py={6} direction="row">
+              <Text text="Created by:" />
+              <Text text={eventProvider?.providerName} />
+            </View>
+          </If>
+
           <Button
             preset="default"
             disabled={!canSaveForm}
@@ -531,7 +577,11 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
       >
         <BottomSheetScrollView style={{}}>
           <If condition={modalState.activeModal === "medication"}>
-            <MedicationEditor medication={modalState.medication} onSubmit={updateMedication} />
+            <MedicationEditor
+              medication={modalState.medication}
+              medicineOptions={medicineOptions}
+              onSubmit={updateMedication}
+            />
           </If>
           <If condition={modalState.activeModal === "diagnoses"}>
             <DiagnosisEditor

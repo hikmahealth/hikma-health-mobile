@@ -5,26 +5,26 @@ import React, { FC, useEffect, useState } from "react"
 import { observer } from "mobx-react-lite"
 import { Alert, Pressable, ViewStyle } from "react-native"
 import { SubmitHandler } from "react-hook-form"
-import { AppStackScreenProps } from "app/navigators"
-import { Button, Screen, Text, View, TextField, Toggle, If } from "app/components"
-import { useStores } from "app/models"
+import { AppStackScreenProps } from "../navigators"
+import { Button, Screen, Text, View, TextField, Toggle, If } from "../components"
+import { useStores } from "../models"
 import { isValid } from "date-fns"
-import { TranslationObject, useRegistrationForm } from "app/hooks/usePatientRegistrationForm"
-import PatientModel, { PatientModelData } from "app/db/model/Patient"
-import { translate } from "app/i18n"
+import { TranslationObject, useRegistrationForm } from "../hooks/usePatientRegistrationForm"
+import PatientModel, { PatientModelData } from "../db/model/Patient"
+import { translate } from "../i18n"
 import { sortBy, upperFirst, omit } from "lodash"
-import { DatePickerButton } from "app/components/DatePicker"
-import { api } from "app/services/api"
-import database from "app/db"
+import { DatePickerButton } from "../components/DatePicker"
+import { api } from "../services/api"
+import database from "../db"
 import { LucideArrowRight } from "lucide-react-native"
-import { colors } from "app/theme"
+import { colors } from "../theme"
 import { Q } from "@nozbe/watermelondb"
-import { levenshtein } from "app/utils/levenshtein"
+import { levenshtein } from "../utils/levenshtein"
 import _ from "lodash"
-import { getTranslation } from "app/utils/parsers"
-import { useSimilarPatientsSearch } from "app/hooks/useSimilarPatientsSearch"
+import { getTranslation } from "../utils/parsers"
+import { useSimilarPatientsSearch } from "../hooks/useSimilarPatientsSearch"
 // import { useNavigation } from "@react-navigation/native"
-// import { useStores } from "app/models"
+// import { useStores } from "../models"
 
 const DEFAULT_DOB = (() => {
   // set year, month and date separately to support HERMES engine
@@ -79,7 +79,7 @@ export const PatientRegistrationFormScreen: FC<PatientRegistrationFormScreenProp
 
       // TODO: support adding the ID of the patient if they are being updated
       const patient = getPatientRecord()
-      console.log({ patient })
+      // console.log({ patient })
 
       try {
         let res: PatientModel

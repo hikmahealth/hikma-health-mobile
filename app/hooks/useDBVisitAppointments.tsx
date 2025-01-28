@@ -1,7 +1,7 @@
 import { Q } from "@nozbe/watermelondb"
 import { useEffect, useState } from "react"
 import database from "../db"
-import AppointmentModel from "app/db/model/Appointment"
+import AppointmentModel from "../db/model/Appointment"
 
 /**
  * Get all appointments for a visit, sorted by created_at
@@ -27,6 +27,7 @@ export function useDBVisitAppointments(visitId: string | null | undefined): Appo
       .subscribe((appointments) => {
         setAppointments(appointments)
       })
+
     return () => {
       return sub?.unsubscribe()
     }

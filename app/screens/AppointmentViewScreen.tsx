@@ -1,37 +1,28 @@
-import React, { FC, useCallback, useState } from "react"
+import React, { FC, useState } from "react"
 import { observer } from "mobx-react-lite"
 import { Alert, Pressable, TextStyle, ViewStyle } from "react-native"
-import { AppStackScreenProps } from "app/navigators"
-import { Button, EventListItem, If, Screen, Text, TextField, View } from "app/components"
-import { colors, spacing } from "app/theme"
-import {
-  LucideCheck,
-  LucideChevronLeft,
-  LucideChevronRight,
-  LucideEdit,
-  LucideRefreshCw,
-  LucideTrash2,
-} from "lucide-react-native"
-import { displayName } from "app/utils/patient"
+import { AppStackScreenProps } from "../navigators"
+import { Button, If, Screen, Text, View } from "../components"
+import { colors, spacing } from "../theme"
+import { LucideCheck, LucideChevronRight, LucideEdit, LucideRefreshCw } from "lucide-react-native"
+import { displayName } from "../utils/patient"
 import { format } from "date-fns"
-import { useAppointmentRecord } from "app/hooks/useAppointmentRecord"
+import { useAppointmentRecord } from "../hooks/useAppointmentRecord"
 import { upperFirst } from "lodash"
-import { api } from "app/services/api"
+import { api } from "../services/api"
 import Toast from "react-native-root-toast"
-import { translate } from "app/i18n"
+import { translate } from "../i18n"
 import DatePicker from "react-native-date-picker"
-import { useDBVisitAppointments } from "app/hooks/useDBVisitAppointments"
-import { useDBVisitEvents } from "app/hooks/useDBVisitEvents"
+import { useDBVisitEvents } from "../hooks/useDBVisitEvents"
 import { withObservables } from "@nozbe/watermelondb/react"
-import EventModel from "app/db/model/Event"
-import VisitModel from "app/db/model/Visit"
-import { NavigationProp } from "@react-navigation/native"
-import PatientModel from "app/db/model/Patient"
-import AppointmentModel from "app/db/model/Appointment"
-import { AppointmentStatus } from "app/types"
+import EventModel from "../db/model/Event"
+import VisitModel from "../db/model/Visit"
+import PatientModel from "../db/model/Patient"
+import AppointmentModel from "../db/model/Appointment"
+import { AppointmentStatus } from "../types"
 import { Picker } from "@react-native-picker/picker"
 // import { useNavigation } from "@react-navigation/native"
-// import { useStores } from "app/models"
+// import { useStores } from "../models"
 
 const colorCodes = ["#ffffff", "#1f2937", "#991b1b", "#c2410c", "#166534", "#1e40af", "#5b21b6"]
 
@@ -49,6 +40,7 @@ export const AppointmentViewScreen: FC<AppointmentViewScreenProps> = observer(
     const {
       appointment,
       patient,
+      clinic,
       isLoading,
       refresh: refreshAppointment,
     } = useAppointmentRecord(appointmentId)
@@ -211,7 +203,6 @@ export const AppointmentViewScreen: FC<AppointmentViewScreenProps> = observer(
                   console.log(err)
                 })
               setIsDatePickerOpen(false)
-              console.log(date)
             },
           },
         ],
@@ -283,6 +274,13 @@ export const AppointmentViewScreen: FC<AppointmentViewScreenProps> = observer(
             textDecorationLine="underline"
           />
         </Pressable>
+
+        <If condition={clinic !== null && clinic !== undefined && typeof clinic.name === "string"}>
+          <View pt={spacing.md}>
+            <Text size="lg" text="Clinic:" />
+            <Text text={clinic?.name} />
+          </View>
+        </If>
 
         <View gap={spacing.md} pt={spacing.md}>
           <View>

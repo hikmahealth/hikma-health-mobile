@@ -1,28 +1,30 @@
 import React, { FC, useEffect, useState } from "react"
 import { observer } from "mobx-react-lite"
 import { Alert, Button, Pressable, StatusBar, ViewStyle } from "react-native"
-import { AppStackScreenProps } from "app/navigators"
-import { If, PatientListItem, Text, TextField, View } from "app/components"
+import { AppStackScreenProps } from "../navigators"
+import { If, PatientListItem, Text, TextField, View } from "../components"
 import { FlashList } from "@shopify/flash-list"
-import PatientModel, { defaultPatient } from "app/db/model/Patient"
-import { colors } from "app/theme"
+import PatientModel, { defaultPatient } from "../db/model/Patient"
+import { colors } from "../theme"
 import { ChevronDownIcon, ChevronUpIcon, PlusIcon, SearchIcon, XIcon } from "lucide-react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useImmer } from "use-immer"
-import database from "app/db"
-import { useDebounce } from "app/hooks/useDebounce"
+import database from "../db"
+import { useDebounce } from "../hooks/useDebounce"
 import { Q } from "@nozbe/watermelondb"
 import { Picker } from "@react-native-picker/picker"
-import { translate } from "app/i18n"
+import { translate } from "../i18n"
 import { useIsFocused } from "@react-navigation/native"
 // import { useNavigation } from "@react-navigation/native"
-import { useStores } from "app/models"
-import { patientApi } from "app/services/api/patientApi"
-import { usePatientRecordEditor } from "app/hooks/usePatientRecordEditor"
+import { useStores } from "../models"
+import { patientApi } from "../services/api/patientApi"
+import { usePatientRecordEditor } from "../hooks/usePatientRecordEditor"
 import { omit } from "lodash"
-import PatientAdditionalAttribute from "app/db/model/PatientAdditionalAttribute"
-import { PatientValueColumn } from "app/types"
-import { RegistrationFormField } from "app/db/model/PatientRegistrationForm"
+import EncryptedStorage from "react-native-encrypted-storage"
+import PatientAdditionalAttribute from "../db/model/PatientAdditionalAttribute"
+import { PatientValueColumn } from "../types"
+import { RegistrationFormField } from "../db/model/PatientRegistrationForm"
+import { extendedSanitizeLikeString } from "../utils/parsers"
 
 type SearchFilter = {
   query: string
@@ -82,8 +84,8 @@ export function usePatientsList(
     if (query.length > 1) {
       queryConditions.push(
         Q.or(
-          Q.where("given_name", Q.like(`%${Q.sanitizeLikeString(query)}%`)),
-          Q.where("surname", Q.like(`%${Q.sanitizeLikeString(query)}%`)),
+          Q.where("given_name", Q.like(`%${extendedSanitizeLikeString(query)}%`)),
+          Q.where("surname", Q.like(`%${extendedSanitizeLikeString(query)}%`)),
         ),
       )
     }
@@ -93,7 +95,7 @@ export function usePatientsList(
       )
     }
     if (sex.length > 0) {
-      queryConditions.push(Q.where("sex", Q.eq(`${Q.sanitizeLikeString(sex)}`)))
+      queryConditions.push(Q.where("sex", Q.eq(`${extendedSanitizeLikeString(sex)}`)))
     }
 
     // const refQuery =
@@ -246,11 +248,11 @@ export function usePatientsList(
 
       // fields that are `select` type are dropdowns and/or checkboxes
       // such as `sex`
-      let likeQuery = `%${Q.sanitizeLikeString(val)}%`
+      let likeQuery = `%${extendedSanitizeLikeString(val)}%`
       if (field.fieldType === "select") {
         // Select fields only search for matches at end of string not at begining
         // solves the: "returns 'female' when 'male' is searched for"
-        likeQuery = `${Q.sanitizeLikeString(val)}%`
+        likeQuery = `${extendedSanitizeLikeString(val)}%`
       }
 
       return Q.where(field.column, Q.like(likeQuery))
@@ -273,10 +275,10 @@ export function usePatientsList(
       }
       // fields that are `select` type are dropdowns and/or checkboxes
       // such as `sex`
-      let likeQuery = `%${Q.sanitizeLikeString(val)}%`
+      let likeQuery = `%${extendedSanitizeLikeString(val)}%`
       if (field.fieldType === "select") {
         // Select fields only search for matches at end of string not at begining
-        likeQuery = `${Q.sanitizeLikeString(val)}%`
+        likeQuery = `${extendedSanitizeLikeString(val)}%`
       }
 
       return Q.where(col, Q.like(likeQuery))
@@ -288,8 +290,8 @@ export function usePatientsList(
       ptQueryConditionsWithStr = [
         Q.and(
           Q.or(
-            Q.where("given_name", Q.like(`%${Q.sanitizeLikeString(query)}%`)),
-            Q.where("surname", Q.like(`%${Q.sanitizeLikeString(query)}%`)),
+            Q.where("given_name", Q.like(`%${extendedSanitizeLikeString(query)}%`)),
+            Q.where("surname", Q.like(`%${extendedSanitizeLikeString(query)}%`)),
           ),
         ),
         ...patientQueryConditions,
@@ -422,22 +424,30 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = observer(
           {
             text: translate("delete"),
             onPress: () => {
-              Alert.alert(
-                translate("patientList.deletePatientQuestion"),
-                translate("patientList.confirmDeletePatient"),
-                [
-                  { text: translate("cancel") },
-                  {
-                    text: translate("delete"),
-                    onPress: () => {
-                      patientApi.deleteById(patientId)
-                    },
-                  },
-                ],
+              return Alert.alert(
+                "Delete not allowed",
+                "Deleting patients in currently not allowed. Contact your administrator",
+                [{ text: "OK" }],
                 {
                   cancelable: true,
                 },
               )
+              // Alert.alert(
+              //   translate("patientList.deletePatientQuestion"),
+              //   translate("patientList.confirmDeletePatient"),
+              //   [
+              //     { text: translate("cancel") },
+              //     {
+              //       text: translate("delete"),
+              //       onPress: () => {
+              //         patientApi.deleteById(patientId)
+              //       },
+              //     },
+              //   ],
+              //   {
+              //     cancelable: true,
+              //   },
+              // )
             },
           },
         ],
