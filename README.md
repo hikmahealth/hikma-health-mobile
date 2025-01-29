@@ -238,6 +238,10 @@ Features on the roadmap represent the vision for the mobile app over the coming 
 - [ ] Memory & performance profiling
 - [ ] Automated CI pipeline for tests (add coveralls)
 
+## Contributing
+
+Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
+
 ## Credits
 
 This project, like many other open source works, relies heavily on the open source community and their contributions. We have built this EHR system on the shoulders of great projects such as the [Ignite](https://github.com/infinitered/ignite) boilerplate, WatermelonDB, and many others.
