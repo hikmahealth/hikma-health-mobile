@@ -69,7 +69,7 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen({
     if (status === "granted") {
       setCameraActive(true)
     } else {
-      Alert.alert(translate("login.requiredCameraPermissions"))
+      Alert.alert(translate("login:requiredCameraPermissions"))
     }
   }
 
@@ -88,10 +88,10 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen({
     if (canOpen) {
       await EncryptedStorage.setItem("HIKMA_API", data)
       setCameraActive(false)
-      Alert.alert(translate("login.qrCodeRegistered"))
+      Alert.alert(translate("login:qrCodeRegistered"))
     } else {
       await EncryptedStorage.removeItem("HIKMA_API")
-      Alert.alert(translate("login.invalidQRCode"))
+      Alert.alert(translate("login:invalidQRCode"))
       setCameraActive(false)
     }
   }
@@ -139,7 +139,7 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen({
   const signIn = async () => {
     const HIKMA_API = await getHHApiUrl()
     if (!HIKMA_API) {
-      Alert.alert(translate("login.invalidQRMessage"))
+      Alert.alert(translate("login:invalidQRMessage"))
       return
     }
     if (creds.email.length < 4 || creds.password.length < 4)
@@ -177,13 +177,13 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen({
         }
       } else {
         console.error({ error: response })
-        Alert.alert(translate("login.invalidCredentials"))
+        Alert.alert(translate("login:invalidCredentials"))
       }
     } catch (e) {
       console.error(e)
       setIsLoading(false)
       // TODO: translate
-      Alert.alert(translate("login.errorConnectingToDB"))
+      Alert.alert(translate("login:errorConnectingToDB"))
     }
   }
 
@@ -249,8 +249,9 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen({
               })
             }
             value={creds.email}
+            testID="login-email"
             autoCapitalize="none"
-            labelTx={"login.email"}
+            labelTx={"login:email"}
           />
           <TextField
             value={creds.password}
@@ -259,26 +260,31 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen({
                 draft.password = t
               })
             }
-            labelTx={"login.password"}
+            testID="login-password"
+            labelTx={"login:password"}
             autoCapitalize="none"
             secureTextEntry
           />
 
           <LanguageToggle />
 
-          <Button disabled={isLoading} onPress={handleSignIn}>
-            <Text tx={!isLoading ? "login.signIn" : "loading"} />
+          <Button disabled={isLoading} testID="login-button" onPress={handleSignIn}>
+            <Text tx={!isLoading ? "login:signIn" : "common:loading"} />
           </Button>
 
           <Pressable style={{ paddingTop: 14 }} onPress={openCamera}>
             <View direction={language.isRTL ? "row-reverse" : "row"} gap={10} alignItems="center">
               <QrCodeIcon size={36} color={colors.palette.primary500} />
-              <Text color={colors.palette.primary500} tx="login.qrCodeRegister" />
+              <Text color={colors.palette.primary500} tx="login:qrCodeRegister" />
             </View>
           </Pressable>
         </View>
       </Screen>
-      <Pressable onPress={openPrivacyPolicy} style={{ position: "absolute", bottom: 50, left: 12 }}>
+      <Pressable
+        testID="login-privacy-policy"
+        onPress={openPrivacyPolicy}
+        style={{ position: "absolute", bottom: 50, left: 12 }}
+      >
         <InfoIcon
           size={24}
           color={isDarkmode ? colors.palette.neutral700 : colors.palette.neutral700}

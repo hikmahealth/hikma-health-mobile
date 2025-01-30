@@ -1,4 +1,4 @@
-import I18n from "i18n-js"
+import i18next from "i18next"
 
 // Note the syntax of these imports from the date-fns library.
 // If you import with the syntax: import { format } from "date-fns" the ENTIRE library
@@ -12,15 +12,45 @@ type Options = Parameters<typeof format>[2]
 
 const getLocale = (): Locale => {
   // const locale = I18n.currentLocale()?.split("-")[0]
-  const locale = I18n.locale?.split("-")[0]
+  const locale = i18next.language.split("-")[0]
   return locale === "ar" ? ar : locale === "ko" ? ko : enUS
 }
 
+let dateFnsLocale: Locale
+export const loadDateFnsLocale = () => {
+  const primaryTag = i18next.language.split("-")[0]
+  switch (primaryTag) {
+    case "en":
+      dateFnsLocale = require("date-fns/locale/en-US").default
+      break
+    case "ar":
+      dateFnsLocale = require("date-fns/locale/ar").default
+      break
+    case "ko":
+      dateFnsLocale = require("date-fns/locale/ko").default
+      break
+    case "es":
+      dateFnsLocale = require("date-fns/locale/es").default
+      break
+    case "fr":
+      dateFnsLocale = require("date-fns/locale/fr").default
+      break
+    case "hi":
+      dateFnsLocale = require("date-fns/locale/hi").default
+      break
+    case "ja":
+      dateFnsLocale = require("date-fns/locale/ja").default
+      break
+    default:
+      dateFnsLocale = require("date-fns/locale/en-US").default
+      break
+  }
+}
+
 export const formatDate = (date: string, dateFormat?: string, options?: Options) => {
-  const locale = getLocale()
   const dateOptions = {
     ...options,
-    locale,
+    locale: dateFnsLocale,
   }
   return format(parseISO(date), dateFormat ?? "MMM dd, yyyy", dateOptions)
 }

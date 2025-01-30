@@ -248,7 +248,7 @@ export const $inputWrapperStyle: ViewStyle = {
   overflow: "hidden",
 }
 
-const $inputStyle: TextStyle = {
+export const $inputStyle: TextStyle = {
   flex: 1,
   alignSelf: "stretch",
   fontFamily: typography.primary.normal,

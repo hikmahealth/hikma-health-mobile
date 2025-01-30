@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Pressable, StyleProp, TextStyle, ViewStyle } from "react-native"
+import { Platform, Pressable, StyleProp, TextStyle, ViewStyle } from "react-native"
 import { observer } from "mobx-react-lite"
 import { colors, typography } from "../theme"
 import { Text } from "../components/Text"
@@ -19,6 +19,8 @@ import {
 import medicationsList from "../data/medicationsList"
 import { PlusIcon } from "lucide-react-native"
 import { useEffect, useState } from "react"
+import { If } from "./If"
+import DropDownPicker from "react-native-dropdown-picker"
 
 export interface MedicationEditorProps {
   /**
@@ -89,6 +91,13 @@ export const MedicationEditor = observer(function MedicationEditor(props: Medica
   const [isSearching, setIsSearching] = useState(false)
   const [map, actions] = useMap<keyof MedicationEntry, string | number>(initialValues)
 
+  // Manage the state of the ios specific drop down picker
+  const [openDropdown, setOpenDropdown] = useState<
+    "route" | "form" | "doseUnits" | "durationUnits" | null
+  >(null)
+
+  const isIos = Platform.OS === "ios"
+
   // on mount, set the initial values to the medication if one exists, else set the ID to a random string
   useEffect(() => {
     if (medication) {
@@ -156,35 +165,114 @@ export const MedicationEditor = observer(function MedicationEditor(props: Medica
                 ))}
             </View>
           )}
-          <Picker selectedValue={map.get("form")} onValueChange={setValue("form")}>
-            <Picker.Item label={"Choose medication form"} value="" />
-            {stringsListToOptions(medicineFormOptions).map((option) => (
-              <Picker.Item key={option.value} label={option.label} value={option.value} />
-            ))}
-          </Picker>
+          <If condition={!isIos}>
+            <Picker selectedValue={map.get("form")} onValueChange={setValue("form")}>
+              <Picker.Item label={"Choose medication form"} value="" />
+              {stringsListToOptions(medicineFormOptions).map((option) => (
+                <Picker.Item key={option.value} label={option.label} value={option.value} />
+              ))}
+            </Picker>
+          </If>
+
+          <If condition={isIos}>
+            <View mt={10}>
+              <Text preset="formLabel" text="Form" />
+
+              <DropDownPicker
+                open={openDropdown === "form"}
+                setOpen={(open) => {
+                  if (open as unknown as boolean) setOpenDropdown("form")
+                  else setOpenDropdown(null)
+                }}
+                modalTitle="Medication Form"
+                style={{
+                  marginTop: 2,
+                  borderWidth: 1,
+                  borderRadius: 4,
+                  backgroundColor: colors.palette.neutral200,
+                  borderColor: colors.palette.neutral400,
+                  zIndex: 990000,
+                  flex: 1,
+                }}
+                zIndex={990000}
+                zIndexInverse={990000}
+                listMode="MODAL"
+                items={stringsListToOptions(doseUnitOptions, false)}
+                value={getValue("form") || ""}
+                setValue={(cb) => {
+                  const data = cb(getValue("form"))
+                  setValue("form")(data || "mg")
+                }}
+              />
+            </View>
+          </If>
         </View>
-        <View style={[$medicineInputRow, $inputWithUnits]} gap={6}>
-          <TextField
-            value={getValue("dose") === 0 ? "" : getValue("dose")?.toString()}
-            label="Dose (Concentration)"
-            style={{ flex: 5 }}
-            keyboardType="number-pad"
-            onChangeText={(v) => {
-              // verify that it is a number
-              if (isNaN(Number(v))) return
-              setValue("dose")(Number(v))
-            }}
-          />
+        <View
+          style={[
+            $medicineInputRow,
+            $inputWithUnits,
+            isIos && { flexDirection: "column", alignItems: "stretch" },
+          ]}
+          gap={isIos ? 0 : 6}
+        >
+          <View style={{ flex: 5 }}>
+            <TextField
+              value={getValue("dose") === 0 ? "" : getValue("dose")?.toString()}
+              label="Dose (Concentration)"
+              // style={{ flex: 5 }}
+              keyboardType="number-pad"
+              onChangeText={(v) => {
+                // verify that it is a number
+                if (isNaN(Number(v))) return
+                setValue("dose")(Number(v))
+              }}
+            />
+          </View>
 
           <View style={{ flex: 2 }}>
             {/*<Text preset="formLabel" text="Units" />*/}
             <Text text="" />
-            <Picker selectedValue={getValue("doseUnits")} onValueChange={setValue("doseUnits")}>
-              <Picker.Item label={"Units"} value="" />
-              {stringsListToOptions(doseUnitOptions, false).map((option) => (
-                <Picker.Item key={option.value} label={option.label} value={option.value} />
-              ))}
-            </Picker>
+            <If condition={!isIos}>
+              <Picker selectedValue={getValue("doseUnits")} onValueChange={setValue("doseUnits")}>
+                <Picker.Item label={"Units"} value="" />
+                {stringsListToOptions(doseUnitOptions, false).map((option) => (
+                  <Picker.Item key={option.value} label={option.label} value={option.value} />
+                ))}
+              </Picker>
+            </If>
+
+            <If condition={isIos}>
+              <>
+                <Text preset="formLabel" text="Dosage Units" />
+
+                <DropDownPicker
+                  open={openDropdown === "doseUnits"}
+                  setOpen={(open) => {
+                    if (open as unknown as boolean) setOpenDropdown("doseUnits")
+                    else setOpenDropdown(null)
+                  }}
+                  modalTitle="Dosage Units"
+                  style={{
+                    marginTop: 2,
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    backgroundColor: colors.palette.neutral200,
+                    borderColor: colors.palette.neutral400,
+                    zIndex: 990000,
+                    flex: 1,
+                  }}
+                  zIndex={990000}
+                  zIndexInverse={990000}
+                  listMode="MODAL"
+                  items={stringsListToOptions(doseUnitOptions, false)}
+                  value={getValue("doseUnits") || ""}
+                  setValue={(cb) => {
+                    const data = cb(getValue("doseUnits"))
+                    setValue("doseUnits")(data || "mg")
+                  }}
+                />
+              </>
+            </If>
           </View>
         </View>
         <View style={$medicineInputRow}>
@@ -196,17 +284,49 @@ export const MedicationEditor = observer(function MedicationEditor(props: Medica
           />
           <View>
             <Text preset="formLabel" text="Route" />
-            <Picker selectedValue={getValue("route")} onValueChange={setValue("route")}>
-              <Picker.Item label={"Choose the medicine Route"} value="" />
-              {stringsListToOptions(medicineRouteOptions).map((option) => (
-                <Picker.Item key={option.value} label={option.label} value={option.value} />
-              ))}
-            </Picker>
+            <If condition={!isIos}>
+              <Picker selectedValue={getValue("route")} onValueChange={setValue("route")}>
+                <Picker.Item label={"Choose the medicine Route"} value="" />
+                {stringsListToOptions(medicineRouteOptions).map((option) => (
+                  <Picker.Item key={option.value} label={option.label} value={option.value} />
+                ))}
+              </Picker>
+            </If>
+
+            <If condition={isIos}>
+              <DropDownPicker
+                open={openDropdown === "route"}
+                setOpen={(open) => {
+                  if (open as unknown as boolean) setOpenDropdown("route")
+                  else setOpenDropdown(null)
+                }}
+                modalTitle="Medication Routes"
+                style={{
+                  marginTop: 4,
+                  borderWidth: 1,
+                  borderRadius: 4,
+                  backgroundColor: colors.palette.neutral200,
+                  borderColor: colors.palette.neutral400,
+                  zIndex: 990000,
+                  flex: 1,
+                }}
+                zIndex={990000}
+                zIndexInverse={990000}
+                listMode="MODAL"
+                items={stringsListToOptions(medicineRouteOptions)}
+                value={getValue("route") || ""}
+                setValue={(cb) => {
+                  const data = cb(getValue("route"))
+                  setValue("route")(data || "oral")
+                }}
+              />
+            </If>
           </View>
         </View>
       </View>
       <View style={{ height: 20 }} />
       <Button onPress={submit}>Save</Button>
+      <View style={{ height: 40 }} />
     </View>
   )
 })

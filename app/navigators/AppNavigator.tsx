@@ -281,7 +281,7 @@ const AppStack = observer(function AppStack() {
         <Stack.Group>
           <Stack.Screen
             options={{
-              title: translate("patients"),
+              title: translate("common:patients"),
             }}
             name="PatientsList"
             component={Screens.PatientsListScreen}
@@ -289,20 +289,20 @@ const AppStack = observer(function AppStack() {
           <Stack.Screen
             name="PatientRegistrationForm"
             options={{
-              title: translate("newPatient.newPatient"),
+              title: translate("newPatient:newPatient"),
             }}
             component={Screens.PatientRegistrationFormScreen}
           />
           <Stack.Screen
             name="PatientRecordEditor"
             options={{
-              title: translate("newPatient.newPatient"),
+              title: translate("newPatient:newPatient"),
             }}
             component={Screens.PatientRecordEditorScreen}
           />
           <Stack.Screen
             options={{
-              title: translate("patientFile.patientView"),
+              title: translate("patientFile:patientView"),
             }}
             name="PatientView"
             component={Screens.PatientViewScreen}
@@ -310,14 +310,14 @@ const AppStack = observer(function AppStack() {
           <Stack.Screen
             name="NewVisit"
             options={{
-              title: translate("newVisit.newVisit"),
+              title: translate("newVisit:newVisit"),
             }}
             component={Screens.NewVisitScreen}
           />
           <Stack.Screen
             name="EventForm"
             options={{
-              title: translate("eventList.newEntry"),
+              title: translate("eventList:newEntry"),
             }}
             component={Screens.EventFormScreen}
           />
@@ -337,7 +337,7 @@ const AppStack = observer(function AppStack() {
             name="AppointmentsList"
             component={Screens.AppointmentsListScreen}
             options={{
-              title: translate("appointments"),
+              title: translate("common:appointments"),
             }}
           />
           <Stack.Screen
@@ -354,7 +354,7 @@ const AppStack = observer(function AppStack() {
                     >
                       <View direction="row" gap={spacing.xs} alignItems="center">
                         <LucideTrash2 color={colors.palette.angry500} size={20} />
-                        <Text tx="cancelAppointment" />
+                        <Text tx="common:cancelAppointment" />
                       </View>
                     </Pressable>
                   </View>
@@ -365,7 +365,7 @@ const AppStack = observer(function AppStack() {
           <Stack.Screen
             name="AppointmentEditorForm"
             options={{
-              title: translate("appointmentEditorForm.title"),
+              title: translate("appointmentEditorForm:title"),
             }}
             component={Screens.AppointmentEditorFormScreen}
           />
@@ -395,7 +395,7 @@ const AppStack = observer(function AppStack() {
       )}
       <Stack.Screen
         options={{
-          title: translate("settingsScreen.privacyPolicy"),
+          title: translate("settingsScreen:privacyPolicy"),
           presentation: "modal",
           headerRight: undefined,
         }}

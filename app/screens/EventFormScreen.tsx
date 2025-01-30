@@ -427,7 +427,9 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
                         flex: 1,
                       }}
                       mode="BADGE"
-                      searchPlaceholder={translate("search", { defaultValue: "Search" }) + "..."}
+                      searchPlaceholder={
+                        translate("common:search", { defaultValue: "Search" }) + "..."
+                      }
                       searchTextInputStyle={$inputWrapperStyle}
                       closeOnBackPressed
                       onClose={closeDialogue}
@@ -565,7 +567,7 @@ export const EventFormScreen: FC<EventFormScreenProps> = observer(function Event
             onPress={handleSubmit(onSubmit)}
             testID="submit"
           >
-            {loading ? translate("loading") : translate("save")}
+            {loading ? translate("common:loading") : translate("common:save")}
           </Button>
         </View>
       </Screen>

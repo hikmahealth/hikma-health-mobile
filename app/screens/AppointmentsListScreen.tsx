@@ -22,7 +22,7 @@ import { Picker } from "@react-native-picker/picker"
 import DropDownPicker from "react-native-dropdown-picker"
 import { translate } from "../i18n"
 import { catchError, of as of$ } from "rxjs"
-import usePersistedState, { useAsyncPersistedState } from "../hooks/usePersistedState"
+import { useAsyncPersistedState } from "../hooks/usePersistedState"
 
 const { height } = Dimensions.get("screen")
 
@@ -188,7 +188,7 @@ export const AppointmentsListScreen: FC<AppointmentsListScreenProps> = observer(
                     flex: 1,
                   }}
                   mode="BADGE"
-                  searchPlaceholder={translate("search", { defaultValue: "Search" }) + "..."}
+                  searchPlaceholder={translate("common:search", { defaultValue: "Search" }) + "..."}
                   searchTextInputStyle={$inputWrapperStyle}
                   closeOnBackPressed
                   value={selectedClinicIds}

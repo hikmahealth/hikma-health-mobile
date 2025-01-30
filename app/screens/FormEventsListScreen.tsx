@@ -30,11 +30,11 @@ export const FormEventsListScreen: FC<FormEventsListScreenProps> = observer(
 
     const openEventOptions = (event: EventModel) => {
       Alert.alert(
-        translate("eventList.eventOptions"),
-        translate("eventList.eventOptionsDescription"),
+        translate("eventList:eventOptions"),
+        translate("eventList:eventOptionsDescription"),
         [
           {
-            text: translate("eventList.edit"),
+            text: translate("eventList:edit"),
             onPress: () => {
               navigation.navigate("EventForm", {
                 patientId,
@@ -46,7 +46,7 @@ export const FormEventsListScreen: FC<FormEventsListScreenProps> = observer(
             },
           },
           {
-            text: translate("eventList.delete"),
+            text: translate("eventList:delete"),
             onPress: () => {
               api
                 .deleteEvent(event.id)

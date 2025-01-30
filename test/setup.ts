@@ -39,12 +39,38 @@ jest.mock("react-native-encrypted-storage", () => {
   }
 })
 
-jest.mock("i18n-js", () => ({
-  currentLocale: () => "en",
+jest.mock("i18next", () => ({
+  currentLocale: "en",
   t: (key: string, params: Record<string, string>) => {
     return `${key} ${JSON.stringify(params)}`
   },
+  translate: (key: string, params: Record<string, string>) => {
+    return `${key} ${JSON.stringify(params)}`
+  },
 }))
+
+jest.mock("expo-localization", () => ({
+  ...jest.requireActual("expo-localization"),
+  getLocales: () => [{ languageTag: "en-US", textDirection: "ltr" }],
+}))
+
+jest.mock("../app/i18n/i18n.ts", () => ({
+  i18n: {
+    isInitialized: true,
+    language: "en",
+    t: (key: string, params: Record<string, string>) => {
+      return `${key} ${JSON.stringify(params)}`
+    },
+    numberToCurrency: jest.fn(),
+  },
+}))
+
+// jest.mock("i18n-js", () => ({
+//   currentLocale: () => "en",
+//   t: (key: string, params: Record<string, string>) => {
+//     return `${key} ${JSON.stringify(params)}`
+//   },
+// }))
 
 declare const tron // eslint-disable-line @typescript-eslint/no-unused-vars
 

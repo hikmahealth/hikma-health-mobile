@@ -31,7 +31,6 @@ import { api } from "../services/api"
 import VisitModel from "../db/model/Visit"
 import logoStr from "../assets/images/logoStr"
 import { useInteractionManager } from "@react-native-community/hooks"
-import { useDebounce } from "usehooks-ts"
 import { useDBPatientAppointments } from "../hooks/useDBPatientAppointments"
 import AppointmentModel from "../db/model/Appointment"
 
@@ -80,10 +79,8 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
     appState: { hersEnabled },
   } = useStores()
   const { patientId, patient: defaultPatient } = route.params
-  const _interactionReady = useInteractionManager()
-  const interactionReady = useDebounce(_interactionReady, 500)
   const { patient, isLoading } = usePatientRecord(patientId, defaultPatient)
-  const eventForms = useDBEventForms(translate("languageCode"))
+  const eventForms = useDBEventForms(translate("common:languageCode"))
   const appointments = useDBPatientAppointments(patientId, startOfDay(new Date()), 5)
 
   const createNewVisit = () => {
@@ -96,14 +93,14 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
 
   const downloadPatientReport = async () => {
     if (!patient) {
-      return alert(translate("patientFile.patientNotFound"))
+      return alert(translate("patientFile:patientNotFound"))
     }
     const visitEvents = await api.fetchPatientReportData(patientId, true)
     const latestSummaryEvent = await api.getLatestPatientEventByType(patientId, "Patient Summary")
     const latestVitalsEvent = await api.getLatestPatientEventByType(patientId, "Vitals")
 
-    var height = translate("noContent")
-    var weight = translate("noContent")
+    var height = translate("common:noContent")
+    var weight = translate("common:noContent")
 
     if (latestVitalsEvent && Object.keys(latestVitalsEvent).length > 0) {
       const vitalsTaken = Object.keys(latestVitalsEvent)
@@ -119,10 +116,10 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
 
     printHTML({
       patient,
-      summary: latestSummaryEvent ? latestSummaryEvent.summary : translate("noContent"),
+      summary: latestSummaryEvent ? latestSummaryEvent.summary : translate("common:noContent"),
       anthropometrics: { height, weight },
       history: visitEvents,
-      language: translate("languageCode"),
+      language: translate("common:languageCode"),
     })
   }
 
@@ -131,13 +128,8 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
   // }
 
   if (!patient) {
-    return <Text tx="patientFile.patientNotFound" />
+    return <Text tx="patientFile:patientNotFound" />
   }
-
-  // if interaction is not ready yet, show a loading indicator
-  // if (!interactionReady) {
-  //   return <ActivityIndicator />
-  // }
 
   const openAppointmentView = (appointment: AppointmentModel) => {
     navigation.navigate("AppointmentView", {
@@ -278,8 +270,8 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
                 patientId: patient.id,
               })
             }
-            label={translate("patientFile.visitHistory")}
-            description={translate("patientFile.visitHistoryDescription")}
+            label={translate("patientFile:visitHistory")}
+            description={translate("patientFile:visitHistoryDescription")}
           />
           {onlySnapshotForms(eventForms).map((form) => {
             return (
@@ -301,7 +293,7 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = observer(function P
 
       <Pressable onPress={createNewVisit} style={$newVisitFAB}>
         <PlusIcon color={"white"} size={20} style={{ marginRight: 10 }} />
-        <Text color="white" size="md" text="New Visit" />
+        <Text color="white" size="md" tx="patientView:newVisit" />
       </Pressable>
     </>
   )
@@ -367,9 +359,9 @@ async function printHTML(props: PDFReportProps) {
           return `
           <div class="mb-18">
             <p style="color: #1e3a8a; font-weight: bold;" class="m-0">Form: ${ev.eventType}</p>
-            <p class="m-0 mb-4">${translate("healthcareProvider")}: ${visit.providerName}</p>
+            <p class="m-0 mb-4">${translate("common:healthcareProvider")}: ${visit.providerName}</p>
 
-            <p class="m-0 mb-4">${translate("results")}:</p>
+            <p class="m-0 mb-4">${translate("common:results")}:</p>
             <div>
               ${evs}
             </div>
@@ -399,13 +391,13 @@ async function printHTML(props: PDFReportProps) {
   <body style="padding: 18px;">
     <div style="">
       <div class="flex justify-between wide">
-        <h1>${translate("patientReport.patientMedicalRecord")}</h1>
+        <h1>${translate("patientReport:patientMedicalRecord")}</h1>
         <img src=${logoStr} style="height: 40px; width: 40px;" />
       </div>
       <div class="patient-info-container" style="">
         <div class="flex">
           <div style="flex: 1">
-              <h3 class="mb-0">${translate("patientReport.PatientInformation")}</h3>
+              <h3 class="mb-0">${translate("patientReport:PatientInformation")}</h3>
               ${patientFullName}
 
               <br>
@@ -425,27 +417,27 @@ async function printHTML(props: PDFReportProps) {
           </div>
 
           <div style="flex: 1">
-              <h3 class="mb-0">${translate("dob")}</h3>
+              <h3 class="mb-0">${translate("common:dob")}</h3>
               ${localeDate(new Date(patient.dateOfBirth), "MMMM dd yyyy", {})}
 
-              <h3 class="mb-0">${translate("weight")}</h3>
+              <h3 class="mb-0">${translate("common:weight")}</h3>
               ${weight}
 
-              <h3 class="mb-0">${translate("height")}</h3>
+              <h3 class="mb-0">${translate("common:height")}</h3>
               ${height}
           </div>
         </div>
 
 
         <div>
-          <h3 class='mb-0'>${translate("patientSummary")}</h3>
+          <h3 class='mb-0'>${translate("common:patientSummary")}</h3>
           ${summary}
         </div>
       </div>
 
 
       <div>
-          <h3>${translate("visitHistory")}</h3>
+          <h3>${translate("common:visitHistory")}</h3>
           ${visitsList}
       </div>
 
@@ -556,12 +548,12 @@ const PatientProfileSummary: FC<PatientProfileSummaryProps> = function PatientPr
         <Text align="center" textDecorationLine="underline" size="xl">
           {displayName(patient)}
         </Text>
-        <Text align="center" testID="sex">{`${translate("sex")}:  ${upperFirst(
+        <Text align="center" testID="sex">{`${translate("common:sex")}:  ${upperFirst(
           translate(patient.sex as TxKeyPath, { defaultValue: patient.sex || "" }),
         )}`}</Text>
         <Text
           align="center"
-          text={`${translate("dob")}: ${
+          text={`${translate("common:dob")}: ${
             isValid(new Date(patient.dateOfBirth))
               ? format(new Date(patient.dateOfBirth), "dd MMM yyyy")
               : ""

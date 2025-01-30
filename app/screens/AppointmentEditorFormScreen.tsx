@@ -1,6 +1,6 @@
 import React, { FC, useState } from "react"
 import { observer } from "mobx-react-lite"
-import { Pressable, ViewStyle } from "react-native"
+import { Platform, Pressable, ViewStyle } from "react-native"
 import { AppStackScreenProps } from "../navigators"
 import { Button, Screen, Text, TextField, View } from "../components"
 import { Controller, useForm } from "react-hook-form"
@@ -18,6 +18,7 @@ import { format, set, setHours } from "date-fns"
 import Toast from "react-native-root-toast"
 import { useDBClinicsList } from "../hooks/useDBClinicsList"
 import { CommonActions } from "@react-navigation/native"
+import { PlatformPicker } from "app/components/PlatformPicker"
 
 interface AppointmentEditorFormScreenProps extends AppStackScreenProps<"AppointmentEditorForm"> {}
 
@@ -25,13 +26,13 @@ interface AppointmentEditorFormScreenProps extends AppStackScreenProps<"Appointm
 
 const durationOptions = [
   { label: "Unknown", value: 0 },
-  { label: translate("xMinutes", { count: 15 }), value: 15 },
-  { label: translate("xMinutes", { count: 30 }), value: 30 },
-  { label: translate("xMinutes", { count: 45 }), value: 45 },
-  { label: translate("xHours", { count: 1 }), value: 60 },
-  { label: translate("xHours", { count: 2 }), value: 60 * 2 },
-  { label: translate("xHours", { count: 3 }), value: 60 * 3 },
-  { label: translate("xHours", { count: 8 }), value: 60 * 8 },
+  { label: translate("common:xMinutes", { count: 15 }), value: 15 },
+  { label: translate("common:xMinutes", { count: 30 }), value: 30 },
+  { label: translate("common:xMinutes", { count: 45 }), value: 45 },
+  { label: translate("common:xHours", { count: 1 }), value: 60 },
+  { label: translate("common:xHours", { count: 2 }), value: 60 * 2 },
+  { label: translate("common:xHours", { count: 3 }), value: 60 * 3 },
+  { label: translate("common:xHours", { count: 8 }), value: 60 * 8 },
 ]
 
 const reasonOptions = [
@@ -60,6 +61,9 @@ export const AppointmentEditorFormScreen: FC<AppointmentEditorFormScreenProps> =
 
     const { visitId, patientId, visitDate } = route.params
     // console.log({ visitId, patientId, visitDate })
+
+    const [openPicker, setOpenPicker] = useState<"clinic" | "duration" | "reason" | null>(null)
+    const isIos = Platform.OS === "ios"
 
     const {
       control,
@@ -142,13 +146,26 @@ export const AppointmentEditorFormScreen: FC<AppointmentEditorFormScreenProps> =
             render={({ field }) => (
               <View>
                 <Text preset="formLabel" text="Clinic" />
-                <View style={$pickerContainer}>
+                {/* <View style={$pickerContainer}>
                   <Picker selectedValue={field.value} onValueChange={field.onChange}>
                     {sortBy(clinics, "name").map((clinic) => (
                       <Picker.Item key={clinic.id} label={clinic.name} value={clinic.id} />
                     ))}
                   </Picker>
-                </View>
+                </View> */}
+                <PlatformPicker
+                  isIos={isIos}
+                  options={sortBy(clinics, "name").map((clinic) => ({
+                    label: clinic.name,
+                    value: clinic.id,
+                  }))}
+                  fieldKey="clinicId"
+                  modalTitle="Clinic"
+                  setValue={() => (value: string) => field.onChange(value)}
+                  setOpen={(value: boolean) => setOpenPicker(value ? "clinic" : null)}
+                  isOpen={openPicker === "clinic"}
+                  value={field.value}
+                />
               </View>
             )}
           />
@@ -158,7 +175,7 @@ export const AppointmentEditorFormScreen: FC<AppointmentEditorFormScreenProps> =
             name="timestamp"
             render={({ field }) => (
               <View>
-                <Text preset="formLabel" tx="appointmentEditorForm.date" />
+                <Text preset="formLabel" tx="appointmentEditorForm:date" />
                 <DatePickerButton
                   date={field.value}
                   mode="date"
@@ -170,7 +187,7 @@ export const AppointmentEditorFormScreen: FC<AppointmentEditorFormScreenProps> =
           />
 
           <View>
-            <Text preset="formLabel" tx="appointmentEditorForm.time" />
+            <Text preset="formLabel" tx="appointmentEditorForm:time" />
             <Pressable
               style={[$pickerContainer, { justifyContent: "flex-start", padding: 10 }]}
               onPress={() => setIsTimePickerOpen(true)}
@@ -195,14 +212,27 @@ export const AppointmentEditorFormScreen: FC<AppointmentEditorFormScreenProps> =
             name="duration"
             render={({ field }) => (
               <View>
-                <Text preset="formLabel" tx="appointmentEditorForm.duration" />
-                <View style={$pickerContainer}>
-                  <Picker selectedValue={field.value} onValueChange={field.onChange}>
+                <Text preset="formLabel" tx="appointmentEditorForm:duration" />
+                {/* <View style={$pickerContainer}> */}
+                {/* <Picker selectedValue={field.value} onValueChange={field.onChange}>
                     {durationOptions.map((option) => (
                       <Picker.Item key={option.value} label={option.label} value={option.value} />
                     ))}
-                  </Picker>
-                </View>
+                  </Picker> */}
+
+                <PlatformPicker
+                  isIos={isIos}
+                  options={durationOptions}
+                  fieldKey="duration"
+                  setValue={() => (value: string) => {
+                    isNaN(Number(value)) ? field.onChange(0) : field.onChange(Number(value))
+                  }}
+                  setOpen={(value: boolean) => setOpenPicker(value ? "duration" : null)}
+                  isOpen={openPicker === "duration"}
+                  value={field.value}
+                  modalTitle="Duration"
+                />
+                {/* </View> */}
               </View>
             )}
           />
@@ -213,14 +243,26 @@ export const AppointmentEditorFormScreen: FC<AppointmentEditorFormScreenProps> =
             name="reason"
             render={({ field }) => (
               <View>
-                <Text preset="formLabel" tx="appointmentEditorForm.reason" />
-                <View style={$pickerContainer}>
+                <Text preset="formLabel" tx="appointmentEditorForm:reason" />
+                {/* <View style={$pickerContainer}>
                   <Picker selectedValue={field.value} onValueChange={field.onChange}>
                     {reasonOptions.map((option) => (
                       <Picker.Item key={option.value} label={option.label} value={option.value} />
                     ))}
                   </Picker>
-                </View>
+                </View> */}
+                <PlatformPicker
+                  isIos={isIos}
+                  options={reasonOptions}
+                  modalTitle="Reason"
+                  fieldKey="reason"
+                  setValue={() => (value: string) => {
+                    field.onChange(value)
+                  }}
+                  setOpen={(value: boolean) => setOpenPicker(value ? "reason" : null)}
+                  isOpen={openPicker === "reason"}
+                  value={field.value}
+                />
               </View>
             )}
           />
@@ -232,7 +274,7 @@ export const AppointmentEditorFormScreen: FC<AppointmentEditorFormScreenProps> =
             render={({ field: { onChange, onBlur, value } }) => (
               <TextField
                 multiline
-                labelTx="appointmentEditorForm.notes"
+                labelTx="appointmentEditorForm:notes"
                 onChangeText={onChange}
                 onBlur={onBlur}
                 value={value}
@@ -242,7 +284,7 @@ export const AppointmentEditorFormScreen: FC<AppointmentEditorFormScreenProps> =
           <Button
             onPress={handleSubmit(onSubmit)}
             disabled={isSubmitting}
-            tx={isSubmitting ? "loading" : "confirm"}
+            tx={isSubmitting ? "common:loading" : "common:confirm"}
           />
         </View>
       </Screen>

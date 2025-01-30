@@ -1,0 +1,6 @@
+appId: com.hikmahealth
+env:
+  FAVORITES_TEXT: "Switch on to only show favorites"
+
+---
+- runFlow: Login.yaml

@@ -144,16 +144,16 @@ const PatientVisitItem: FC<PatientVisitItemProps> = enhanceVisitItem(
           />
           <If condition={!!clinic}>
             <Text>
-              {translate("clinic")}: {clinic.name}
+              {translate("common:clinic")}: {clinic.name}
             </Text>
           </If>
           <If condition={visit.checkInTimestamp && isValid(visit.checkInTimestamp)}>
             <Text>
-              {translate("checkedIn")}: {format(visit.checkInTimestamp, "HH:mm a")}
+              {translate("common:checkedIn")}: {format(visit.checkInTimestamp, "HH:mm a")}
             </Text>
           </If>
           <Text>
-            {translate("provider")}: {visit.providerName}
+            {translate("common:provider")}: {visit.providerName}
           </Text>
         </View>
       </Pressable>

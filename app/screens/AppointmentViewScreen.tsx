@@ -67,8 +67,8 @@ export const AppointmentViewScreen: FC<AppointmentViewScreenProps> = observer(
         "Reschedule Appointment",
         "Are you sure you want to reschedule this appointment?",
         [
-          { text: translate("cancel"), style: "cancel" },
-          { text: translate("yes"), onPress: () => setIsDatePickerOpen(true) },
+          { text: translate("common:cancel"), style: "cancel" },
+          { text: translate("common:yes"), onPress: () => setIsDatePickerOpen(true) },
         ],
         {
           cancelable: true,
@@ -81,9 +81,9 @@ export const AppointmentViewScreen: FC<AppointmentViewScreenProps> = observer(
         "Mark Appointment Complete",
         "Do you want to mark this appointment as complete?",
         [
-          { text: translate("cancel"), style: "cancel" },
+          { text: translate("common:cancel"), style: "cancel" },
           {
-            text: translate("yes"),
+            text: translate("common:yes"),
             onPress: () => {
               api
                 .markAppointmentComplete(appointment.id)
@@ -178,9 +178,9 @@ export const AppointmentViewScreen: FC<AppointmentViewScreenProps> = observer(
           format(date, "MMM d, yyyy 'at' h:mm a") +
           "?",
         [
-          { text: translate("cancel"), style: "cancel" },
+          { text: translate("common:cancel"), style: "cancel" },
           {
-            text: translate("yes"),
+            text: translate("common:yes"),
             onPress: () => {
               api
                 .updateAppointment(appointment.id, { timestamp: date, status: "pending" })
@@ -318,8 +318,8 @@ export const AppointmentViewScreen: FC<AppointmentViewScreenProps> = observer(
 
         <View gap={spacing.md} pt={spacing.md}>
           <View>
-            <Text size="lg" tx={"appointmentView.colorTagLabel"} />
-            <Text tx={"appointmentView.colorTagDescription"} />
+            <Text size="lg" tx={"appointmentView:colorTagLabel"} />
+            <Text tx={"appointmentView:colorTagDescription"} />
           </View>
           <View>
             <View direction="row" gap={spacing.xs}>
@@ -360,14 +360,14 @@ export const AppointmentViewScreen: FC<AppointmentViewScreenProps> = observer(
           <If condition={appointment.status === "checked_in"}>
             <View py={spacing.sm}>
               <Button
-                tx="appointmentView.startNewVisit"
+                tx="appointmentView:startNewVisit"
                 onPress={startNewVisit}
                 preset="defaultPrimary"
               />
             </View>
 
             <View py={spacing.sm}>
-              <Button tx="appointmentView.markComplete" onPress={markAppointmentComplete} />
+              <Button tx="appointmentView:markComplete" onPress={markAppointmentComplete} />
             </View>
           </If>
 
@@ -376,7 +376,7 @@ export const AppointmentViewScreen: FC<AppointmentViewScreenProps> = observer(
               <Pressable style={{ alignSelf: "center" }} onPress={rescheduleAppointment}>
                 <View direction="row" gap={spacing.md} alignItems="center">
                   <LucideRefreshCw color={colors.palette.primary500} size={20} />
-                  <Text tx="reschedule" />
+                  <Text tx="common:reschedule" />
                 </View>
               </Pressable>
             </View>

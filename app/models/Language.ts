@@ -1,6 +1,7 @@
 import { Instance, SnapshotIn, SnapshotOut, types } from "mobx-state-tree"
-import { i18n } from "../i18n"
+import i18next from "i18next"
 import { withSetPropAction } from "./helpers/withSetPropAction"
+import { I18nManager } from "react-native"
 
 export type LanguageName =
   | "ar"
@@ -78,11 +79,18 @@ export const LanguageModel = types
     setLanguage(language: LanguageName) {
       self.current = language
       self.isRTL = RTL_LANGUAGES.includes(language)
+      i18next.changeLanguage(language)
+
+      if (RTL_LANGUAGES.includes(language)) {
+        I18nManager.forceRTL(true)
+      } else {
+        I18nManager.forceRTL(false)
+      }
 
       if (language === "ar") {
-        i18n.locale = "ar"
+        i18next.language = "ar"
       } else {
-        i18n.locale = language
+        i18next.language = language
       }
     },
 
@@ -90,6 +98,7 @@ export const LanguageModel = types
     resetLanguage() {
       self.current = "en-US"
       self.isRTL = false
+      i18next.language = "en-US"
     },
   }))
 

@@ -418,11 +418,11 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = observer(
 
     const openPatientEditOptions = (patientId: string) => {
       Alert.alert(
-        translate("patientList.managePatient"),
+        translate("patientList:managePatient"),
         "",
         [
           {
-            text: translate("delete"),
+            text: translate("common:delete"),
             onPress: () => {
               return Alert.alert(
                 "Delete not allowed",
@@ -493,7 +493,7 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = observer(
                 }
                 value={searchFilter.query}
                 onChangeText={(query) => setSearchField("query", query)}
-                placeholderTx="patientList.nameSearch"
+                placeholderTx="patientList:nameSearch"
               />
 
               <View gap={8}>
@@ -537,7 +537,7 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = observer(
                       <TextField
                         value={searchFilter.yearOfBirth}
                         onChangeText={(yob) => setSearchField("yearOfBirth", yob)}
-                        placeholderTx="yearOfBirth"
+                        placeholderTx="common:yearOfBirth"
                         keyboardType="number-pad"
                       />
                     </View>
@@ -547,9 +547,9 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = observer(
                         selectedValue={searchFilter.sex}
                         onValueChange={(sex) => setSearchField("sex", sex)}
                       >
-                        <Picker.Item label={translate("sex")} value="" />
-                        <Picker.Item label={translate("male")} value="male" />
-                        <Picker.Item label={translate("female")} value="female" />
+                        <Picker.Item label={translate("common:sex")} value="" />
+                        <Picker.Item label={translate("common:male")} value="male" />
+                        <Picker.Item label={translate("common:female")} value="female" />
                       </Picker>
                     </View>
                   </View>
@@ -558,7 +558,7 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = observer(
 
               <View direction="row" justifyContent="space-between" alignItems="flex-start">
                 <Text
-                  text={`${translate("showing")} ${
+                  text={`${translate("common:showing")} ${
                     patients.length
                   } / ${totalPatientsCount.toLocaleString()}`}
                 />
@@ -569,8 +569,8 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = observer(
                         size="xs"
                         tx={
                           isExpandedSearch
-                            ? "patientList.hideSearchOptions"
-                            : "patientList.showSearchOptions"
+                            ? "patientList:hideSearchOptions"
+                            : "patientList:showSearchOptions"
                         }
                       />
                       {!isExpandedSearch ? (
@@ -600,7 +600,7 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = observer(
 
         <Pressable onPress={openPatientRegisterForm} style={$newVisitFAB}>
           <PlusIcon color={"white"} size={20} style={{ marginRight: 10 }} />
-          <Text color="white" size="sm" text={translate("newPatient.newPatient")} />
+          <Text color="white" size="sm" text={translate("newPatient:newPatient")} />
         </Pressable>
       </>
     )
