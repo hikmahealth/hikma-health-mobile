@@ -74,7 +74,7 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = observer(function NewVisi
             <Text
               color={colors.palette.primary500}
               textDecorationLine="underline"
-              text={`${translate("newVisitScreen.setNewAppointment")} (${appointmentsCount})`}
+              text={`${translate("newVisitScreen:setNewAppointment")} (${appointmentsCount})`}
             ></Text>
           </View>
         </Pressable>
@@ -118,7 +118,7 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = observer(function NewVisi
         })}
       </View>
 
-      <Button tx="newVisit.completeVisit" onPress={() => navigation.goBack()} />
+      <Button tx="newVisit:completeVisit" onPress={() => navigation.goBack()} />
       <View style={{ height: 100 }} />
     </Screen>
   )

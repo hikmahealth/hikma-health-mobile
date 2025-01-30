@@ -1,7 +1,7 @@
 PODS:
   - Base64 (1.1.2)
   - boost (1.83.0)
-  - CodePush (9.0.0):
+  - CodePush (9.0.1):
     - Base64 (~> 1.1)
     - JWT (~> 3.0.0-beta.12)
     - React-Core
@@ -1203,7 +1203,7 @@ PODS:
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
-  - RNGestureHandler (2.14.1):
+  - RNGestureHandler (2.22.1):
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
@@ -1234,16 +1234,16 @@ PODS:
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
-  - RNSentry (5.33.1):
+  - RNSentry (5.36.0):
     - glog
     - hermes-engine
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
     - React-hermes
-    - Sentry/HybridSDK (= 8.36.0)
+    - Sentry/HybridSDK (= 8.41.0)
   - RNSVG (15.11.1):
     - React-Core
-  - Sentry/HybridSDK (8.36.0)
+  - Sentry/HybridSDK (8.41.0)
   - simdjson (3.1.0-wmelon1)
   - SocketRocket (0.6.1)
   - SSZipArchive (2.5.5)
@@ -1543,7 +1543,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Base64: cecfb41a004124895a7bcee567a89bae5a89d49b
   boost: d3f49c53809116a5d38da093a8aa78bf551aed09
-  CodePush: 8119f47df607085a6185bfc5ef5c4137709e1068
+  CodePush: 780b28488229317b89691bd88dfcdcfe81a94e63
   DoubleConversion: fea03f2699887d960129cc54bba7e52542b6f953
   EXApplication: d62cd534090692cbf538ea15f69f829b517a40b1
   EXBarCodeScanner: 83622fbebb5b6711a5a1ce4ccd3dfdbb5d6a0ab8
@@ -1625,12 +1625,12 @@ SPEC CHECKSUMS:
   RNCPicker: 43a6a73efbb33d71640146070cc1720f1f75f5d6
   RNDeviceInfo: 801c18d0525e86580900e7b5f562dca0c8c05021
   RNFlashList: acc8b5f413b16c09304d7bbd2fc9e51f6ee16f71
-  RNGestureHandler: dd5543af5c344cb2bdd8de81a8ec85adb5ec4b4b
+  RNGestureHandler: cfb03b481860d1b4b8f125434731b28b533d2e53
   RNReanimated: 88dfb3d4b761e093b5a794a893785e15f96db949
   RNScreens: 59f615aa0782077560c8eea46c2daec3a716dba9
-  RNSentry: 67fc95f0769ab6eaa510fb3d3eab09839c99f2bb
+  RNSentry: 026daca5e69d063126b8e904fb6773ad3c29ddeb
   RNSVG: f70944ff686a4fa2771cff9e81c9856a81738009
-  Sentry: f8374b5415bc38dfb5645941b3ae31230fbeae57
+  Sentry: 54d0fe6c0df448497c8ed4cce66ccf7027e1823e
   simdjson: e6bfae9ce4bcdc80452d388d593816f1ca2106f3
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   SSZipArchive: c69881e8ac5521f0e622291387add5f60f30f3c4

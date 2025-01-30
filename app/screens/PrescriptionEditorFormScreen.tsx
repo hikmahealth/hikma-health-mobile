@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { observer } from "mobx-react-lite"
-import { Pressable, ViewStyle } from "react-native"
+import { Platform, Pressable, ViewStyle } from "react-native"
 import { AppStackScreenProps } from "../navigators"
 import {
   Button,
@@ -41,6 +41,7 @@ import { $pickerContainer } from "./AppointmentEditorFormScreen"
 import { Picker } from "@react-native-picker/picker"
 import { addWeeks } from "date-fns"
 import medicationsList from "../data/medicationsList"
+import DropDownPicker from "react-native-dropdown-picker"
 
 // export type MedicationEntry = {
 //   id: string
@@ -160,6 +161,11 @@ export const PrescriptionEditorFormScreen: FC<PrescriptionEditorFormScreenProps>
     const handleSheetChanges = useCallback((index: number) => {
       console.log("handleSheetChanges", index)
     }, [])
+
+    // Manage the state of the ios specific drop down picker
+    const [open, setOpen] = useState(false)
+
+    const isIos = Platform.OS === "ios"
 
     const openMedicationEditor = (medication?: PrescriptionItem) => {
       setActiveMedicine(medication || null)
@@ -370,16 +376,44 @@ export const PrescriptionEditorFormScreen: FC<PrescriptionEditorFormScreenProps>
 
             <View gap={4}>
               <Text preset="formLabel">Pickup Clinic</Text>
-              <View style={$pickerContainer}>
-                <Picker
-                  selectedValue={pickupClinicId}
-                  onValueChange={(value) => setPickupClinicId(value)}
-                >
-                  {clinics.map((c) => (
-                    <Picker.Item key={c.id} label={c.name} value={c.id} />
-                  ))}
-                </Picker>
-              </View>
+              <If condition={!isIos}>
+                <View style={$pickerContainer}>
+                  <Picker
+                    selectedValue={pickupClinicId}
+                    onValueChange={(value) => setPickupClinicId(value)}
+                  >
+                    {clinics.map((c) => (
+                      <Picker.Item key={c.id} label={c.name} value={c.id} />
+                    ))}
+                  </Picker>
+                </View>
+              </If>
+
+              <If condition={isIos}>
+                <DropDownPicker
+                  open={open}
+                  setOpen={setOpen}
+                  modalTitle="Pickup Clinic"
+                  style={{
+                    marginTop: 4,
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    backgroundColor: colors.palette.neutral200,
+                    borderColor: colors.palette.neutral400,
+                    zIndex: 990000,
+                    flex: 1,
+                  }}
+                  zIndex={990000}
+                  zIndexInverse={990000}
+                  listMode="MODAL"
+                  items={clinics.map((c) => ({ label: c.name, value: c.id }))}
+                  value={pickupClinicId}
+                  setValue={(cb) => {
+                    const data = cb(pickupClinicId)
+                    setPickupClinicId(data)
+                  }}
+                />
+              </If>
             </View>
 
             <View gap={0}>

@@ -9,7 +9,7 @@ import { AppStackScreenProps } from "../navigators"
 import { Button, Screen, Text, View, TextField, Toggle, If } from "../components"
 import { useStores } from "../models"
 import { isValid } from "date-fns"
-import { TranslationObject, useRegistrationForm } from "../hooks/usePatientRegistrationForm"
+import { useRegistrationForm } from "../hooks/usePatientRegistrationForm"
 import PatientModel, { PatientModelData } from "../db/model/Patient"
 import { translate } from "../i18n"
 import { sortBy, upperFirst, omit } from "lodash"
@@ -244,7 +244,7 @@ export const PatientRegistrationFormScreen: FC<PatientRegistrationFormScreenProp
                 >
                   <View>
                     <Text text={`${patient.givenName} ${patient.surname}`} />
-                    <Text text={`${translate("dob")}: ${patient.dateOfBirth}`} />
+                    <Text text={`${translate("common:dob")}: ${patient.dateOfBirth}`} />
                   </View>
                   <LucideArrowRight color={colors.textDim} size={16} />
                 </Pressable>
@@ -253,7 +253,7 @@ export const PatientRegistrationFormScreen: FC<PatientRegistrationFormScreenProp
           </If>
 
           <Button preset="default" onPress={() => onSubmit(state)} testID="submit">
-            {translate("save")}
+            {translate("common:save")}
           </Button>
         </View>
       </Screen>

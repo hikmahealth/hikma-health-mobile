@@ -43,7 +43,7 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = obs
     useEffect(() => {
       if (editPatientId && typeof editPatientId === "string" && editPatientId.length > 3) {
         navigation.setOptions({
-          title: translate("newPatient.updatePatient"),
+          title: translate("newPatient:updatePatient"),
         })
       }
     }, [editPatientId])
@@ -105,13 +105,13 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = obs
             // if there is no patient Id, there is no need to navigate elsewhere.
             return navigation.goBack()
           }
-          Alert.alert(translate("success"), translate("newPatient.successfulSave"), [
+          Alert.alert(translate("common:success"), translate("newPatient:successfulSave"), [
             {
-              text: translate("newPatient.done"),
+              text: translate("newPatient:done"),
               onPress: () => navigation.goBack(),
             },
             {
-              text: translate("newPatient.continueToVisits"),
+              text: translate("newPatient:continueToVisits"),
               onPress: () => {
                 return navigation.replace("NewVisit", {
                   patientId: redirectPatientId,
@@ -124,7 +124,7 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = obs
         })
         .catch((error) => {
           console.error(error)
-          Alert.alert(translate("error"), translate("newPatient.errorSaving"))
+          Alert.alert(translate("common:error"), translate("newPatient:errorSaving"))
         })
     }
     const $rtl = language.isRTL ? $rtlStyle : {}
@@ -154,7 +154,7 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = obs
                     />
                   )}
                   <If condition={field.column === "government_id" && existingGovtId}>
-                    <Text tx={"newPatient.govtIdExists"} />
+                    <Text tx={"newPatient:govtIdExists"} />
                   </If>
 
                   {type === "date" && (
@@ -227,7 +227,7 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = obs
             >
               <Text
                 weight="semiBold"
-                tx="newPatient.similarFoundPatients"
+                tx="newPatient:similarFoundPatients"
                 style={{ marginBottom: 8 }}
               />
               {similarPatients.slice(0, 5).map((patient) => (
@@ -244,7 +244,7 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = obs
                 >
                   <View>
                     <Text text={`${patient.givenName} ${patient.surname}`} />
-                    <Text text={`${translate("dob")}: ${patient.dateOfBirth}`} />
+                    <Text text={`${translate("common:dob")}: ${patient.dateOfBirth}`} />
                   </View>
                   <LucideArrowRight color={colors.textDim} size={16} />
                 </Pressable>
@@ -258,7 +258,7 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = obs
             onPress={() => onSubmit()}
             testID="submit"
           >
-            {translate("save")}
+            {translate("common:save")}
           </Button>
         </View>
         <View style={{ height: 40 }} />

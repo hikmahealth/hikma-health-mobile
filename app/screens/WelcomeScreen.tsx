@@ -22,15 +22,15 @@ export const WelcomeScreen: FC<WelcomeScreenProps> = observer(function WelcomeSc
         <Text
           testID="welcome-heading"
           style={$welcomeHeading}
-          tx="welcomeScreen.readyForLaunch"
+          text="welcomeScreen:readyForLaunch"
           preset="heading"
         />
-        <Text tx="welcomeScreen.exciting" preset="subheading" />
+        <Text text="welcomeScreen:exciting" preset="subheading" />
         <Image style={$welcomeFace} source={welcomeFace} resizeMode="contain" />
       </View>
 
       <View style={[$bottomContainer, $bottomContainerInsets]}>
-        <Text tx="welcomeScreen.postscript" size="md" />
+        <Text text="welcomeScreen:postscript" size="md" />
       </View>
     </View>
   )

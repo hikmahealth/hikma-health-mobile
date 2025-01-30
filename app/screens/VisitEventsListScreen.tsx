@@ -116,11 +116,11 @@ export const VisitEventsListScreen: FC<VisitEventsListScreenProps> = observer(
 
     const openEventOptions = (event: EventModel) => {
       Alert.alert(
-        translate("eventList.eventOptions"),
-        translate("eventList.eventOptionsDescription"),
+        translate("eventList:eventOptions"),
+        translate("eventList:eventOptionsDescription"),
         [
           {
-            text: translate("eventList.edit"),
+            text: translate("eventList:edit"),
             onPress: () => {
               navigation.navigate("EventForm", {
                 patientId,
@@ -133,7 +133,7 @@ export const VisitEventsListScreen: FC<VisitEventsListScreenProps> = observer(
             },
           },
           {
-            text: translate("eventList.delete"),
+            text: translate("eventList:delete"),
             onPress: () => {
               return Toast.show("Delete is not supported.", {
                 position: Toast.positions.BOTTOM,

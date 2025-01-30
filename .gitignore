@@ -111,3 +111,4 @@ coverage
 
 
 notes.txt
+.env.local
