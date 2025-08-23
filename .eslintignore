@@ -6,3 +6,5 @@ android
 ignite/ignite.json
 package.json
 .eslintignore
+
+vendor

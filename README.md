@@ -1,4 +1,10 @@
-# Welcome to your new ignited app!
+# HIKMA HEALTH MOBILE!
+
+
+DO NOT run `npx expo prebuild` or similar directly from the command line, it edits the app.json file adding a new "expo" key which overrides the existing root config.
+If you get an error like: unable to resolve simdjson needed for watermelon, this is likely the issue. simply remove the additional "expo" key from the app.json file (if there is one). If there is anything in the expo object that is not in the root object, simply move it up.
+
+---
 
 > The latest and greatest boilerplate for Infinite Red opinions
 

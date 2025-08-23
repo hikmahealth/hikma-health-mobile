@@ -9,7 +9,7 @@ import { useAppTheme } from "@/theme/context"
 import type { ThemedStyle, ThemedStyleArray } from "@/theme/types"
 import { typography } from "@/theme/typography"
 
-type Sizes = keyof typeof $sizeStyles
+export type Sizes = keyof typeof $sizeStyles
 type Weights = keyof typeof typography.primary
 type Presets = "default" | "bold" | "heading" | "subheading" | "formLabel" | "formHelper"
 
@@ -36,6 +36,14 @@ export interface TextProps extends RNTextProps {
    */
   preset?: Presets
   /**
+   * Decoration Line of the text
+   */
+  textDecorationLine?: "none" | "underline" | "line-through" | "underline line-through"
+  /**
+   * Color of the text
+   */
+  color?: string
+  /**
    * Text weight modifier.
    */
   weight?: Weights
@@ -43,6 +51,10 @@ export interface TextProps extends RNTextProps {
    * Text size modifier.
    */
   size?: Sizes
+  /**
+   * Text aligh modifier
+   */
+  align?: "auto" | "left" | "right" | "center"
   /**
    * Children components.
    */
@@ -57,7 +69,19 @@ export interface TextProps extends RNTextProps {
  * @returns {JSX.Element} The rendered `Text` component.
  */
 export const Text = forwardRef(function Text(props: TextProps, ref: ForwardedRef<RNText>) {
-  const { weight, size, tx, txOptions, text, children, style: $styleOverride, ...rest } = props
+  const {
+    weight,
+    size,
+    tx,
+    txOptions,
+    text,
+    children,
+    textDecorationLine,
+    color,
+    align,
+    style: $styleOverride,
+    ...rest
+  } = props
   const { themed } = useAppTheme()
 
   const i18nText = tx && translate(tx, txOptions)
@@ -69,6 +93,9 @@ export const Text = forwardRef(function Text(props: TextProps, ref: ForwardedRef
     themed($presets[preset]),
     weight && $fontWeightStyles[weight],
     size && $sizeStyles[size],
+    color ? { color } : {},
+    textDecorationLine ? { textDecorationLine } : {},
+    align ? { textAlign: align } : {},
     $styleOverride,
   ]
 

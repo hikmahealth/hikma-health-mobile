@@ -34,6 +34,12 @@ module.exports = ({ config }: ConfigContext): Partial<ExpoConfig> => {
         ],
       },
     },
-    plugins: [...existingPlugins, require("./plugins/withSplashScreen").withSplashScreen],
+    plugins: [
+      ...existingPlugins,
+      // ["./lib/watermelon-expo"],
+
+      require("./plugins/withSplashScreen").withSplashScreen,
+      require("./plugins/withWatermelon").withWatermelon,
+    ],
   }
 }

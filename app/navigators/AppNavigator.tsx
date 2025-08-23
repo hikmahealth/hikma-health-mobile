@@ -4,16 +4,27 @@
  * Generally speaking, it will contain an auth flow (registration, login, forgot password)
  * and a "main" flow which the user will use once logged in.
  */
-import { ComponentProps } from "react"
+import { ComponentProps, useEffect } from "react"
+import { createDrawerNavigator } from "@react-navigation/drawer"
 import { NavigationContainer } from "@react-navigation/native"
 import { createNativeStackNavigator, NativeStackScreenProps } from "@react-navigation/native-stack"
+import { useSelector } from "@xstate/react"
 
+import { AppDrawer } from "@/components/AppDrawer"
 import Config from "@/config"
 import { ErrorBoundary } from "@/screens/ErrorScreen/ErrorBoundary"
-import { WelcomeScreen } from "@/screens/WelcomeScreen"
+import { LoginScreen } from "@/screens/LoginScreen"
+import { PrivacyPolicyScreen } from "@/screens/PrivacyPolicyScreen"
+import { SettingsScreen } from "@/screens/SettingsScreen"
+import { SyncSettingsScreen } from "@/screens/SyncSettingsScreen"
+import { startSync } from "@/services/syncService"
+import { languageStore } from "@/store/language"
+import { providerStore } from "@/store/provider"
 import { useAppTheme } from "@/theme/context"
 
+import { AppointmentNavigator } from "./AppointmentNavigator"
 import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
+import { PatientNavigator } from "./PatientNavigator"
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -26,7 +37,18 @@ import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
  */
 export type AppStackParamList = {
   Welcome: undefined
-  // 🔥 Your screens go here
+  Login: undefined
+  PrivacyPolicy: undefined
+  Settings: undefined
+  Patients: undefined
+  Appointment: undefined
+  NewVisit: undefined
+  EventForm: undefined
+  PatientVisitsList: undefined
+  FormEventsList: undefined
+  VisitEventsList: { patientId: string; visitId: string; visitTimestamp?: number }
+  PatientRegistrationForm: { editPatientId?: string }
+  SyncSettings: undefined
   // IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
 }
 
@@ -44,25 +66,72 @@ export type AppStackScreenProps<T extends keyof AppStackParamList> = NativeStack
 // Documentation: https://reactnavigation.org/docs/stack-navigator/
 const Stack = createNativeStackNavigator<AppStackParamList>()
 
+const Drawer = createDrawerNavigator()
+
 const AppStack = () => {
   const {
     theme: { colors },
   } = useAppTheme()
 
+  const provider = useSelector(providerStore, (state) => state.context)
+  const { isRTL } = useSelector(languageStore, (state) => state.context)
+
+  // Check if the provider is signed in
+  const isSignedIn = useSelector(providerStore, (state) => {
+    const { id, name, email } = state.context
+    return !!id && !!name && !!email
+  })
+
+  useEffect(() => {
+    if (isSignedIn) {
+      startSync(provider.email).catch((err) => {
+        console.log("Failed to start sync:", err)
+      })
+    }
+  }, [isSignedIn, provider.email])
+
+  // FIXME: perform better check
+  if (!isSignedIn) {
+    return (
+      <Stack.Navigator
+        initialRouteName="Login"
+        screenOptions={{
+          headerShown: false,
+          navigationBarColor: colors.background,
+          contentStyle: {
+            backgroundColor: colors.background,
+          },
+        }}
+      >
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+      </Stack.Navigator>
+    )
+  }
+
+  const drawerPosition = isRTL ? "right" : "left"
+
   return (
-    <Stack.Navigator
+    <Drawer.Navigator
+      drawerContent={(props) => <AppDrawer {...props} />}
       screenOptions={{
         headerShown: false,
-        navigationBarColor: colors.background,
-        contentStyle: {
+        drawerStyle: {
           backgroundColor: colors.background,
         },
+        drawerPosition,
       }}
     >
-      <Stack.Screen name="Welcome" component={WelcomeScreen} />
-      {/** 🔥 Your screens go here */}
-      {/* IGNITE_GENERATOR_ANCHOR_APP_STACK_SCREENS */}
-    </Stack.Navigator>
+      <Drawer.Screen name="Patients" component={PatientNavigator} />
+      <Drawer.Screen name="Settings" component={SettingsScreen} />
+      <Drawer.Screen
+        name="SyncSettings"
+        options={{ title: "Sync Settings", headerShown: true }}
+        component={SyncSettingsScreen}
+      />
+      <Drawer.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+      <Drawer.Screen name="Appointment" component={AppointmentNavigator} />
+    </Drawer.Navigator>
   )
 }
 

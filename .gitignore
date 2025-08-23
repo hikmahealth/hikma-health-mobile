@@ -31,6 +31,7 @@ local.properties
 *.iml
 *.hprof
 .cxx/
+*.aab
 
 # node.js
 #
@@ -95,3 +96,15 @@ web-build/
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+
+#envs
+.env.local
+.env.local.example
+.env
+
+.env.local
+
+
+# Hikma Health JSON files
+/hikma-health*.json

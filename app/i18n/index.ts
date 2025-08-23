@@ -12,6 +12,8 @@ import fr from "./fr"
 import hi from "./hi"
 import ja from "./ja"
 import ko from "./ko"
+import Language from "@/models/Language"
+import { Option } from "effect"
 
 const fallbackLocale = "en-US"
 
@@ -43,12 +45,17 @@ if (locale?.languageTag && locale?.textDirection === "rtl") {
   I18nManager.allowRTL(false)
 }
 
-export const initI18n = async () => {
+export const initI18n = async (language: Option.Option<Language.LanguageName>) => {
   i18n.use(initReactI18next)
+
+  const lng = Option.match(language, {
+    onNone: () => locale?.languageTag ?? fallbackLocale,
+    onSome: (value) => value,
+  })
 
   await i18n.init({
     resources,
-    lng: locale?.languageTag ?? fallbackLocale,
+    lng,
     fallbackLng: fallbackLocale,
     interpolation: {
       escapeValue: false,

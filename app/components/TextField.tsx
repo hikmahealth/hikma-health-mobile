@@ -49,6 +49,23 @@ export interface TextFieldProps extends Omit<TextInputProps, "ref"> {
    */
   LabelTextProps?: TextProps
   /**
+   * The description text to display if not using `descriptionTx`.
+   */
+  description?: TextProps["text"]
+  /**
+   * Description text which is looked up via i18n.
+   */
+  descriptionTx?: TextProps["tx"]
+  /**
+   * Optional description options to pass to i18n. Useful for interpolation
+   * as well as explicitly setting locale or translation fallbacks.
+   */
+  descriptionTxOptions?: TextProps["txOptions"]
+  /**
+   * Pass any additional props directly to the description Text component.
+   */
+  DescriptionTextProps?: TextProps
+  /**
    * The helper text to display if not using `helperTx`.
    */
   helper?: TextProps["text"]
@@ -115,6 +132,9 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
     labelTx,
     label,
     labelTxOptions,
+    description,
+    descriptionTx,
+    descriptionTxOptions,
     placeholderTx,
     placeholder,
     placeholderTxOptions,
@@ -126,6 +146,7 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
     LeftAccessory,
     HelperTextProps,
     LabelTextProps,
+    DescriptionTextProps,
     style: $inputStyleOverride,
     containerStyle: $containerStyleOverride,
     inputWrapperStyle: $inputWrapperStyleOverride,
@@ -147,6 +168,8 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
   const $containerStyles = [$containerStyleOverride]
 
   const $labelStyles = [$labelStyle, LabelTextProps?.style]
+
+  const $descriptionStyles = [$descriptionStyle, DescriptionTextProps?.style]
 
   const $inputWrapperStyles = [
     $styles.row,
@@ -201,6 +224,17 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
         />
       )}
 
+      {!!(description || descriptionTx) && (
+        <Text
+          preset="formLabel"
+          text={description}
+          tx={descriptionTx}
+          txOptions={descriptionTxOptions}
+          {...DescriptionTextProps}
+          style={themed($descriptionStyles)}
+        />
+      )}
+
       <View style={themed($inputWrapperStyles)}>
         {!!LeftAccessory && (
           <LeftAccessory
@@ -246,11 +280,16 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
   )
 })
 
-const $labelStyle: ThemedStyle<TextStyle> = ({ spacing }) => ({
+export const $labelStyle: ThemedStyle<TextStyle> = ({ spacing }) => ({
   marginBottom: spacing.xs,
 })
 
-const $inputWrapperStyle: ThemedStyle<ViewStyle> = ({ colors }) => ({
+export const $descriptionStyle: ThemedStyle<TextStyle> = ({ spacing, colors }) => ({
+  marginBottom: spacing.xs,
+  color: colors.textDim,
+})
+
+export const $inputWrapperStyle: ThemedStyle<ViewStyle> = ({ colors }) => ({
   alignItems: "flex-start",
   borderWidth: 1,
   borderRadius: 4,
@@ -259,7 +298,7 @@ const $inputWrapperStyle: ThemedStyle<ViewStyle> = ({ colors }) => ({
   overflow: "hidden",
 })
 
-const $inputStyle: ThemedStyle<TextStyle> = ({ colors, typography, spacing }) => ({
+export const $inputStyle: ThemedStyle<TextStyle> = ({ colors, typography, spacing }) => ({
   flex: 1,
   alignSelf: "stretch",
   fontFamily: typography.primary.normal,

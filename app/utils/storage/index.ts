@@ -1,3 +1,6 @@
+import * as SecureStore from "expo-secure-store"
+import { Option } from "effect"
+import Config from "react-native-config"
 import { MMKV } from "react-native-mmkv"
 
 export const storage = new MMKV()
@@ -79,4 +82,18 @@ export function clear(): void {
   try {
     storage.clearAll()
   } catch {}
+}
+
+/**
+ * Get the HH api URL stored in encrypted storage
+ * @returns {Promise<string | null>}
+ */
+export async function getHHApiUrl(): Promise<Option.Option<string>> {
+  // if in dev mode, use the HIKMA_API_TESTING from the .env file
+  const DEV_HIKMA_API = process.env.EXPO_PUBLIC_HIKMA_API_TESTING
+  const HIKMA_API = await SecureStore.getItemAsync("HIKMA_API")
+  if (__DEV__ && HIKMA_API === null) {
+    return Option.fromNullable(DEV_HIKMA_API)
+  }
+  return Option.fromNullable(await SecureStore.getItemAsync("HIKMA_API"))
 }
