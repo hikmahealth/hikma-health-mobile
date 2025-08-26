@@ -2,8 +2,10 @@ import { FC, useEffect, useMemo, useState } from "react"
 import { Alert, Pressable, ViewStyle } from "react-native"
 import { useSelector } from "@xstate/react"
 import { format } from "date-fns"
+import { Option } from "effect"
 import { upperFirst } from "es-toolkit/compat"
 import { LucideArrowRight } from "lucide-react-native"
+import DropDownPicker from "react-native-dropdown-picker"
 
 import { Button } from "@/components/Button"
 import { DateOfBirthInput } from "@/components/DateOfBirthInput"
@@ -14,6 +16,7 @@ import { Text } from "@/components/Text"
 import { TextField } from "@/components/TextField"
 import { Radio } from "@/components/Toggle/Radio"
 import { View } from "@/components/View"
+import { useClinics } from "@/hooks/useClinicsList"
 import { useDebounce } from "@/hooks/useDebounce"
 import { usePatientRecordEditor } from "@/hooks/usePatientRecordEditor"
 import { useSimilarPatientsSearch } from "@/hooks/useSimilarPatientsSearch"
@@ -21,6 +24,7 @@ import { translate } from "@/i18n/translate"
 import Patient from "@/models/Patient"
 import { PatientStackScreenProps } from "@/navigators/PatientNavigator"
 import { languageStore } from "@/store/language"
+import { providerStore } from "@/store/provider"
 import { colors } from "@/theme/colors"
 import { parseYYYYMMDD } from "@/utils/date"
 import { getTranslation } from "@/utils/parsers"
@@ -33,10 +37,22 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = ({
   route,
 }) => {
   const { language, isRTL } = useSelector(languageStore, (state) => state.context)
+  const {
+    id: providerId,
+    clinic_id: clinicId,
+    clinic_name: clinicName,
+    name: providerName,
+  } = useSelector(providerStore, (state) => state.context)
   const editPatientId = route?.params?.editPatientId
 
   const [existingGovtId, setExistingGovtId] = useState<boolean>(false)
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { clinics, isLoading: isLoadingClinics } = useClinics()
+  const clinicOptionsList = clinics.map((clinic) => ({
+    label: clinic.name,
+    value: clinic.id,
+  }))
   const { formFields, updateField, patientRecord } = usePatientRecordEditor(editPatientId, language)
 
   const { givenName, surname } = useMemo(() => {
@@ -47,6 +63,9 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = ({
 
   console.log(formFields)
   console.log(patientRecord.values)
+
+  // Manage the state of whihch dropdown is open
+  const [openDropdown, setOpenDropdown] = useState<"primary_clinic_id" | null>(null)
 
   /** Background patient search for similar existing patients */
   const similarPatients = useSimilarPatientsSearch(givenName, surname)
@@ -102,12 +121,20 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = ({
     if (existingGovtId) return
     // TODO: Confirm that all the required fields are filled in
 
+    const provider = {
+      id: providerId,
+      name: providerName,
+    }
+    const clinic = {
+      id: Option.getOrElse(clinicId, () => "Unknown"),
+      name: Option.getOrElse(clinicName, () => "Unknown"),
+    }
     let req
     if (editPatientId && editPatientId.length > 5) {
       // patient exists
-      req = Patient.DB.updateById(editPatientId, patientRecord)
+      req = Patient.DB.updateById(editPatientId, patientRecord, provider, clinic)
     } else {
-      req = Patient.DB.register(patientRecord)
+      req = Patient.DB.register(patientRecord, provider, clinic)
     }
     req
       .then((patientId) => {
@@ -150,7 +177,7 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = ({
             const { type, label, value } = field
             return (
               <View key={field.id}>
-                {(type === "text" || type === "number") && (
+                {(type === "text" || type === "number") && field.column !== "primary_clinic_id" && (
                   <TextField
                     keyboardType={type === "number" ? "number-pad" : "default"}
                     value={String(value)}
@@ -167,6 +194,28 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = ({
                 )}
                 <If condition={field.column === "government_id" && existingGovtId}>
                   <Text tx={"newPatient:govtIdExists"} />
+                </If>
+
+                <If condition={field.column === "primary_clinic_id"}>
+                  <Text preset="formLabel" text={label} />
+                  <DropDownPicker
+                    open={openDropdown === field.column}
+                    setOpen={(open) => {
+                      if (open as unknown as boolean) setOpenDropdown(field.column as any)
+                      else setOpenDropdown(null)
+                    }}
+                    modalTitle="Primary Clinic"
+                    style={$dropDownPickerStyle}
+                    zIndex={990000}
+                    zIndexInverse={990000}
+                    listMode="MODAL"
+                    items={clinicOptionsList}
+                    value={value}
+                    setValue={(cb) => {
+                      const data = cb(value)
+                      updateField(field.id, data)
+                    }}
+                  />
                 </If>
 
                 {type === "date" && field.column === "date_of_birth" && (
@@ -298,3 +347,13 @@ const $spacer: ViewStyle = {
 }
 
 const $rtlStyle: ViewStyle = { flexDirection: "row-reverse" }
+
+const $dropDownPickerStyle: ViewStyle = {
+  marginTop: 2,
+  borderWidth: 1,
+  borderRadius: 4,
+  backgroundColor: colors.palette.neutral200,
+  borderColor: colors.palette.neutral400,
+  zIndex: 990000,
+  flex: 1,
+}

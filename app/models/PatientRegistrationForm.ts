@@ -23,6 +23,7 @@ namespace PatientRegistrationForm {
     | "camp"
     | "government_id"
     | "external_patient_id"
+    | "primary_clinic_id"
   export const baseColumns: BaseColumn[] = [
     "given_name",
     "surname",
@@ -33,6 +34,7 @@ namespace PatientRegistrationForm {
     "camp",
     "government_id",
     "external_patient_id",
+    "primary_clinic_id",
   ]
 
   export const InputType = {

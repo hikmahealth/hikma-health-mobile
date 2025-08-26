@@ -1,7 +1,6 @@
 import { FC, useEffect, useState } from "react"
-import { ViewStyle, StatusBar, Pressable, Image, Alert } from "react-native"
-import { LegendList, LegendListRef, LegendListRenderItemProps } from "@legendapp/list"
-import { Q } from "@nozbe/watermelondb"
+import { ViewStyle, StatusBar, Pressable, Alert } from "react-native"
+import { LegendList } from "@legendapp/list"
 import { Picker } from "@react-native-picker/picker"
 import { useIsFocused } from "@react-navigation/native"
 import { NativeStackScreenProps } from "@react-navigation/native-stack"
@@ -10,25 +9,23 @@ import { ChevronDownIcon, ChevronUpIcon, PlusIcon, SearchIcon, XIcon } from "luc
 
 import { If } from "@/components/If"
 import { PatientListItem } from "@/components/PatientListItem"
-import { Screen } from "@/components/Screen"
 import { Text } from "@/components/Text"
 import { TextField } from "@/components/TextField"
 import { View } from "@/components/View"
-import database from "@/db"
-import PatientModel from "@/db/model/Patient"
 import { usePatientRecordEditor } from "@/hooks/usePatientRecordEditor"
 import { usePatientsList } from "@/hooks/usePatientsList"
 import { translate } from "@/i18n/translate"
-import Patient from "@/models/Patient"
 import { PatientNavigatorParamList } from "@/navigators/PatientNavigator"
 import { languageStore } from "@/store/language"
 import { colors } from "@/theme/colors"
+import { providerStore } from "@/store/provider"
 
 interface PatientsListScreenProps
   extends NativeStackScreenProps<PatientNavigatorParamList, "PatientsList"> {}
 
 export const PatientsListScreen: FC<PatientsListScreenProps> = ({ navigation }) => {
   const { language, isRTL } = useSelector(languageStore, (state) => state.context)
+  const { id: providerId } = useSelector(providerStore, (state) => state.context)
   const isFocused = useIsFocused()
 
   const { formFields, patientRecord } = usePatientRecordEditor(undefined, language)
@@ -43,7 +40,7 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = ({ navigation }) 
     onChangeSearchParam,
     resetSearchParams,
     isLoading: isPatientListLoading,
-  } = usePatientsList(30, patientRecord.fields)
+  } = usePatientsList(30, patientRecord.fields, providerId)
   const [isExpandedSearch, setIsExpandedSearch] = useState(false)
 
   // On colapse expanded search, set year of birth and sex to empty

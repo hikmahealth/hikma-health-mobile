@@ -17,6 +17,8 @@ export default class PatientAdditionalAttribute extends Model {
   @json("metadata", sanitizeMetadata) metadata!: object
   @field("is_deleted") isDeleted!: boolean
   @date("deleted_at") deletedAt!: Date
+
+  // --- Timestamps (Read-only) ---
   @readonly @date("created_at") createdAt!: Date
   @readonly @date("updated_at") updatedAt!: Date
 }
@@ -24,7 +26,7 @@ export default class PatientAdditionalAttribute extends Model {
 // The sanitizer might also receive null if the column is nullable, or undefined if
 // the field doesn't contain valid JSON.
 /**
-Sanitize the raw data returned by a `JSON.parse()` operation over the stored "string" 
+Sanitize the raw data returned by a `JSON.parse()` operation over the stored "string"
 type
 
 @param {null | undefined | object} data: null if the field is nullable, undefined if the JSON is invalid or the data object stored in its place

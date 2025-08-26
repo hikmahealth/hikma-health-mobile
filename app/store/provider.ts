@@ -3,6 +3,7 @@ import { createStore } from "@xstate/store"
 import { Option } from "effect"
 
 import User from "@/models/User"
+import UserClinicPermissions from "@/models/UserClinicPermissions"
 
 export const providerStore = createStore({
   context: {
@@ -13,6 +14,18 @@ export const providerStore = createStore({
     instance_url: Option.none<string>(),
     clinic_id: Option.none<string>(),
     clinic_name: Option.none<string>(),
+    // Permissions
+    permissions:
+      Option.none<
+        Pick<
+          UserClinicPermissions.T,
+          | "canRegisterPatients"
+          | "canViewHistory"
+          | "canEditRecords"
+          | "canDeleteRecords"
+          | "isClinicAdmin"
+        >
+      >(),
   },
   emits: {
     provider_changed: (payload: User.Provider) => {
@@ -22,6 +35,8 @@ export const providerStore = createStore({
         instance_url: Option.getOrNull(payload.instance_url),
         clinic_id: Option.getOrNull(payload.clinic_id),
         clinic_name: Option.getOrNull(payload.clinic_name),
+        // TODO: get the permissions
+        permissions: Option.getOrNull(payload.permissions),
       }
       return SecureStorage.setItemAsync("providerStore", JSON.stringify(toStore))
     },
@@ -36,6 +51,7 @@ export const providerStore = createStore({
         instance_url: Option.none<string>(),
         clinic_id: Option.none<string>(),
         clinic_name: Option.none<string>(),
+        permissions: Option.none<UserClinicPermissions.T>(),
       }
       enque.emit.provider_changed(payload)
       return {
@@ -54,6 +70,7 @@ export const providerStore = createStore({
         instance_url: event.instance_url,
         clinic_id: event.clinic_id,
         clinic_name: event.clinic_name,
+        permissions: Option.none<UserClinicPermissions.T>(),
       }
     },
   },

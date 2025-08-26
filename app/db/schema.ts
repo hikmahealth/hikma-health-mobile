@@ -22,6 +22,10 @@ const patientSchema = tableSchema({
     // V2
     { name: "government_id", type: "string" }, // government issued id
     { name: "external_patient_id", type: "string" }, // paitent id for the patient from external sources
+
+    // V5
+    { name: "primary_clinic_id", type: "string", isOptional: true, isIndexed: true }, // indexed column, we often query by this!
+    { name: "last_modified_by", type: "string", isOptional: true },
   ],
 })
 // NOTE: Addresses will be stored in a separate table
@@ -203,8 +207,95 @@ const prescriptionSchema = tableSchema({
   ],
 })
 
+// V5
+const patientVitalsSchema = tableSchema({
+  name: "patient_vitals",
+  columns: [
+    { name: "patient_id", type: "string", isIndexed: true },
+    { name: "visit_id", type: "string", isOptional: true },
+    { name: "timestamp", type: "number" },
+    { name: "systolic_bp", type: "number", isOptional: true },
+    { name: "diastolic_bp", type: "number", isOptional: true },
+    { name: "bp_position", type: "string", isOptional: true }, // sitting | standing | ...
+    { name: "height_cm", type: "number", isOptional: true },
+    { name: "weight_kg", type: "number", isOptional: true },
+    { name: "bmi", type: "number", isOptional: true },
+    { name: "waist_circumference_cm", type: "number", isOptional: true },
+    { name: "heart_rate", type: "number", isOptional: true },
+    { name: "pulse_rate", type: "number", isOptional: true },
+    { name: "oxygen_saturation", type: "number", isOptional: true },
+    { name: "respiratory_rate", type: "number", isOptional: true },
+    { name: "temperature_celsius", type: "number", isOptional: true },
+    { name: "pain_level", type: "number", isOptional: true },
+    { name: "recorded_by_user_id", type: "string", isOptional: true },
+    { name: "metadata", type: "string" }, // JSON field
+    { name: "is_deleted", type: "boolean" },
+    { name: "created_at", type: "number" },
+    { name: "updated_at", type: "number" },
+    { name: "last_modified", type: "number" },
+    { name: "server_created_at", type: "number" },
+    { name: "deleted_at", type: "number", isOptional: true },
+  ],
+})
+
+const userClinicPermissionsSchema = tableSchema({
+  name: "user_clinic_permissions",
+  columns: [
+    { name: "user_id", type: "string", isIndexed: true },
+    { name: "clinic_id", type: "string", isIndexed: true },
+    { name: "can_register_patients", type: "boolean" },
+    { name: "can_view_history", type: "boolean" },
+    { name: "can_edit_records", type: "boolean" },
+    { name: "can_delete_records", type: "boolean" },
+    { name: "is_clinic_admin", type: "boolean" },
+    { name: "created_by", type: "string", isOptional: true },
+    { name: "last_modified_by", type: "string", isOptional: true },
+    { name: "created_at", type: "number" },
+    { name: "updated_at", type: "number" },
+  ],
+})
+
+const appConfigSchema = tableSchema({
+  name: "app_config",
+  columns: [
+    { name: "namespace", type: "string" },
+    { name: "key", type: "string" },
+    { name: "value", type: "string" },
+    { name: "data_type", type: "string" }, // default would be 'string'
+    { name: "created_at", type: "number" },
+    { name: "updated_at", type: "number" },
+    { name: "last_modified", type: "number" },
+    { name: "last_modified_by", type: "string", isOptional: true },
+    { name: "display_name", type: "string", isOptional: true },
+  ],
+})
+
+const patientProblemsSchema = tableSchema({
+  name: "patient_problems",
+  columns: [
+    { name: "patient_id", type: "string", isIndexed: true },
+    { name: "visit_id", type: "string", isOptional: true },
+    { name: "problem_code_system", type: "string" }, // icd10cm, snomed, icd11, icd10
+    { name: "problem_code", type: "string" }, // E11.9 for diabetes or I10 for hypertension in icd10
+    { name: "problem_label", type: "string" }, // 'Type 2 diabetes mellitus without complications', 'Essential (primary) hypertension'
+    { name: "clinical_status", type: "string" }, // 'active', 'remission', 'resolved'
+    { name: "verification_status", type: "string" }, // 'provisional', 'confirmed', 'refuted', 'unconfirmed'
+    { name: "severity_score", type: "number", isOptional: true },
+    { name: "onset_date", type: "number", isOptional: true }, // date as timestamp
+    { name: "end_date", type: "number", isOptional: true }, // date as timestamp
+    { name: "recorded_by_user_id", type: "string", isOptional: true },
+    { name: "metadata", type: "string" }, // JSON field
+    { name: "is_deleted", type: "boolean" },
+    { name: "created_at", type: "number" },
+    { name: "updated_at", type: "number" },
+    { name: "last_modified", type: "number" },
+    { name: "server_created_at", type: "number" },
+    { name: "deleted_at", type: "number", isOptional: true },
+  ],
+})
+
 export default appSchema({
-  version: 4, // 🔥 IMPORTANT!! 🔥 when migrating dont forget to change this number
+  version: 5, // 🔥 IMPORTANT!! 🔥 when migrating dont forget to change this number
   tables: [
     patientSchema,
     clinicSchema,
@@ -222,5 +313,11 @@ export default appSchema({
 
     // New tables in v4
     prescriptionSchema,
+
+    // New tables in v5
+    patientVitalsSchema,
+    userClinicPermissionsSchema,
+    appConfigSchema,
+    patientProblemsSchema,
   ],
 })

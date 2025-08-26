@@ -3,6 +3,10 @@ import { Option } from "effect"
 
 import { providerStore } from "@/store/provider"
 import { getHHApiUrl } from "@/utils/storage"
+import UserClinicPermissions from "./UserClinicPermissions"
+import database from "@/db"
+import UserModel from "@/db/model/User"
+import { Q } from "@nozbe/watermelondb"
 
 namespace User {
   export const Roles = {
@@ -29,6 +33,16 @@ namespace User {
     instance_url: Option.Option<string>
     clinic_id: Option.Option<string>
     clinic_name: Option.Option<string>
+    permissions: Option.Option<
+      Pick<
+        UserClinicPermissions.T,
+        | "canRegisterPatients"
+        | "canViewHistory"
+        | "canEditRecords"
+        | "canDeleteRecords"
+        | "isClinicAdmin"
+      >
+    >
   }
 
   /** Default empty User Item */
@@ -104,6 +118,19 @@ namespace User {
     } catch (e) {
       console.error(e)
       throw e
+    }
+  }
+
+  export namespace DB {
+    /**
+     * Given a user id, return the user data
+     * @param {string} id
+     * @returns {Promise<UserModel>}
+     */
+    export async function getById(id: string): Promise<UserModel> {
+      const user = await database.get<UserModel>("users").find(id)
+      if (!user) throw new Error("User not found")
+      return user
     }
   }
 }

@@ -175,6 +175,23 @@ const initialFormFields: PatientRegistrationForm.RegistrationFormField[] = [
     isSearchField: false,
     deleted: false,
   },
+  {
+    baseField: true,
+    id: "fe4d179e-8153-11f0-8de9-0242ac120002",
+    column: "primary_clinic_id",
+    position: 12,
+    label: {
+      en: "Primary Clinic",
+      ar: "العيادة الأساسية",
+      es: "Clínica Primaria",
+    },
+    fieldType: "text",
+    options: [],
+    visible: true,
+    required: true,
+    isSearchField: false,
+    deleted: false,
+  },
 ]
 
 export const initialFormState: PatientRegistrationForm.RegistrationForm = {

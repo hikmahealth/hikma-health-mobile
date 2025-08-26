@@ -41,6 +41,7 @@ import { ThemeProvider } from "./theme/context"
 import { customFontsToLoad } from "./theme/typography"
 import { loadDateFnsLocale } from "./utils/formatDate"
 import * as storage from "./utils/storage"
+import UserClinicPermissions from "./models/UserClinicPermissions"
 
 export const NAVIGATION_PERSISTENCE_KEY = "NAVIGATION_STATE"
 
@@ -133,6 +134,8 @@ export function App() {
               instance_url: Option.fromNullable(payload.instance_url),
               clinic_id: Option.fromNullable(payload.clinic_id),
               clinic_name: Option.fromNullable(payload.clinic_name),
+              // TODO: Implement permissions retrieval logic
+              permissions: Option.none<UserClinicPermissions.T>(),
             })
           }
         } else {

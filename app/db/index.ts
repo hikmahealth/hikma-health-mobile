@@ -2,20 +2,25 @@ import { Database } from "@nozbe/watermelondb"
 import LokiJSAdapter from "@nozbe/watermelondb/adapters/lokijs"
 import SQLiteAdapter from "@nozbe/watermelondb/adapters/sqlite"
 import { setGenerator } from "@nozbe/watermelondb/utils/common/randomId"
+import * as Sentry from "@sentry/react-native"
 import { v1 as uuidv1 } from "uuid"
 
 import migrations from "./migrations"
 
 // Import all models here
+import AppConfig from "./model/AppConfig"
 import Appointment from "./model/Appointment"
 import Clinic from "./model/Clinic"
 import Event from "./model/Event"
 import EventForm from "./model/EventForm"
 import Patient from "./model/Patient"
 import PatientAdditionalAttribute from "./model/PatientAdditionalAttribute"
+import PatientProblems from "./model/PatientProblems"
 import PatientRegistrationForm from "./model/PatientRegistrationForm"
+import PatientVitals from "./model/PatientVitals"
 import Prescription from "./model/Prescription"
 import User from "./model/User"
+import UserClinicPermissions from "./model/UserClinicPermissions"
 import Visit from "./model/Visit"
 import schema from "./schema"
 
@@ -54,9 +59,13 @@ function createAdapter() {
 
       onQuotaExceededError: (error) => {
         // Browser ran out of disk space -- offer the user to reload the app or log out
+        Sentry.captureException(error)
+        // FIXME: Must inform the user on quota exceeded error
       },
       onSetUpError: (error) => {
         // Database failed to load -- offer the user to reload the app or log out
+        Sentry.captureException(error)
+        // FIXME: Must inform the user on database setup error
       },
       extraIncrementalIDBOptions: {
         onDidOverwrite: () => {
@@ -96,6 +105,12 @@ export const database = new Database({
 
     // v4
     Prescription,
+
+    // v5
+    AppConfig,
+    PatientVitals,
+    PatientProblems,
+    UserClinicPermissions,
   ],
 })
 

@@ -1,6 +1,7 @@
 import { Q } from "@nozbe/watermelondb"
+import * as Sentry from "@sentry/react-native"
 import { format, isValid } from "date-fns"
-import { Option } from "effect"
+import { Either, Option } from "effect"
 import { camelCase } from "es-toolkit/compat"
 
 import database from "@/db"
@@ -10,9 +11,11 @@ import PatientModel from "@/db/model/Patient"
 import PatientAdditionalAttribute from "@/db/model/PatientAdditionalAttribute"
 import { RegistrationFormField } from "@/db/model/PatientRegistrationForm"
 import VisitModel from "@/db/model/Visit"
+import { providerStore } from "@/store/provider"
 
 import Event from "./Event"
 import PatientRegistrationForm from "./PatientRegistrationForm"
+import UserClinicPermissions from "./UserClinicPermissions"
 import Visit from "./Visit"
 
 namespace Patient {
@@ -35,6 +38,11 @@ namespace Patient {
     deletedAt: Option.Option<Date>
     createdAt: Date
     updatedAt: Date
+
+    // V5
+    primaryClinicId?: string
+    lastModifiedBy?: string
+    // !v5
   }
 
   export type PatientValueColumn = "date_value" | "string_value" | "boolean_value" | "number_value"
@@ -170,7 +178,7 @@ namespace Patient {
   @returns {PatientRecord}
   */
   export function getDefaultPatientRecord(
-    registrationForm: PatientRegistrationForm.T,
+    registrationForm: PatientRegistrationForm.PatientRecord,
   ): PatientRegistrationForm.PatientRecord {
     const values = registrationForm["fields"].reduce(
       (prev, field) => {
@@ -186,7 +194,7 @@ namespace Patient {
         }
         return prev
       },
-      {} as PatientRegistrationForm.T["values"],
+      {} as PatientRegistrationForm.PatientRecord["values"],
     )
     return {
       fields: registrationForm["fields"],
@@ -203,10 +211,25 @@ namespace Patient {
      * @param {(patient: Option.Option<DB.T>, isLoading: boolean) => void} callback Function called when patient data updates
      * @returns {{unsubscribe: () => void}} Object containing unsubscribe function
      */
-    export function subscribe(
+    export async function subscribe(
       patientId: string,
+      provider: {
+        userId: string
+        clinicId: string
+      },
       callback: (patient: Option.Option<DB.T>, isLoading: boolean) => void,
-    ): { unsubscribe: () => void } {
+    ): Promise<{ unsubscribe: () => void }> {
+      const { userId, clinicId } = provider
+
+      if (!clinicId) {
+        throw new Error("Provider does not belong to any clinic")
+      }
+      console.log({ userId, clinicId })
+
+      const viewHistoryClinicIds = await UserClinicPermissions.DB.getClinicIdsWithPermission(
+        userId,
+        "canViewHistory",
+      )
       let isLoading = true
 
       const subscription = database.collections
@@ -214,7 +237,12 @@ namespace Patient {
         .findAndObserve(patientId)
         .subscribe((dbPatient) => {
           const patient = dbPatient
-          callback(Option.fromNullable(patient), isLoading)
+          // If the patient has no primary clinic, then just return the patient.
+          if (!patient.primaryClinicId || viewHistoryClinicIds.includes(patient.primaryClinicId)) {
+            callback(Option.fromNullable(patient), isLoading)
+          } else {
+            callback(Option.none(), isLoading)
+          }
           isLoading = false
         })
 
@@ -279,6 +307,8 @@ namespace Patient {
       deletedAt: Option.fromNullable(dbPatient.deletedAt),
       createdAt: dbPatient.createdAt,
       updatedAt: dbPatient.updatedAt,
+      primaryClinicId: dbPatient.primaryClinicId,
+      lastModifiedBy: dbPatient.lastModifiedBy,
     })
 
     /** Default empty Patient Item */
@@ -301,17 +331,35 @@ namespace Patient {
       deletedAt: Option.none(),
       createdAt: new Date(),
       updatedAt: new Date(),
+      primaryClinicId: "",
+      lastModifiedBy: "",
     }
 
     /**
     Register a new patient
     @param {PatientRegistrationForm.PatientRecord} patientRecord
+    @param {{ id: string; name: string }} provider - The provider information
+    @param {{ id: string; name: string }} clinic - The clinic information
     @returns {Promise<PatientModel["id"]>}
     */
     export const register = async (
       patientRecord: PatientRegistrationForm.PatientRecord,
+      provider: { id: string; name: string },
+      clinic: { id: string; name: string },
     ): Promise<PatientModel["id"]> => {
-      //
+      // Check permission before registering
+      const primaryClinicId =
+        getPatientFieldByName(patientRecord, "primary_clinic_id", "") || clinic.id
+      const permission = "canRegisterPatients"
+      const hasPermission = await UserClinicPermissions.DB.userHasPermission(
+        provider.id,
+        primaryClinicId,
+        permission,
+      )
+      if (Either.isLeft(hasPermission)) {
+        throw new Error("Permission denied")
+      }
+
       const { fields, values } = patientRecord
 
       // prepare the patient record
@@ -336,6 +384,8 @@ namespace Patient {
         newPatient.governmentId = getPatientFieldByName(patientRecord, "government_id", "") || ""
         newPatient.externalPatientId =
           getPatientFieldByName(patientRecord, "external_patient_id", "") || ""
+        newPatient.primaryClinicId = primaryClinicId || ""
+        newPatient.lastModifiedBy = provider.id
       })
 
       const patientAttributesRef = database.get<PatientAdditionalAttribute>(
@@ -554,8 +604,20 @@ namespace Patient {
     export const updateById = async (
       patientId: string,
       patientRecord: PatientRegistrationForm.PatientRecord,
+      provider: { id: string; name: string },
+      clinic: { id: string; name: string },
     ) => {
       const { fields, values } = patientRecord
+      const primaryClinicId =
+        getPatientFieldByName(patientRecord, "primary_clinic_id", "") || clinic.id
+      const viewHistoryClinicIds = await UserClinicPermissions.DB.getClinicIdsWithPermission(
+        provider.id,
+        "canEditRecords",
+      )
+
+      if (!viewHistoryClinicIds.includes(primaryClinicId)) {
+        throw new Error("Unauthorized")
+      }
 
       // prepare the patient record
 
@@ -579,13 +641,16 @@ namespace Patient {
         updPatient.governmentId = getPatientFieldByName(patientRecord, "government_id", "") || ""
         updPatient.externalPatientId =
           getPatientFieldByName(patientRecord, "external_patient_id", "") || ""
+
+        updPatient.primaryClinicId = primaryClinicId || ""
+        updPatient.lastModifiedBy = provider.id || ""
       })
 
       const patientAttributesRef = database.get<PatientAdditionalAttribute>(
         "patient_additional_attributes",
       )
 
-      console.log("Update: ", patientId, values)
+      // console.log("Update: ", patientId, values)
 
       const attrQueries = fields
         // filter out base columns
@@ -635,6 +700,8 @@ namespace Patient {
               })
             })
           } catch (error) {
+            Sentry.captureException(error)
+            console.error(error)
             return []
           }
         })
@@ -650,6 +717,7 @@ namespace Patient {
 
     /**
     Delete a patient by id
+    FIXME: Do all mark as deleted methods first set the "isDeleted" flag to true and set a deletedAt? or is that done at the server level?
     */
     export const deleteById = async (id: string) => {
       const patientRef = (

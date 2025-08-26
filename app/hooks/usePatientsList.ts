@@ -8,6 +8,7 @@ import PatientModel from "@/db/model/Patient"
 import PatientAdditionalAttribute from "@/db/model/PatientAdditionalAttribute"
 import { RegistrationFormField } from "@/db/model/PatientRegistrationForm"
 import Patient from "@/models/Patient"
+import UserClinicPermissions from "@/models/UserClinicPermissions"
 import { extendedSanitizeLikeString } from "@/utils/parsers"
 
 import { useDebounce } from "./useDebounce"
@@ -38,14 +39,18 @@ type PatientsList = {
  * Search and filtering is supported by updating a search string inside SearchFilter object
  *
  * @param {number} pageSize - The number of patients to fetch per page
+ * @param {RegistrationFormField[]} formFields - The form fields to filter by
+ * @param {string} userId - The current logged in provider
  * @returns {PatientsList} - The patients list
  */
 export function usePatientsList(
   pageSize: number,
   formFields: RegistrationFormField[],
+  userId: string,
 ): PatientsList {
   /** Whether we are listing the patients or searching the patients */
   // const [mode, setMode] = useState<"list" | "search">("list")
+  const [canViewHistoryClinicIds, setCanViewHistoryClinicIds] = useState<string[]>([])
   const [page, setPage] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [patients, setPatients] = useState<PatientModel[]>([])
@@ -176,10 +181,6 @@ export function usePatientsList(
 
   ////////
 
-  // const language = "en"
-  // const {
-  // patientRecord: { fields: formFields },
-  // } = usePatientRecordEditor(undefined, language)
   const [searchParams, setSearchParams] = useState<Record<string, string>>({})
   const onChangeParam = (id: string, value: string) => {
     setIsLoading(true)
@@ -190,6 +191,18 @@ export function usePatientsList(
       return { ...prev, [id]: value }
     })
   }
+
+  useEffect(() => {
+    // Only the clinic patients that the user has access to
+    UserClinicPermissions.DB.getClinicIdsWithPermission(userId, "canViewHistory")
+      .then((res) => {
+        setCanViewHistoryClinicIds(res)
+      })
+      .catch((err) => {
+        console.error(err)
+        setCanViewHistoryClinicIds([])
+      })
+  }, [userId])
 
   /** Debounced search filters improves performance by reducing the number of queries */
   const debouncedSearchParams = useDebounce(searchParams, 750)
@@ -319,7 +332,16 @@ export function usePatientsList(
     }
 
     const sub = patientsRef
-      .query(...ptQueryConditionsWithStr, ...ptQueryConditions, Q.take(totalShowingResults))
+      .query(
+        ...ptQueryConditionsWithStr,
+        ...ptQueryConditions,
+        // PERMISSIONS CHECK FOR VIEWING PATIENT HISTORY
+        Q.or(
+          Q.where("primary_clinic_id", Q.oneOf(canViewHistoryClinicIds)),
+          Q.where("primary_clinic_id", null),
+        ),
+        Q.take(totalShowingResults),
+      )
       .observe()
       .subscribe(async (patientRes) => {
         const patientIds = patientRes.map((p) => p.id)
@@ -365,7 +387,7 @@ export function usePatientsList(
       sub.unsubscribe()
       setIsLoading(false)
     }
-  }, [debouncedSearchParams, searchFilter.query, totalShowingResults])
+  }, [debouncedSearchParams, searchFilter.query, totalShowingResults, canViewHistoryClinicIds])
 
   ////
 

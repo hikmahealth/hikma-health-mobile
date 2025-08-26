@@ -132,6 +132,7 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = ({ route, navigatio
       </Screen>
     )
   }
+  console.log({ patient: Option.getOrNull(patient) })
   return (
     <Screen style={$root} contentContainerStyle={$contentContainer} preset="scroll">
       <View pt={40} pb={40} style={{ backgroundColor: colors.palette.primary50 }}>

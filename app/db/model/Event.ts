@@ -10,6 +10,7 @@ import {
 import { Associations } from "@nozbe/watermelondb/Model"
 
 import Event from "@/models/Event"
+import { sanitizeMetadata } from "@/utils/db"
 
 import VisitModel from "./Visit"
 
@@ -31,6 +32,8 @@ export default class EventModel extends Model {
   @json("metadata", sanitizeMetadata) metadata!: Record<string, any>
   @field("is_deleted") isDeleted!: boolean
   @date("deleted_at") deletedAt!: Date
+
+  // --- Timestamps (Read-only) ---
   @readonly @date("created_at") createdAt!: Date
   @readonly @date("updated_at") updatedAt!: Date
 
@@ -52,18 +55,4 @@ export const defaultEvent = {
 
 function sanitizeFormData(data: any) {
   return Array.isArray(data) ? data : []
-}
-
-// The sanitizer might also receive null if the column is nullable, or undefined if the field doesn't contain valid JSON.
-/**
-Sanitize the raw data returned by a `JSON.parse()` operation over the stored "string" type
-
-@param {null | undefined | object} data: null if the field is nullable, undefined if the JSON is invalid or the data object stored in its place
-*/
-function sanitizeMetadata(data: any) {
-  if (data) {
-    return data
-  } else {
-    return {}
-  }
 }

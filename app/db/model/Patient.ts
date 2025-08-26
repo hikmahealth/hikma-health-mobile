@@ -9,6 +9,7 @@ export default class PatientModel extends Model {
 
   static associations: Associations = {
     visits: { type: "has_many", foreignKey: "patient_id" },
+    // TODO: add associations for vitals, events, and problems
   }
 
   // @text('id') id;
@@ -27,12 +28,19 @@ export default class PatientModel extends Model {
   @text("external_patient_id") externalPatientId!: string
   // !V2 Added
 
+  // V5 Added
+  @text("primary_clinic_id") primaryClinicId!: string // optional and indexed
+  @text("last_modified_by") lastModifiedBy!: string // optional <but make sure to set this whenever a record is updated>
+  // !V5 Added
+
   /** Additional data stores all the extra dynamic fields that are stored on the database */
   @json("additional_data", sanitizeAdditionalData) additionalData!: Record<string, any>
   @json("metadata", sanitizeMetadata) metadata!: Record<string, any>
 
   @field("is_deleted") isDeleted!: boolean
   @date("deleted_at") deletedAt!: Date
+
+  // --- Timestamps (Read-only) ---
   @readonly @date("created_at") createdAt!: Date
   @readonly @date("updated_at") updatedAt!: Date
 
