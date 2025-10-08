@@ -1,4 +1,4 @@
-import { Model } from "@nozbe/watermelondb"
+import { Model, Q } from "@nozbe/watermelondb"
 import {
   field,
   text,
@@ -6,6 +6,8 @@ import {
   readonly,
   json,
   immutableRelation,
+  children,
+  lazy,
 } from "@nozbe/watermelondb/decorators"
 import { Associations } from "@nozbe/watermelondb/Model"
 
@@ -39,6 +41,20 @@ export default class AppointmentModel extends Model {
   @text("status") status!: Appointment.Status
   @json("metadata", sanitizeMetadata) metadata!: Record<string, any> & { colorTag?: string }
   @field("is_deleted") isDeleted!: boolean
+  @field("is_walk_in") isWalkIn!: boolean
+
+  /**
+   * departments data looks like this:
+   * {
+     id: string (department ID),
+     name: string (department name),
+     seen_at: string | null (ISO timestamp) defaults to null,
+     seen_by: string | null (user ID) defaults to null,
+     status: 'pending' | 'in_progress' | 'completed' default to 'pending'
+   }
+   */
+  @json("departments", sanitizeDepartments) departments!: Appointment.EncodedDepartmentT[]
+
   @date("deleted_at") deletedAt!: Date
   @readonly @date("created_at") createdAt!: Date
   @readonly @date("updated_at") updatedAt!: Date
@@ -48,6 +64,20 @@ export default class AppointmentModel extends Model {
   @immutableRelation("providers", "provider_id") provider!: UserModel
   @immutableRelation("visits", "current_visit_id") currentVisit!: VisitModel
   @immutableRelation("visits", "fulfilled_visit_id") fulfilledVisit!: VisitModel
+
+  @lazy
+  getPatient = this.collections
+    .get<PatientModel>("patients")
+    .query(Q.where("id", this.patientId), Q.take(1))
+    .fetch()
+
+  @lazy
+  getClinic = this.collections
+    .get<ClinicModel>("clinics")
+    .query(Q.where("id", this.clinicId), Q.take(1))
+    .fetch()
+
+  // ("patients") patients!: PatientModel[]
 }
 
 // The sanitizer might also receive null if the column is nullable, or undefined if the field doesn't contain valid JSON.
@@ -61,5 +91,18 @@ function sanitizeMetadata(data: any) {
     return data
   } else {
     return {}
+  }
+}
+
+/**
+ * Sanitize the raw data returned by a `JSON.parse()` operation over the stored "string" type
+
+@param {null | undefined | object} data: null if the field is nullable, undefined if the JSON is invalid or the data object stored in its place
+*/
+function sanitizeDepartments(data: any) {
+  if (data) {
+    return data
+  } else {
+    return []
   }
 }

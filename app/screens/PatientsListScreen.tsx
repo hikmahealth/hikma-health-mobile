@@ -120,6 +120,7 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = ({ navigation }) 
         contentContainerStyle={$patientList}
         onRefresh={getNextPagePatients}
         refreshing={false}
+        testID="patientList"
         ListHeaderComponent={
           <View pb={10} pt={6} gap={4}>
             <TextField
@@ -238,7 +239,6 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = ({ navigation }) 
         ItemSeparatorComponent={() => <View style={$separator} />}
         ListFooterComponent={() => <View style={{ height: 40 }} />}
         data={patients}
-        recycleItems
         extraData={isFocused}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (

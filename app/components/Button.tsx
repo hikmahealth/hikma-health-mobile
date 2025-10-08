@@ -14,7 +14,7 @@ import type { ThemedStyle, ThemedStyleArray } from "@/theme/types"
 
 import { Text, TextProps } from "./Text"
 
-type Presets = "default" | "filled" | "reversed"
+type Presets = "default" | "filled" | "reversed" | "defaultPrimary"
 
 export interface ButtonAccessoryProps {
   style: StyleProp<any>
@@ -220,8 +220,18 @@ const $viewPresets: Record<Presets, ThemedStyleArray<ViewStyle>> = {
   filled: [
     $styles.row,
     $baseViewStyle,
-    ({ colors }) => ({ backgroundColor: colors.palette.neutral300 }),
+    ({ colors }) => ({ backgroundColor: colors.palette.primary500 }),
   ],
+  defaultPrimary: [
+    $styles.row,
+    $baseViewStyle,
+    ({ colors }) => ({
+      borderWidth: 1,
+      borderColor: colors.palette.primary500,
+      backgroundColor: colors.palette.primary500,
+    }),
+  ] as StyleProp<ViewStyle>,
+
   reversed: [
     $styles.row,
     $baseViewStyle,
@@ -231,18 +241,21 @@ const $viewPresets: Record<Presets, ThemedStyleArray<ViewStyle>> = {
 
 const $textPresets: Record<Presets, ThemedStyleArray<TextStyle>> = {
   default: [$baseTextStyle],
-  filled: [$baseTextStyle],
+  filled: [$baseTextStyle, ({ colors }) => ({ color: colors.palette.neutral100 })],
+  defaultPrimary: [$baseTextStyle, ({ colors }) => ({ color: colors.palette.neutral100 })],
   reversed: [$baseTextStyle, ({ colors }) => ({ color: colors.palette.neutral100 })],
 }
 
 const $pressedViewPresets: Record<Presets, ThemedStyle<ViewStyle>> = {
   default: ({ colors }) => ({ backgroundColor: colors.palette.neutral200 }),
-  filled: ({ colors }) => ({ backgroundColor: colors.palette.neutral400 }),
+  filled: ({ colors }) => ({ backgroundColor: colors.palette.primary600 }),
+  defaultPrimary: ({ colors }) => ({ backgroundColor: colors.palette.primary200 }),
   reversed: ({ colors }) => ({ backgroundColor: colors.palette.neutral700 }),
 }
 
 const $pressedTextPresets: Record<Presets, ThemedStyle<TextStyle>> = {
   default: () => ({ opacity: 0.9 }),
   filled: () => ({ opacity: 0.9 }),
+  defaultPrimary: () => ({ opacity: 0.9 }),
   reversed: () => ({ opacity: 0.9 }),
 }

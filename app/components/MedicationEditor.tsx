@@ -16,6 +16,7 @@ import { colors } from "@/theme/colors"
 import { If } from "./If"
 import { TextField } from "./TextField"
 import { Text } from "../components/Text"
+import { stringsListToOptions } from "@/utils/misc"
 // import {
 //   MedicationEntry,
 //   doseUnitOptions,
@@ -335,15 +336,6 @@ export function MedicationsFormItem({
       </View>
     </View>
   )
-}
-
-function stringsListToOptions(strings: string[], format = true) {
-  return strings.map((string) => {
-    return {
-      label: format ? upperFirst(string) : string,
-      value: string,
-    }
-  })
 }
 
 const $medicineInputRow: ViewStyle = {

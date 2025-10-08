@@ -36,7 +36,10 @@ export const providerStore = createStore({
         clinic_id: Option.getOrNull(payload.clinic_id),
         clinic_name: Option.getOrNull(payload.clinic_name),
         // TODO: get the permissions
-        permissions: Option.getOrNull(payload.permissions),
+        permissions:
+          payload.permissions &&
+          Option.isOption(payload.permissions) &&
+          Option.getOrNull(payload.permissions),
       }
       return SecureStorage.setItemAsync("providerStore", JSON.stringify(toStore))
     },

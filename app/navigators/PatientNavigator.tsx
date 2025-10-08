@@ -7,43 +7,59 @@ import { LucideArrowLeft, LucideEdit2, LucideMenu } from "lucide-react-native"
 import { If } from "@/components/If"
 import { SyncButtonIndicator } from "@/components/SyncButtonIndicator"
 import { Text } from "@/components/Text"
+import { UpdateAvailableIndicator } from "@/components/UpdateAvailableIndicator"
 import { View } from "@/components/View"
 import { translate } from "@/i18n/translate"
+import { AppointmentEditorFormScreen } from "@/screens/AppointmentEditorFormScreen"
+import { AppointmentViewScreen } from "@/screens/AppointmentViewScreen"
 import { EventFormScreen } from "@/screens/EventFormScreen"
 import { FormEventsListScreen } from "@/screens/FormEventsListScreen"
 import { NewVisitScreen } from "@/screens/NewVisitScreen"
 import { PatientRecordEditorScreen } from "@/screens/PatientRecordEditorScreen"
 import { PatientsListScreen } from "@/screens/PatientsListScreen"
 import { PatientViewScreen } from "@/screens/PatientViewScreen"
-// import { AppointmentEditorFormScreen } from "@/screens/AppointmentEditorFormScreen"
-// import { AppointmentViewScreen } from "@/screens/AppointmentViewScreen"
 import { PatientVisitsListScreen } from "@/screens/PatientVisitsListScreen"
 import { VisitEventsListScreen } from "@/screens/VisitEventsListScreen"
+import { VitalFormScreen } from "@/screens/VitalFormScreen"
+import { VitalHistoryScreen } from "@/screens/VitalHistoryScreen"
 import { languageStore } from "@/store/language"
 import { colors } from "@/theme/colors"
-import { UpdateAvailableIndicator } from "@/components/UpdateAvailableIndicator"
 // import { useSafeAreaInsetsStyle } from "@/utils/useSafeAreaInsetsStyle"
 
 export type PatientNavigatorParamList = {
   PatientsList: undefined
   PatientView: { patientId: string }
-  NewVisit: { patientId: string; visitId: string | null; visitDate: number }
+  NewVisit: {
+    patientId: string
+    visitId: string | null
+    visitDate: number
+    appointmentId?: string | null
+    departmentId?: string | null
+  }
   EventForm: {
     patientId: string
     visitId: string | null
     formId: string
     eventId: string | null
+
+    visitDate?: number
+
+    // Only present if coming from an appointment
+    appointmentId?: string | null
+    departmentId?: string | null
   }
   AppointmentEditorForm: {
     patientId: string
     visitId: string | null
     appointmentId: string
   }
-  AppointmentView: { patientId: string; appointmentId: string }
+  AppointmentView: { patientId: string; appointmentId: string; departmentId?: string }
   PatientVisitsList: { patientId: string }
   FormEventsList: { patientId: string; formId: string }
   VisitEventsList: { patientId: string; visitId: string | null; visitTimestamp?: number }
   PatientRecordEditor: { editPatientId?: string }
+  VitalHistory: { patientId: string }
+  VitalForm: { patientId: string }
 }
 
 const Stack = createNativeStackNavigator<PatientNavigatorParamList>()
@@ -97,8 +113,14 @@ export const PatientNavigator = () => {
         }}
         component={EventFormScreen}
       />
-      {/* <Stack.Screen name="AppointmentEditorForm" component={AppointmentEditorFormScreen} /> */}
-      {/* <Stack.Screen name="AppointmentView" component={AppointmentViewScreen} /> */}
+      <Stack.Screen
+        name="AppointmentEditorForm"
+        options={{
+          title: translate("appointmentEditorForm:title"),
+        }}
+        component={AppointmentEditorFormScreen}
+      />
+      <Stack.Screen name="AppointmentView" component={AppointmentViewScreen} />
       <Stack.Screen
         name="PatientVisitsList"
         options={{ title: "Visits" }}
@@ -121,6 +143,16 @@ export const PatientNavigator = () => {
         }}
         component={PatientRecordEditorScreen}
       />
+      <Stack.Screen
+        name="VitalHistory"
+        options={{ title: translate("vitalHistory:title") }}
+        component={VitalHistoryScreen}
+      />
+      <Stack.Screen
+        name="VitalForm"
+        options={{ title: translate("vitalForm:title") }}
+        component={VitalFormScreen}
+      />
     </Stack.Navigator>
   )
 }
@@ -133,7 +165,7 @@ interface StackHeaderProps {
   back?: any
 }
 
-const StackHeader = ({ navigation, options, route, isRTL, back }: StackHeaderProps) => {
+export const StackHeader = ({ navigation, options, route, isRTL, back }: StackHeaderProps) => {
   const { title } = options
   const { params } = route
   const routeName = route.name
@@ -160,7 +192,7 @@ const StackHeader = ({ navigation, options, route, isRTL, back }: StackHeaderPro
   }
 
   const leftContent = () => {
-    let res = (
+    const res = (
       <>
         <If condition={!isRTL}>
           <If condition={back}>
@@ -170,7 +202,7 @@ const StackHeader = ({ navigation, options, route, isRTL, back }: StackHeaderPro
           </If>
           <If condition={!back}>
             <TouchableOpacity onPress={handleDrawer} style={$backButton}>
-              <LucideMenu size={24} color={colors.palette.primary700} />
+              <LucideMenu testID="drawerButton" size={24} color={colors.palette.primary700} />
             </TouchableOpacity>
           </If>
 
@@ -190,7 +222,7 @@ const StackHeader = ({ navigation, options, route, isRTL, back }: StackHeaderPro
     if (showDrawerButton && !isRTL) {
       return (
         <TouchableOpacity onPress={handleDrawer} style={$backButton}>
-          <LucideMenu size={24} color={colors.palette.primary700} />
+          <LucideMenu testID="drawerButton" size={24} color={colors.palette.primary700} />
         </TouchableOpacity>
       )
     } else if (back) {
@@ -213,7 +245,7 @@ const StackHeader = ({ navigation, options, route, isRTL, back }: StackHeaderPro
         <If condition={isRTL}>
           <If condition={showDrawerButton}>
             <TouchableOpacity onPress={handleDrawer} style={$editButton}>
-              <LucideMenu size={24} color={colors.palette.primary700} />
+              <LucideMenu testID="drawerButton" size={24} color={colors.palette.primary700} />
             </TouchableOpacity>
           </If>
         </If>

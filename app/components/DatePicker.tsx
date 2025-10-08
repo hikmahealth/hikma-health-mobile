@@ -7,7 +7,9 @@ import { colors } from "@/theme/colors"
 
 import { Text } from "./Text"
 
-type CustomDatePickerProps = DatePickerProps
+type CustomDatePickerProps = DatePickerProps & {
+  disabled?: boolean
+}
 
 export const DatePickerButton = ({ date, onDateChange, ...rest }: CustomDatePickerProps) => {
   const [open, setOpen] = useState(false)
@@ -17,6 +19,7 @@ export const DatePickerButton = ({ date, onDateChange, ...rest }: CustomDatePick
       <Pressable
         style={$datePicker}
         testID="DatePickerButton"
+        disabled={rest.disabled}
         onPress={() => setOpen((open) => !open)}
       >
         <Text>{format(date, "do MMMM yyyy")}</Text>

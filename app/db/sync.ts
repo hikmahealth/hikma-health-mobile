@@ -94,6 +94,8 @@ export async function syncDB(
         // In place update and set dates
         updateDates(changes)
 
+        // console.log(changes)
+
         const newRecordsToChange = countRecordsInChanges(changes)
 
         // trigger callback to update the number of records to change
@@ -158,6 +160,7 @@ export async function syncDB(
 }
 
 // FIXME: Needs documentation & tests
+// TODO: need to notify users that any new json fields should be added here
 export function updateDates(changes: SyncDatabaseChangeSet) {
   const defaultDate = new Date()
   const changeType = ["created", "updated", "deleted"] as unknown as (keyof SyncTableChangeSet)[]
@@ -170,6 +173,8 @@ export function updateDates(changes: SyncDatabaseChangeSet) {
           if (record.deleted_at) {
             record.deleted_at = new Date(record.deleted_at || defaultDate).getTime()
           }
+
+          // Make sure all "timestamps" are number times
           if (record.timestamp) {
             record.timestamp = new Date(record.timestamp || defaultDate).getTime()
           }
@@ -183,6 +188,11 @@ export function updateDates(changes: SyncDatabaseChangeSet) {
 
           if (record.expiration_date) {
             record.expiration_date = new Date(record.expiration_date || defaultDate).getTime()
+          }
+
+          // cast all jsonb "departments" into strings for local
+          if (record.departments && typeof record.departments !== "string") {
+            record.departments = JSON.stringify(record.departments)
           }
 
           // set up metadata

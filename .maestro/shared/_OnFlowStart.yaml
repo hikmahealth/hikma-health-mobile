@@ -24,6 +24,8 @@ appId: ${MAESTRO_APP_ID}
     clearState: true
     clearKeychain: true
     stopApp: true
+    arguments:
+      isE2E: "true"
 
 - waitForAnimationToEnd
 
@@ -31,10 +33,10 @@ appId: ${MAESTRO_APP_ID}
 # this uses the default maestro timeout and moves on if it doesn't see the text.
 - runFlow:
     when:
-      visible: 'Development servers'
+      visible: "Development servers"
     commands:
       # this regex allows for different hosts and ports
-      - tapOn: "http://.*:.*" 
+      - tapOn: "http://.*:.*"
       - waitForAnimationToEnd
 
 - runFlow:
@@ -49,7 +51,7 @@ appId: ${MAESTRO_APP_ID}
 - runFlow:
     when:
       platform: iOS
-      visible: 
+      visible:
         id: "SBSwitcherWindow:Main" # id of the iOS bottom sheet we want to dismiss
     commands:
       - swipe:

@@ -16,9 +16,9 @@ export default class PatientVitals extends Model {
   }
 
   // --- Vital Sign Fields ---
-  @date("patient_id") patientId!: string
-  @date("visit_id") visitId?: string
-  @date("recorded_by_user_id") recordedByUserId!: string
+  @text("patient_id") patientId!: string
+  @text("visit_id") visitId?: string
+  @text("recorded_by_user_id") recordedByUserId!: string
   @date("timestamp") timestamp!: Date
   @field("systolic_bp") systolicBp?: number
   @field("diastolic_bp") diastolicBp?: number

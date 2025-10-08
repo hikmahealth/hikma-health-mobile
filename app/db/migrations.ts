@@ -2,6 +2,52 @@ import { addColumns, createTable, schemaMigrations } from "@nozbe/watermelondb/S
 
 export default schemaMigrations({
   migrations: [
+    // V6
+    // Clinics Table:
+    //  - Adds an is_archived column to the clinics table
+    // Creates a new clinic_departments table
+    {
+      toVersion: 6,
+      steps: [
+        addColumns({
+          table: "appointments",
+          columns: [{ name: "is_walk_in", type: "boolean" }],
+        }),
+        addColumns({
+          table: "clinics",
+          columns: [{ name: "is_archived", type: "boolean" }],
+        }),
+        createTable({
+          name: "clinic_departments",
+          columns: [
+            { name: "clinic_id", type: "string", isIndexed: true },
+            { name: "name", type: "string" },
+            { name: "code", type: "string", isOptional: true }, // Short code like "CARDIO", "PEDS", "ER", "ICU", "OPD", "LAB"
+            { name: "description", type: "string", isOptional: true },
+            { name: "status", type: "string" }, // active, inactive, maintenance
+
+            // Core capabilities as booleans
+            { name: "can_dispense_medications", type: "boolean" },
+            { name: "can_perform_labs", type: "boolean" },
+            { name: "can_perform_imaging", type: "boolean" },
+
+            // Future flexibility - JSON string on mobile (jsonb on server)
+            { name: "additional_capabilities", type: "string" }, // JSON array as string
+
+            // Metadata for flexible department-specific data
+            { name: "metadata", type: "string" }, // JSON object as string
+
+            // Audit and soft-delete columns
+            { name: "is_deleted", type: "boolean" },
+            { name: "created_at", type: "number" },
+            { name: "updated_at", type: "number" },
+            { name: "last_modified", type: "number" },
+            { name: "server_created_at", type: "number" },
+            { name: "deleted_at", type: "number", isOptional: true },
+          ],
+        }),
+      ],
+    },
     // V5
     // Patients Table:
     //  - Adds a primary_clinic_id column to the patients id

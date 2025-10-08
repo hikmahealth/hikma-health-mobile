@@ -14,9 +14,7 @@ import { Text } from "@/components/Text"
 
 interface <%= props.pascalCaseName %>ScreenProps extends AppStackScreenProps<"<%= props.pascalCaseName %>"> {}
 
-export const <%= props.pascalCaseName %>Screen: FC<<%= props.pascalCaseName %>ScreenProps> = () => {
-  // Pull in navigation via hook
-  // const navigation = useNavigation()
+export const <%= props.pascalCaseName %>Screen: FC<<%= props.pascalCaseName %>ScreenProps> = ({ route, navigation}) => {
   return (
     <Screen style={$root} preset="scroll">
       <Text text="<%= props.camelCaseName %>" />
@@ -26,4 +24,5 @@ export const <%= props.pascalCaseName %>Screen: FC<<%= props.pascalCaseName %>Sc
 
 const $root: ViewStyle = {
   flex: 1,
+  paddingHorizontal: 14,
 }

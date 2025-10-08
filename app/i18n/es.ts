@@ -25,6 +25,8 @@ const es: ENTranslations = {
     medicine: "Medicinas",
     medicineDescription: "Medicina prescrita al paciente",
     patientNotFound: "Registro no encontrado",
+    vitalHistory: "Historia vital",
+    vitalHistoryDescription: "Historia vital del paciente",
   },
   newVisitScreen: {
     medicalHistory: "Historia médica",
@@ -152,7 +154,28 @@ const es: ENTranslations = {
       "¿Está seguro de que desea establecer este servidor como predeterminado?",
     syncError: "Error de Sincronización",
   },
+  vitalHistory: {
+    title: "Historial de Signos Vitales",
+    description: "Ver y gestionar tu historial de signos vitales",
+    newEntry: "Nueva Entrada",
+  },
+  vitalForm: {
+    title: "Formulario de Signos Vitales",
+    description: "Completa tu información de signos vitales",
+  },
+  appointmentsList: {
+    title: "Lista de Citas",
+  },
+  component: {
+    dateOfBirthInput: {
+      unknown: "Desconocido",
+      ageInput: "Edad",
+      datePicker: "Fecha",
+    },
+  },
   common: {
+    today: "Hoy",
+    departments: "Departamentos",
     chooseLanguage: "Elige un idioma",
     checkedIn: "Marcado como presente",
     xMinutes: "{{count}} Minutos",
@@ -164,6 +187,7 @@ const es: ENTranslations = {
     male: "Masculino",
     female: "Femenino",
     signOut: "Desconectar",
+    confirmSignOut: "Confirmar Desconexión",
     patients: "Pacientes",
     PATIENTS: "PACIENTES",
     welcome: "Bienvenido de nuevo",
@@ -186,6 +210,7 @@ const es: ENTranslations = {
     cancelAppointment: "Cancelar",
     editAppointment: "Editar",
     appointments: "Citas",
+    syncStarted: "Sincronización iniciada",
     yes: "Sí",
     no: "No",
     firstName: "Nombre",
@@ -306,6 +331,18 @@ const es: ENTranslations = {
     providerNotFound: "Proveedor de atención médica no encontrado",
     downloadPatientHistory: "Descarga historial del paciente",
     syncingStarted: "Sincronizando datos con el servidor",
+
+    or: "o",
+
+    // vitals
+    bloodPressure: "Presión Arterial",
+    temperature: "Temperatura",
+    pulseRate: "Frecuencia del Pulso",
+    respiratoryRate: "Frecuencia Respiratoria",
+    oxygenSaturation: "Saturación de Oxígeno",
+    painLevel: "Nivel de Dolor",
+    waistCircumference: "Circunferencia de Cintura",
+    bmi: "IMC",
   },
 }
 export default es

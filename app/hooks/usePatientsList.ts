@@ -309,11 +309,19 @@ export function usePatientsList(
     let ptQueryConditionsWithStr = []
     if (searchFilter.query.length > 1) {
       const query = searchFilter.query
+      const terms = query.split(" ")
       ptQueryConditionsWithStr = [
         Q.and(
+          // Q.or(
+          //   Q.where("given_name", Q.like(`%${extendedSanitizeLikeString(query)}%`)),
+          //   Q.where("surname", Q.like(`%${extendedSanitizeLikeString(query)}%`)),
+          // ),
+
           Q.or(
-            Q.where("given_name", Q.like(`%${extendedSanitizeLikeString(query)}%`)),
-            Q.where("surname", Q.like(`%${extendedSanitizeLikeString(query)}%`)),
+            ...terms.flatMap((t) => [
+              Q.where("given_name", Q.like(`%${extendedSanitizeLikeString(t)}%`)),
+              Q.where("surname", Q.like(`%${extendedSanitizeLikeString(t)}%`)),
+            ]),
           ),
         ),
         ...patientQueryConditions,

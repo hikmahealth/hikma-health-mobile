@@ -24,7 +24,7 @@ interface NewVisitScreenProps
   extends NativeStackScreenProps<PatientNavigatorParamList, "NewVisit"> {}
 
 export const NewVisitScreen: FC<NewVisitScreenProps> = ({ route, navigation }) => {
-  const { patientId, visitDate } = route.params
+  const { patientId, visitDate, appointmentId, departmentId } = route.params
   const visitId = Option.fromNullable(route.params.visitId)
   const language = useSelector(languageStore, (store) => store.context.language)
   const _provider = useSelector(providerStore, (state) => state.context)
@@ -34,7 +34,6 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = ({ route, navigation }) =
 
   /** If we are updating an existing visit, then we are just adding an event. update the title to reflect this */
   useEffect(() => {
-    console.log({ patientId, visitDate, visitId })
     if (Option.isSome(visitId) && (visitId.value as string).length > 3) {
       navigation.setOptions({
         // TODO: Localize
@@ -44,7 +43,7 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = ({ route, navigation }) =
   }, [visitId, navigation])
 
   // TODO: Add provider check, make sure a provider is signed in and exists
-  console.log({ isLoadingEvents, isLoadingForms })
+  // console.log({ isLoadingEvents, isLoadingForms })
 
   return (
     <Screen style={$root} preset="scroll">
@@ -68,6 +67,8 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = ({ route, navigation }) =
                   patientId,
                   formId: form.id,
                   eventId: null,
+                  appointmentId,
+                  departmentId,
                 })
               }}
             />

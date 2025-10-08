@@ -22,6 +22,7 @@ import Prescription from "./model/Prescription"
 import User from "./model/User"
 import UserClinicPermissions from "./model/UserClinicPermissions"
 import Visit from "./model/Visit"
+import ClinicDepartment from "./model/ClinicDepartment"
 import schema from "./schema"
 
 setGenerator(() => uuidv1())
@@ -111,6 +112,9 @@ export const database = new Database({
     PatientVitals,
     PatientProblems,
     UserClinicPermissions,
+
+    // v6
+    ClinicDepartment,
   ],
 })
 

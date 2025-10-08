@@ -52,6 +52,7 @@ const clinicSchema = tableSchema({
     { name: "created_at", type: "number" },
     { name: "is_deleted", type: "boolean" },
     { name: "deleted_at", type: "number", isOptional: true },
+    { name: "is_archived", type: "boolean" },
   ],
 })
 
@@ -149,6 +150,20 @@ const appointmentSchema = tableSchema({
     { name: "reason", type: "string" },
     { name: "notes", type: "string" },
 
+    { name: "is_walk_in", type: "boolean" },
+
+    /**
+     * departments data looks like this:
+     * {
+       id: string (department ID),
+       name: string (department name),
+       seen_at: string | null (ISO timestamp) defaults to null,
+       seen_by: string | null (user ID) defaults to null,
+       status: 'pending' | 'in_progress' | 'completed' default to 'pending'
+     }
+     */
+    { name: "departments", type: "string" },
+
     // Status can be pending, confirmed, cancelled, or completed
     { name: "status", type: "string", isOptional: false },
     { name: "metadata", type: "string" }, // JSON medatadata field
@@ -222,7 +237,7 @@ const patientVitalsSchema = tableSchema({
     { name: "bmi", type: "number", isOptional: true },
     { name: "waist_circumference_cm", type: "number", isOptional: true },
     { name: "heart_rate", type: "number", isOptional: true },
-    { name: "pulse_rate", type: "number", isOptional: true },
+    { name: "pulse_rate", type: "number", isOptional: true }, // pulse rate is different from heart rate!
     { name: "oxygen_saturation", type: "number", isOptional: true },
     { name: "respiratory_rate", type: "number", isOptional: true },
     { name: "temperature_celsius", type: "number", isOptional: true },
@@ -232,8 +247,6 @@ const patientVitalsSchema = tableSchema({
     { name: "is_deleted", type: "boolean" },
     { name: "created_at", type: "number" },
     { name: "updated_at", type: "number" },
-    { name: "last_modified", type: "number" },
-    { name: "server_created_at", type: "number" },
     { name: "deleted_at", type: "number", isOptional: true },
   ],
 })
@@ -294,8 +307,38 @@ const patientProblemsSchema = tableSchema({
   ],
 })
 
+const clinicDepartmentsSchema = tableSchema({
+  name: "clinic_departments",
+  columns: [
+    { name: "clinic_id", type: "string", isIndexed: true },
+    { name: "name", type: "string" },
+    { name: "code", type: "string", isOptional: true }, // Short code like "CARDIO", "PEDS", "ER", "ICU", "OPD", "LAB"
+    { name: "description", type: "string", isOptional: true },
+    { name: "status", type: "string" }, // active, inactive, maintenance
+
+    // Core capabilities as booleans
+    { name: "can_dispense_medications", type: "boolean" },
+    { name: "can_perform_labs", type: "boolean" },
+    { name: "can_perform_imaging", type: "boolean" },
+
+    // Future flexibility - JSON string on mobile (jsonb on server)
+    { name: "additional_capabilities", type: "string" }, // JSON array as string
+
+    // Metadata for flexible department-specific data
+    { name: "metadata", type: "string" }, // JSON object as string
+
+    // Audit and soft-delete columns
+    { name: "is_deleted", type: "boolean" },
+    { name: "created_at", type: "number" },
+    { name: "updated_at", type: "number" },
+    { name: "last_modified", type: "number" },
+    { name: "server_created_at", type: "number" },
+    { name: "deleted_at", type: "number", isOptional: true },
+  ],
+})
+
 export default appSchema({
-  version: 5, // 🔥 IMPORTANT!! 🔥 when migrating dont forget to change this number
+  version: 6, // 🔥 IMPORTANT!! 🔥 when migrating dont forget to change this number
   tables: [
     patientSchema,
     clinicSchema,
@@ -319,5 +362,8 @@ export default appSchema({
     userClinicPermissionsSchema,
     appConfigSchema,
     patientProblemsSchema,
+
+    // New tables in v6
+    clinicDepartmentsSchema,
   ],
 })

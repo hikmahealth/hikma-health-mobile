@@ -36,6 +36,7 @@ import { appStateStore } from "@/store/appState"
 import { languageStore } from "@/store/language"
 import { colors } from "@/theme/colors"
 import { localeDate } from "@/utils/date"
+import { usePatientAppointments } from "@/hooks/useDBPatientAppointments"
 
 const { height } = Dimensions.get("window")
 
@@ -51,7 +52,7 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = ({ route, navigatio
     Option.fromNullable(language),
   )
 
-  const appointments: Appointment.T[] = []
+  const { appointments } = usePatientAppointments(patientId)
 
   // const createNewAppointment = () => {
   //   navigation.navigate("AppointmentEditorForm", {
@@ -104,7 +105,7 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = ({ route, navigatio
     })
   }
 
-  const openAppointmentView = (appointment: Appointment.T) => {
+  const openAppointmentView = (appointment: { id: string }) => {
     navigation.navigate("AppointmentView", {
       patientId,
       appointmentId: appointment.id,
@@ -132,155 +133,166 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = ({ route, navigatio
       </Screen>
     )
   }
-  console.log({ patient: Option.getOrNull(patient) })
   return (
-    <Screen style={$root} contentContainerStyle={$contentContainer} preset="scroll">
-      <View pt={40} pb={40} style={{ backgroundColor: colors.palette.primary50 }}>
-        <PatientProfileSummary patient={Patient.DB.fromDB(patient.value)} onPressEdit={() => {}} />
+    <>
+      <Screen style={$root} contentContainerStyle={$contentContainer} preset="scroll">
+        <View pt={40} pb={40} style={{ backgroundColor: colors.palette.primary50 }}>
+          <PatientProfileSummary
+            patient={Patient.DB.fromDB(patient.value)}
+            onPressEdit={() => {}}
+          />
 
-        <View direction="row" justifyContent="center" alignItems="center" mt={10} gap={10}>
-          <Pressable
-            style={$editButton}
-            onPress={() =>
-              navigation.navigate("PatientRecordEditor", { editPatientId: patient.value.id })
-            }
-          >
-            <PencilIcon color={colors.palette.primary400} size={20} style={{ marginRight: 10 }} />
-            <Text text="Edit" />
-          </Pressable>
-
-          <Pressable style={$editButton} onPress={downloadPatientReport}>
-            <DownloadCloudIcon
-              color={colors.palette.primary400}
-              size={20}
-              style={{ marginRight: 10 }}
-            />
-            <Text text="Download" />
-          </Pressable>
-        </View>
-      </View>
-
-      <View px={16} py={20} gap={10} mb={18}>
-        <If condition={hersEnabled && false}>
-          <View
-            direction="row"
-            alignItems="center"
-            gap={5}
-            style={{
-              borderRadius: 8,
-              borderColor: colors.error,
-              borderWidth: 1,
-              backgroundColor: colors.errorBackground,
-            }}
-            p={3}
-            mt={10}
-          >
-            <LucideCircleDot size={16} color={colors.error} />
-            <Text text={"High: Asthma worsening risk"} size="xs" />
-          </View>
-
-          <View
-            direction="row"
-            alignItems="center"
-            gap={5}
-            style={{
-              borderRadius: 8,
-              borderColor: "#facc15",
-              borderWidth: 1,
-              backgroundColor: "#fef9c3",
-            }}
-            p={3}
-            mt={0}
-            mb={10}
-          >
-            <LucideCircleDot size={16} color={"#facc15"} />
-            <Text text={"Low: Increased risk of stress & anxiety"} size="xs" />
-          </View>
-        </If>
-
-        <View
-          gap={10}
-          mb={4}
-          style={{ borderBottomWidth: 1, borderBottomColor: colors.border, paddingBottom: 10 }}
-        >
-          <View direction="row" gap={10} alignItems="center">
-            <Text text="Appointments" />
-            <If condition={appointments.length > 0}>
-              <Pressable onPress={createNewAppointment}>
-                <LucidePlus color={colors.palette.primary500} size={20} />
-              </Pressable>
-            </If>
-          </View>
-          <If condition={appointments?.length === 0 || !appointments}>
-            <Pressable onPress={createNewAppointment}>
-              <Text
-                textDecorationLine="underline"
-                color={colors.palette.primary500}
-                text="Create New Appointment"
-              />
+          <View direction="row" justifyContent="center" alignItems="center" mt={10} gap={10}>
+            <Pressable
+              style={$editButton}
+              onPress={() =>
+                navigation.navigate("PatientRecordEditor", { editPatientId: patient.value.id })
+              }
+            >
+              <PencilIcon color={colors.palette.primary400} size={20} style={{ marginRight: 10 }} />
+              <Text text="Edit" />
             </Pressable>
-          </If>
-          <If condition={appointments.length > 0}>
-            <View direction="row" gap={10} style={{ flexWrap: "wrap" }}>
-              {appointments.map((appointment) => {
-                return (
-                  <Pressable
-                    onPress={() => openAppointmentView(appointment)}
-                    style={{
-                      padding: 6,
-                      paddingHorizontal: 10,
-                      backgroundColor: colors.palette.primary300,
-                      borderRadius: 10,
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      gap: 10,
-                    }}
-                    key={appointment.id}
-                  >
-                    <Text
-                      text={`${format(new Date(appointment.timestamp), "dd MMM yyyy")}`}
-                      size="xxs"
-                      color="#fff"
-                    />
-                    <LucideArrowRight color={colors.palette.neutral100} size={16} />
-                  </Pressable>
-                )
-              })}
+
+            <Pressable style={$editButton} onPress={downloadPatientReport}>
+              <DownloadCloudIcon
+                color={colors.palette.primary400}
+                size={20}
+                style={{ marginRight: 10 }}
+              />
+              <Text text="Download" />
+            </Pressable>
+          </View>
+        </View>
+
+        <View px={16} py={20} gap={10} mb={18}>
+          <If condition={hersEnabled && false}>
+            <View
+              direction="row"
+              alignItems="center"
+              gap={5}
+              style={{
+                borderRadius: 8,
+                borderColor: colors.error,
+                borderWidth: 1,
+                backgroundColor: colors.errorBackground,
+              }}
+              p={3}
+              mt={10}
+            >
+              <LucideCircleDot size={16} color={colors.error} />
+              <Text text={"High: Asthma worsening risk"} size="xs" />
+            </View>
+
+            <View
+              direction="row"
+              alignItems="center"
+              gap={5}
+              style={{
+                borderRadius: 8,
+                borderColor: "#facc15",
+                borderWidth: 1,
+                backgroundColor: "#fef9c3",
+              }}
+              p={3}
+              mt={0}
+              mb={10}
+            >
+              <LucideCircleDot size={16} color={"#facc15"} />
+              <Text text={"Low: Increased risk of stress & anxiety"} size="xs" />
             </View>
           </If>
-        </View>
 
-        <SnapshotFormLink
-          onPress={() =>
-            navigation.navigate("PatientVisitsList", {
-              patientId: patient.value.id,
-            })
-          }
-          label={translate("patientFile:visitHistory")}
-          description={translate("patientFile:visitHistoryDescription")}
-        />
-        {EventForm.filterSnapshots(eventForms).map((form) => {
-          return (
-            <SnapshotFormLink
-              key={form.id}
-              onPress={() =>
-                navigation.navigate("FormEventsList", {
-                  patientId: patient.value.id,
-                  formId: form.id,
-                })
-              }
-              label={form.name}
-              description={form.description}
-            />
-          )
-        })}
-      </View>
+          {/* Hide the appointments until the module is ready  */}
+          <View gap={10} mb={4} style={$appointmentContainer}>
+            <View direction="row" gap={10} alignItems="center">
+              <Text text="Appointments" />
+              <If condition={appointments.length > 0}>
+                <Pressable onPress={createNewAppointment}>
+                  <LucidePlus color={colors.palette.primary500} size={20} />
+                </Pressable>
+              </If>
+            </View>
+            <If condition={appointments?.length === 0 || !appointments}>
+              <Pressable onPress={createNewAppointment}>
+                <Text
+                  textDecorationLine="underline"
+                  color={colors.palette.primary500}
+                  text="Create New Appointment"
+                />
+              </Pressable>
+            </If>
+            <If condition={appointments.length > 0}>
+              <View direction="row" gap={10} style={{ flexWrap: "wrap" }}>
+                {appointments.map((appointment) => {
+                  return (
+                    <Pressable
+                      onPress={() => openAppointmentView(appointment)}
+                      style={{
+                        padding: 6,
+                        paddingHorizontal: 10,
+                        backgroundColor: colors.palette.primary300,
+                        borderRadius: 10,
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 10,
+                      }}
+                      key={appointment.id}
+                    >
+                      <Text
+                        text={`${format(new Date(appointment.timestamp), "dd MMM yyyy")}`}
+                        size="xxs"
+                        color="#fff"
+                      />
+                      <LucideArrowRight color={colors.palette.neutral100} size={16} />
+                    </Pressable>
+                  )
+                })}
+              </View>
+            </If>
+          </View>
+
+          <SnapshotFormLink
+            onPress={() =>
+              navigation.navigate("VitalHistory", {
+                patientId: patient.value.id,
+              })
+            }
+            label={translate("patientFile:vitalHistory")}
+            description={translate("patientFile:vitalHistoryDescription")}
+          />
+
+          <SnapshotFormLink
+            onPress={() =>
+              navigation.navigate("PatientVisitsList", {
+                patientId: patient.value.id,
+              })
+            }
+            label={translate("patientFile:visitHistory")}
+            description={translate("patientFile:visitHistoryDescription")}
+          />
+          {EventForm.filterSnapshots(eventForms).map((form) => {
+            return (
+              <SnapshotFormLink
+                key={form.id}
+                onPress={() =>
+                  navigation.navigate("FormEventsList", {
+                    patientId: patient.value.id,
+                    formId: form.id,
+                  })
+                }
+                label={form.name}
+                description={form.description}
+              />
+            )
+          })}
+        </View>
+      </Screen>
       <Pressable onPress={createNewVisit} style={$newVisitFAB}>
         <PlusIcon color={"white"} size={20} style={{ marginRight: 10 }} />
         <Text color="white" size="md" tx="patientView:newVisit" />
       </Pressable>
-    </Screen>
+    </>
   )
 }
 
@@ -496,7 +508,7 @@ const $newVisitFAB: ViewStyle = {
   display: "flex",
   flexDirection: "row",
   position: "absolute",
-  bottom: 20,
+  bottom: 40,
   right: 24,
   elevation: 4,
   zIndex: 100,
@@ -518,4 +530,10 @@ const $editButton: ViewStyle = {
   paddingVertical: 3,
   borderWidth: 1,
   borderColor: colors.palette.primary300,
+}
+
+const $appointmentContainer: ViewStyle = {
+  borderBottomWidth: 1,
+  borderBottomColor: colors.border,
+  paddingBottom: 10,
 }

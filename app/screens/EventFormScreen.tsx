@@ -110,9 +110,20 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
     visitId = null,
     // formData,
     eventId = null,
-    visitDate,
+    visitDate = new Date().getTime(),
     appointmentId = null,
+    departmentId = null,
   } = route.params
+
+  console.log({
+    patientId,
+    formId,
+    visitId,
+    eventId,
+    visitDate,
+    appointmentId,
+    departmentId,
+  })
 
   const language = useSelector(languageStore, (state) => state.context.language)
   const provider = useSelector(providerStore, (state) => state.context)
@@ -288,7 +299,22 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
       // Update the appointment with the visitId
       if (appointmentId) {
         // Function is async and we are not waiting for it, and if it fails we dont care too much and dont want it to block the user from continuing
-        Appointment.DB.markComplete(appointmentId, res.visitId).catch((e) => {
+        if (departmentId) {
+          Appointment.DB.updateAppointmentDepartmentStatus(
+            appointmentId,
+            departmentId,
+            provider.id,
+            "completed",
+          ).catch((e) => {
+            console.error("Error updating appointment department status", e)
+            Sentry.captureException(e)
+          })
+        }
+        // If an appointment does not have a departmentId, means it is not connected to a department and can just be completed.
+        // if  departmentId is present, do not update the appointment status
+        Appointment.DB.markComplete(appointmentId, provider.id, res.visitId, {
+          preserveStatus: departmentId ? true : false,
+        }).catch((e) => {
           console.error("Error updating appointment with visitId", e)
           Sentry.captureException(e)
         })
@@ -491,6 +517,8 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
       <Screen style={$root} preset="scroll">
         <View gap={12} pb={24}>
           {form.formFields.map((field, idx) => {
+            console.log(field.fieldType, "as a ", field.inputType, "options: ", field.options)
+            console.log("is Multi", field.multi)
             return (
               <View key={`formField-${idx}`}>
                 <If condition={field.inputType === "text" || field.inputType === "number"}>
@@ -534,7 +562,7 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
                         watch(field.name) as any,
                         Option.isOption(field.multi)
                           ? Option.getOrElse(field.multi, () => false)
-                          : false,
+                          : field.multi || false,
                       )}
                       searchable
                       closeAfterSelecting
@@ -543,7 +571,7 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
                       multiple={
                         Option.isOption(field.multi)
                           ? Option.getOrElse(field.multi, () => false)
-                          : false
+                          : field.multi || false
                       }
                       modalContentContainerStyle={$modalContentContainerStyle}
                       mode="BADGE"
@@ -556,7 +584,7 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
                       items={sortBy(
                         Option.isOption(field.options)
                           ? Option.getOrElse(field.options, () => [])
-                          : [],
+                          : field.options || [],
                         ["label"],
                       )}
                       setOpen={openDialogue(field.id)}

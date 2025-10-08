@@ -26,6 +26,8 @@ const ar: Translations = {
     medicine: "دواء",
     medicineDescription: "الوصفه الطبيه للمريض",
     patientNotFound: "لم يتم العثور على السجل",
+    vitalHistory: "تاريخ المريض",
+    vitalHistoryDescription: "تاريخ المريض",
   },
   newVisitScreen: {
     medicalHistory: "التاريخ الطبي",
@@ -146,7 +148,28 @@ const ar: Translations = {
     patientMedicalRecord: "السجل الطبي للمريض",
     PatientInformation: "معلومات المريض",
   },
+  vitalHistory: {
+    title: "التاريخ الحيوي",
+    description: "عرض وإدارة التاريخ الحيوي الخاص بك",
+    newEntry: "إدخال جديد",
+  },
+  vitalForm: {
+    title: "نموذج المعلومات الحيوية",
+    description: "املأ معلوماتك الحيوية",
+  },
+  appointmentsList: {
+    title: "قائمة المواعيد",
+  },
+  component: {
+    dateOfBirthInput: {
+      unknown: "غير معروف",
+      ageInput: "العمر",
+      datePicker: "التاريخ",
+    },
+  },
   common: {
+    today: "اليوم",
+    departments: "الاقسام",
     chooseLanguage: "اختر اللغة",
     checkedIn: "تم التحقق",
     xMinutes: "{{count}} دقيقة",
@@ -158,6 +181,7 @@ const ar: Translations = {
     male: "ذكر",
     female: "أنثى",
     signOut: "تسجيل خروج",
+    confirmSignOut: "تأكيد تسجيل خروج",
     patients: "المرضى",
     PATIENTS: "المرضى",
     welcome: "مرحبا بعودتك",
@@ -301,6 +325,18 @@ const ar: Translations = {
     downloadPatientHistory: "تحميل تاريخ المريض ",
     syncingStarted: "جاري مزامنة البيانات مع الخادم",
     syncStarted: "جاري مزامنة البيانات مع الخادم",
+
+    or: "أو",
+
+    // vitals
+    bloodPressure: "ضغط الدم",
+    temperature: "درجة الحرارة",
+    pulseRate: "معدل النبض",
+    respiratoryRate: "معدل التنفس",
+    oxygenSaturation: "تشبع الأكسجين",
+    painLevel: "مستوى الألم",
+    waistCircumference: "محيط الخصر",
+    bmi: "مؤشر كتلة الجسم",
   },
   syncSettingsScreen: {
     confirmSetDefault: "تأكيد تعيين الافتراضي",

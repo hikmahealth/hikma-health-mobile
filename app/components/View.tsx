@@ -25,6 +25,9 @@ export type ViewProps = {
   /** The flex number */
   flex?: number
 
+  /** Flex Wrap */
+  flexWrap?: "wrap" | "nowrap" | "wrap-reverse"
+
   /** Margin */
   m?: number
 
@@ -72,10 +75,13 @@ export type ViewProps = {
 
   /** Align Content */
   alignContent?: "space-between" | "center" | "flex-start" | "flex-end" | "space-around" | "stretch"
+
+  /** Height */
+  height?: number
 } & RNViewProps
 
 /**
- * Describe your component here
+ * Custom View component with various styling options.
  */
 export const View = (props: ViewProps) => {
   const {
@@ -95,8 +101,10 @@ export const View = (props: ViewProps) => {
     p,
     direction,
     flex,
+    flexWrap,
     justifyContent,
     alignItems,
+    height,
     ...rest
   } = props
   const $styles = [
@@ -116,8 +124,10 @@ export const View = (props: ViewProps) => {
       p,
       direction,
       flex,
+      flexWrap,
       justifyContent,
       alignItems,
+      height,
     }),
     style,
   ]
@@ -133,6 +143,7 @@ const styleMapping: Record<string, keyof ViewStyle> = {
   gap: "gap",
   direction: "flexDirection",
   flex: "flex",
+  flexWrap: "flexWrap",
   justifyContent: "justifyContent",
   alignItems: "alignItems",
   m: "margin",
@@ -146,6 +157,7 @@ const styleMapping: Record<string, keyof ViewStyle> = {
   py: "paddingVertical",
   px: "paddingHorizontal",
   p: "padding",
+  height: "height",
 }
 
 const composeStyles = (styles: Record<string, unknown>): ViewStyle => {

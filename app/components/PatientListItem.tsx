@@ -128,7 +128,12 @@ const PatientListItemInner = memo(
     const viewDirection = useMemo(() => (isRTL ? "row-reverse" : "row"), [isRTL])
 
     return (
-      <Pressable onPress={handlePress} style={$styles} onLongPress={handleLongPress}>
+      <Pressable
+        testID={`patientListItem:${patient.id}`}
+        onPress={handlePress}
+        style={$styles}
+        onLongPress={handleLongPress}
+      >
         <View gap={20} direction={viewDirection}>
           <AvatarMemo patient={patient} />
           <View>

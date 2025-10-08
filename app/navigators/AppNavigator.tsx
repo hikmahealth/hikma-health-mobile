@@ -49,7 +49,11 @@ export type AppStackParamList = {
   VisitEventsList: { patientId: string; visitId: string; visitTimestamp?: number }
   PatientRegistrationForm: { editPatientId?: string }
   SyncSettings: undefined
-  // IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
+  VitalHistory: undefined
+	VitalForm: undefined
+	AppointmentEditorForm: undefined
+	AppointmentView: undefined
+	// IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
 }
 
 /**

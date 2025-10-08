@@ -87,7 +87,7 @@ namespace Patient {
    * @param {Patient} patient
    * @returns {string}
    */
-  export const displayName = (patient: Patient.T): string => {
+  export const displayName = (patient: { givenName: string; surname: string }): string => {
     const { givenName = " ", surname = " " } = patient
     return `${givenName} ${surname}`.trim()
   }
@@ -224,7 +224,6 @@ namespace Patient {
       if (!clinicId) {
         throw new Error("Provider does not belong to any clinic")
       }
-      console.log({ userId, clinicId })
 
       const viewHistoryClinicIds = await UserClinicPermissions.DB.getClinicIdsWithPermission(
         userId,

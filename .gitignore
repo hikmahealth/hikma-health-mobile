@@ -104,7 +104,13 @@ web-build/
 .env
 
 .env.local
+.env.*
 
 
 # Hikma Health JSON files
 /hikma-health*.json
+
+
+
+# eas ota update builds
+dist/*

@@ -330,8 +330,6 @@ const enhancePrescription = withObservables(["prescription"], ({ prescription })
 
 export const PrescriptionListItem = enhancePrescription(
   ({ prescription, openPrescriptionPage, language: _, clinic }: PrescriptionListItemProps) => {
-    console.log("prescription", prescription.pickupClinicId, clinic?.name)
-
     const $statusDot = {
       backgroundColor: getStatusColor(prescription.status),
       height: 10,

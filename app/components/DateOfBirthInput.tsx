@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react"
-import { StyleProp, TextStyle, ViewStyle, Pressable } from "react-native"
-import { differenceInYears, isValid, subYears } from "date-fns"
+import { StyleProp, TextStyle, ViewStyle, Pressable, Alert } from "react-native"
+import {
+  differenceInDays,
+  differenceInYears,
+  intervalToDuration,
+  isValid,
+  subYears,
+} from "date-fns"
 
 import { Text } from "@/components/Text"
 import { View } from "@/components/View"
@@ -12,6 +18,8 @@ import { calculateAge, parseYYYYMMDD } from "@/utils/date"
 
 import { DatePickerButton } from "./DatePicker"
 import { $descriptionStyle, $labelStyle, TextField } from "./TextField"
+import { parse } from "effect/Number"
+import { spacing } from "@/theme/spacing"
 
 const DEFAULT_MONTH = 0 // January
 const DEFAULT_DAY = 1 // First day of the month
@@ -85,12 +93,23 @@ export const DateOfBirthInput = (props: DateOfBirthInputProps) => {
 
   const [dobMode, setDobMode] = useState<"date-picker" | "age-input" | "unknown">("date-picker")
 
-  const setAge = (age: number) => {
-    const newDate = subYears(new Date(), age)
+  const [ageString, setAgeString] = useState<string>("")
+
+  const setAge = (age: string) => {
+    const newDate = subYears(new Date(), parseFloat(age) || 0)
+    setAgeString(age)
     setDate(newDate)
   }
 
-  const age = differenceInYears(new Date(), date)
+  // const age = differenceInYears(new Date(), date)
+
+  // on change of the date while in the date-picker mode, set the age to the difference in years
+  useEffect(() => {
+    if (dobMode === "date-picker") {
+      // const age = differenceInDays(new Date(), date)
+      setAgeString(calculateAgeString(date))
+    }
+  }, [date, dobMode])
 
   useEffect(() => {
     if (dobMode === "unknown") {
@@ -100,6 +119,46 @@ export const DateOfBirthInput = (props: DateOfBirthInputProps) => {
     }
   }, [dobMode, date])
 
+  const today = new Date()
+
+  const handleDateChange = (date: Date | null) => {
+    if (!date) return
+
+    if (date > today) {
+      Alert.alert("Invalid Date", "Please select a date in the past.")
+      setDate(today)
+      return
+    }
+    setDate(date)
+    if (dobMode === "date-picker") {
+      setAgeString(calculateAgeString(date))
+    }
+  }
+
+  const calculateAgeString = (date: Date): string => {
+    const { years = 0, months = 0 } = intervalToDuration({ start: date, end: new Date() })
+    if (years === 0 && months > 0 && months < 12) {
+      return `${(months / 12).toFixed(1)}`
+    }
+    return years.toString()
+  }
+
+  const getInputStyle = (option: "age-input" | "date-picker" | "unknown") => {
+    if (dobMode === option) {
+      return $activeBtn
+    }
+    return $inactiveBtn
+  }
+
+  const getInputTextStyle = (
+    option: "age-input" | "date-picker" | "unknown",
+  ): ThemedStyle<TextStyle> => {
+    if (dobMode === option) {
+      return $activeText
+    }
+    return $inactiveText
+  }
+
   return (
     <View style={$styles}>
       {(labelTx || label) && (
@@ -108,29 +167,52 @@ export const DateOfBirthInput = (props: DateOfBirthInputProps) => {
       {(description || descriptionTx) && (
         <Text style={themed($descriptionStyle)} tx={descriptionTx} text={description} />
       )}
-      <View direction="row" gap={16}>
-        <View style={dobMode === "date-picker" ? $activeBtn : $inactiveBtn}>
+      <View direction="row" gap={6}>
+        <View style={getInputStyle("date-picker")}>
           <Pressable onPress={() => setDobMode("date-picker")}>
-            <Text style={themed($text)}>Date of Birth</Text>
+            <Text
+              size="xs"
+              tx="component:dateOfBirthInput.datePicker"
+              style={themed(getInputTextStyle("date-picker"))}
+            ></Text>
           </Pressable>
         </View>
-        <View style={dobMode === "age-input" ? $activeBtn : $inactiveBtn}>
+        <Text tx="common:or" />
+        <View style={getInputStyle("age-input")}>
           <Pressable onPress={() => setDobMode("age-input")}>
-            <Text style={themed($text)}>Age</Text>
+            <Text
+              size="xs"
+              tx="component:dateOfBirthInput.ageInput"
+              style={themed(getInputTextStyle("age-input"))}
+            ></Text>
           </Pressable>
         </View>
-        <View style={dobMode === "unknown" ? $activeBtn : $inactiveBtn}>
-          <Pressable
-            onPress={() => setDobMode("unknown")}
-            style={dobMode === "unknown" ? $activeBtn : $inactiveBtn}
-          >
-            <Text style={themed($text)}>Unknown</Text>
+        <Text tx="common:or" />
+        <View style={getInputStyle("unknown")}>
+          <Pressable onPress={() => setDobMode("unknown")}>
+            <Text
+              size="xs"
+              tx="component:dateOfBirthInput.unknown"
+              style={themed(getInputTextStyle("unknown"))}
+            ></Text>
           </Pressable>
         </View>
       </View>
-      {dobMode === "date-picker" && <DatePickerButton onDateChange={setDate} date={date} />}
+      {dobMode === "date-picker" && <DatePickerButton onConfirm={handleDateChange} date={date} />}
       {dobMode === "age-input" && (
-        <TextField value={age.toString()} onChangeText={(t) => setAge(parseInt(t))} />
+        <View pt={10}>
+          <TextField
+            keyboardType="numeric"
+            value={ageString}
+            onChangeText={(t) => {
+              if (isNaN(parseFloat(t))) {
+                setAge("")
+              } else {
+                setAge(t)
+              }
+            }}
+          />
+        </View>
       )}
     </View>
   )
@@ -148,9 +230,28 @@ const $text: ThemedStyle<TextStyle> = ({ colors, typography }) => ({
 
 // TODO: Get styling advice from @megan
 const $activeBtn: ViewStyle = {
-  borderBottomWidth: 1,
-  borderColor: colors.border,
-  paddingHorizontal: 4,
+  borderWidth: 1,
+  borderColor: colors.palette.primary600,
+  backgroundColor: colors.palette.primary600,
+  paddingHorizontal: 10,
+  borderRadius: 8,
 }
 
-const $inactiveBtn: ViewStyle = {}
+const $inactiveBtn: ViewStyle = {
+  borderWidth: 1,
+  borderColor: colors.border,
+  paddingHorizontal: 10,
+  borderRadius: 8,
+}
+
+const $activeText: ThemedStyle<TextStyle> = ({ colors, typography }) => ({
+  fontFamily: typography.primary.normal,
+  fontSize: 14,
+  color: colors.palette.neutral100,
+})
+
+const $inactiveText: ThemedStyle<TextStyle> = ({ colors, typography }) => ({
+  fontFamily: typography.primary.normal,
+  fontSize: 14,
+  color: colors.palette.primary500,
+})

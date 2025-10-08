@@ -37,6 +37,8 @@ namespace Visit {
     updatedAt: new Date(),
   }
 
+  export type DBVisit = VisitModel
+
   export namespace DB {
     export type T = VisitModel
 

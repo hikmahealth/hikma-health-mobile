@@ -1,3 +1,5 @@
+import ClinicModel from "@/db/model/Clinic"
+import ClinicDepartmentModel from "@/db/model/ClinicDepartment"
 import { Option } from "effect"
 
 namespace Clinic {
@@ -9,6 +11,9 @@ namespace Clinic {
     updatedAt: Date
     deletedAt: Option.Option<Date>
   }
+
+  export type DBClinic = ClinicModel
+  export type DBClinicDepartment = ClinicDepartmentModel
 
   /** Default empty Clinic Item */
   export const empty: T = {

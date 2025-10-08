@@ -49,11 +49,17 @@ const drawerItems: DrawerItem[] = [
     icon: LucideUsers,
     routeName: "Patients",
   },
+  {
+    name: "Appointment",
+    label: "Appointments",
+    icon: LucideCalendar,
+    routeName: "Appointment",
+  },
   // {
-  //   name: "Appointment",
-  //   label: "Appointments",
+  //   name: "Prescription",
+  //   label: "Prescriptions",
   //   icon: LucideCalendar,
-  //   routeName: "Appointment",
+  //   routeName: "Prescription",
   // },
   {
     name: "Settings",

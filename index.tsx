@@ -1,8 +1,14 @@
 import "@expo/metro-runtime" // this is for fast refresh on web w/o expo-router
+import { LogBox } from "react-native"
 import { registerRootComponent } from "expo"
 import * as Sentry from "@sentry/react-native"
+import { LaunchArguments } from "react-native-launch-arguments"
 
 import { App } from "@/app"
+
+if (LaunchArguments.value().isE2E) {
+  LogBox.ignoreAllLogs()
+}
 
 if (!__DEV__) {
   Sentry.init({

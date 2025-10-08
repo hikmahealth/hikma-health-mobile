@@ -24,6 +24,8 @@ const en = {
     medicine: "Medicine",
     medicineDescription: "Medicine prescribed to the patient",
     patientNotFound: "Patient not found",
+    vitalHistory: "Vital History",
+    vitalHistoryDescription: "Patient's vital history",
   },
   newVisitScreen: {
     medicalHistory: "Medical History",
@@ -150,7 +152,28 @@ const en = {
     confirmSetDefaultDescription: "Are you sure you want to set this server as the default?",
     syncError: "Sync Error",
   },
+  vitalHistory: {
+    title: "Vital History",
+    description: "View and manage your vital history",
+    newEntry: "New Entry",
+  },
+  vitalForm: {
+    title: "Vital Form",
+    description: "Fill out your vital information",
+  },
+  appointmentsList: {
+    title: "Appointments List",
+  },
+  component: {
+    dateOfBirthInput: {
+      unknown: "Unknown",
+      ageInput: "Age",
+      datePicker: "Date",
+    },
+  },
   common: {
+    today: "Today",
+    departments: "Departments",
     chooseLanguage: "Choose Language",
     checkedIn: "Checked In",
     xMinutes: "{{count}} Minutes",
@@ -162,6 +185,7 @@ const en = {
     male: "male",
     female: "female",
     signOut: "Sign Out",
+    confirmSignOut: "Confirm Sign Out",
     patients: "Patients",
     PATIENTS: "< PATIENTS",
     welcome: "Welcome Back",
@@ -304,6 +328,17 @@ const en = {
     downloadPatientHistory: "Download Patient History",
     syncingStarted: "Syncing data with the server",
     syncStarted: "Syncing data with the server",
+    or: "or",
+
+    // vitals
+    bloodPressure: "Blood Pressure",
+    temperature: "Temperature",
+    pulseRate: "Pulse Rate",
+    respiratoryRate: "Respiratory Rate",
+    oxygenSaturation: "Oxygen Saturation",
+    painLevel: "Pain Level",
+    waistCircumference: "Waist Circumference",
+    bmi: "BMI",
   },
 }
 

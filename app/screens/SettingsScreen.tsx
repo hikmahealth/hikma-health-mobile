@@ -144,7 +144,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ navigation }) => {
           style: "cancel",
         },
         {
-          text: translate("drawer:signOut"),
+          text: translate("common:confirmSignOut"),
           onPress: async () => {
             await SecureStore.deleteItemAsync("provider_password")
             await SecureStore.deleteItemAsync("provider_email")
@@ -319,7 +319,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ navigation }) => {
         </View>
       </If>
       <View py={22}>
-        <Button preset="filled" onPress={signOut}>
+        <Button testID="signOutBtn" preset="filled" onPress={signOut}>
           {translate("common:signOut")}
         </Button>
       </View>

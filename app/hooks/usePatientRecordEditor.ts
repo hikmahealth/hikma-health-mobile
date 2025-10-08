@@ -194,6 +194,14 @@ const initialFormFields: PatientRegistrationForm.RegistrationFormField[] = [
   },
 ]
 
+export function getBaseFieldByColumn(
+  column: PatientRegistrationForm.BaseColumn | string,
+): PatientRegistrationForm.RegistrationFormField | undefined {
+  return initialFormFields
+    .filter((field) => field.baseField)
+    .find((field) => field.column === column)
+}
+
 export const initialFormState: PatientRegistrationForm.RegistrationForm = {
   id: "initial-id",
   name: "Patient Registration Form",
@@ -221,6 +229,8 @@ type PatientRecordEditorState = {
   formFields: FormField[]
   // Updates the current field's value
   updateField: (id: string, value: any) => void
+  // Whether or not the patient record or the form is loading
+  isLoading: boolean
 }
 
 /**
@@ -233,18 +243,20 @@ export function usePatientRecordEditor(
   patientId: string | undefined | null,
   language: string,
 ): PatientRecordEditorState {
-  const [isLoading, setIsLoading] = useState<boolean>(true)
   const [registrationForm, setRegistrationForm] = useState<RegistrationFormModel | null>(null)
+  const [isLoadingForm, setIsLoadingForm] = useState<boolean>(true)
   const [patientRecord, setPatientRecord] = useState<PatientRegistrationForm.PatientRecord>({
     values: {},
     fields: [],
   })
+  const [isLoadingPatient, setIsLoadingPatient] = useState<boolean>(true)
   // const [formFields, setFormFields] = useState<PatientRecordEditorState["formFields"]>([])
 
   useEffect(() => {
     let record = Patient.getDefaultPatientRecord(
       registrationForm || ({ fields: [] } as unknown as RegistrationFormModel),
     )
+    setIsLoadingPatient(true)
 
     if (patientId) {
       // get the patient state
@@ -257,13 +269,17 @@ export function usePatientRecordEditor(
           console.warn("Error fetching a patient with the id: ", patientId)
           setPatientRecord(record)
         })
+        .finally(() => {
+          setIsLoadingPatient(false)
+        })
     } else {
       setPatientRecord(record)
+      setIsLoadingPatient(false)
     }
   }, [registrationForm, patientId, language])
 
   useEffect(() => {
-    setIsLoading(true)
+    setIsLoadingForm(true)
     const sub = database
       .get<RegistrationFormModel>("registration_forms")
       .query()
@@ -286,10 +302,12 @@ export function usePatientRecordEditor(
             }
           : null
         setRegistrationForm(patientRegistrationForm)
+        setIsLoadingForm(false)
       })
 
     return () => {
       sub.unsubscribe()
+      setIsLoadingForm(false)
     }
   }, [])
 
@@ -314,6 +332,10 @@ export function usePatientRecordEditor(
   // get the default values for each field
   // get the exisiting patient record
 
+  console.log({
+    isLoadingForm,
+    isLoadingPatient,
+  })
   return {
     formFields,
     patientRecord,
@@ -328,5 +350,6 @@ export function usePatientRecordEditor(
         },
       }))
     },
+    isLoading: isLoadingPatient || isLoadingForm,
   }
 }

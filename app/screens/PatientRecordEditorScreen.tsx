@@ -1,5 +1,6 @@
 import { FC, useEffect, useMemo, useState } from "react"
 import { Alert, Pressable, ViewStyle } from "react-native"
+import { captureException } from "@sentry/react-native"
 import { useSelector } from "@xstate/react"
 import { format } from "date-fns"
 import { Option } from "effect"
@@ -18,7 +19,7 @@ import { Radio } from "@/components/Toggle/Radio"
 import { View } from "@/components/View"
 import { useClinics } from "@/hooks/useClinicsList"
 import { useDebounce } from "@/hooks/useDebounce"
-import { usePatientRecordEditor } from "@/hooks/usePatientRecordEditor"
+import { getBaseFieldByColumn, usePatientRecordEditor } from "@/hooks/usePatientRecordEditor"
 import { useSimilarPatientsSearch } from "@/hooks/useSimilarPatientsSearch"
 import { translate } from "@/i18n/translate"
 import Patient from "@/models/Patient"
@@ -28,6 +29,7 @@ import { providerStore } from "@/store/provider"
 import { colors } from "@/theme/colors"
 import { parseYYYYMMDD } from "@/utils/date"
 import { getTranslation } from "@/utils/parsers"
+import UserClinicPermissions from "@/models/UserClinicPermissions"
 // import { useNavigation } from "@react-navigation/native"
 
 interface PatientRecordEditorScreenProps extends PatientStackScreenProps<"PatientRecordEditor"> {}
@@ -53,16 +55,35 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = ({
     label: clinic.name,
     value: clinic.id,
   }))
-  const { formFields, updateField, patientRecord } = usePatientRecordEditor(editPatientId, language)
+  const {
+    formFields,
+    updateField,
+    patientRecord,
+    isLoading: isPatientRecordLoading,
+  } = usePatientRecordEditor(editPatientId, language)
+
+  // on mount, set the primary_clinic_id to the user's current clinic id;
+  useEffect(() => {
+    const primaryClinicFieldId = getBaseFieldByColumn("primary_clinic_id")
+    console.log({
+      primaryClinicFieldId: primaryClinicFieldId?.id,
+      clinicId: Option.getOrElse(clinicId, () => ""),
+      clinicOptionsList,
+      isPatientRecordLoading,
+    })
+    if (primaryClinicFieldId && isPatientRecordLoading === false) {
+      updateField(
+        primaryClinicFieldId.id,
+        Option.getOrElse(clinicId, () => ""),
+      )
+    }
+  }, [clinicId, isPatientRecordLoading])
 
   const { givenName, surname } = useMemo(() => {
     const givenName = Patient.getPatientFieldByName(patientRecord, "given_name", "") || ""
     const surname = Patient.getPatientFieldByName(patientRecord, "surname", "") || ""
     return { givenName, surname }
   }, [patientRecord.values])
-
-  console.log(formFields)
-  console.log(patientRecord.values)
 
   // Manage the state of whihch dropdown is open
   const [openDropdown, setOpenDropdown] = useState<"primary_clinic_id" | null>(null)
@@ -117,7 +138,7 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = ({
     })
   }
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
     if (existingGovtId) return
     // TODO: Confirm that all the required fields are filled in
 
@@ -129,6 +150,20 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = ({
       id: Option.getOrElse(clinicId, () => "Unknown"),
       name: Option.getOrElse(clinicName, () => "Unknown"),
     }
+    const primaryClinicId =
+      Patient.getPatientFieldByName(patientRecord, "primary_clinic_id", "") || clinic.id
+    const viewHistoryClinicIds = await UserClinicPermissions.DB.getClinicIdsWithPermission(
+      provider.id,
+      "canEditRecords",
+    )
+
+    if (!viewHistoryClinicIds.includes(primaryClinicId)) {
+      Alert.alert("Unauthorized", "You do not have permission to edit this patient's record.", [
+        { text: "OK", onPress: () => navigation.goBack() },
+      ])
+      return
+    }
+
     let req
     if (editPatientId && editPatientId.length > 5) {
       // patient exists
@@ -162,6 +197,21 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = ({
       })
       .catch((error) => {
         console.error(error)
+        // Report error to Sentry
+        if (typeof captureException === "function") {
+          captureException(error, {
+            tags: {
+              section: "patient_record_editor",
+              action: editPatientId ? "update_patient" : "register_patient",
+            },
+            extra: {
+              providerId,
+              clinicId: Option.getOrElse(clinicId, () => "Unknown"),
+              editPatientId,
+              patientRecord: JSON.stringify(patientRecord.values),
+            },
+          })
+        }
         Alert.alert(translate("common:error"), translate("newPatient:errorSaving"))
       })
   }
@@ -175,6 +225,7 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = ({
           .filter((field) => field.visible)
           .map((field) => {
             const { type, label, value } = field
+            // console.log(type, label, value)
             return (
               <View key={field.id}>
                 {(type === "text" || type === "number") && field.column !== "primary_clinic_id" && (

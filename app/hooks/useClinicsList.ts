@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { Q } from "@nozbe/watermelondb"
 
 import database from "@/db"
 import ClinicModel from "@/db/model/Clinic"
@@ -14,7 +15,7 @@ export function useClinics(): { clinics: ClinicModel[]; isLoading: boolean } {
   useEffect(() => {
     const sub = database
       .get<ClinicModel>("clinics")
-      .query()
+      .query(Q.where("is_archived", false))
       .observe()
       .subscribe((clinics) => {
         setClinics(clinics)

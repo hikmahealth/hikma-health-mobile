@@ -1,23 +1,681 @@
-import { FC } from "react"
-import { ViewStyle } from "react-native"
+import { FC, useState, useEffect } from "react"
+import { ViewStyle, TextStyle, Pressable } from "react-native"
+import { LegendList } from "@legendapp/list"
+import { compose } from "@nozbe/watermelondb/react"
+import withObservables from "@nozbe/watermelondb/react/withObservables"
+import type { NativeStackScreenProps } from "@react-navigation/native-stack"
+import { useSelector } from "@xstate/react"
+import { format, isSameDay, isToday, startOfDay } from "date-fns"
+import { Option } from "effect"
+import { upperFirst } from "es-toolkit"
+import {
+  LucideCheck,
+  LucideChevronDown,
+  LucideChevronUp,
+  LucideListTodo,
+  LucideSearch,
+} from "lucide-react-native"
+import DropDownPicker from "react-native-dropdown-picker"
+import { catchError, of as of$ } from "rxjs"
+import { useDebounceValue } from "usehooks-ts"
 
-import { Screen } from "@/components/Screen"
+import { If } from "@/components/If"
 import { Text } from "@/components/Text"
-import type { AppStackScreenProps } from "@/navigators/AppNavigator"
-// import { useNavigation } from "@react-navigation/native"
+import { TextField } from "@/components/TextField"
+import { Checkbox } from "@/components/Toggle/Checkbox"
+import { View } from "@/components/View"
+import db from "@/db"
+import ClinicDepartmentModel from "@/db/model/ClinicDepartment"
+import { useDBClinicsList } from "@/hooks/useDBClinicsList"
+import Appointment from "@/models/Appointment"
+import Clinic from "@/models/Clinic"
+import Patient from "@/models/Patient"
+import type { AppointmentNavigatorParamList } from "@/navigators/AppointmentNavigator"
+import { providerStore } from "@/store/provider"
+import { colors } from "@/theme/colors"
+import { useAppTheme } from "@/theme/context"
+import type { ThemedStyle } from "@/theme/types"
+import { friendlyString } from "@/utils/misc"
 
-interface AppointmentsListScreenProps extends AppStackScreenProps<"AppointmentsList"> {}
+interface AppointmentsListScreenProps
+  extends NativeStackScreenProps<AppointmentNavigatorParamList, "AppointmentsList"> {}
 
-export const AppointmentsListScreen: FC<AppointmentsListScreenProps> = () => {
-  // Pull in navigation via hook
-  // const navigation = useNavigation()
+interface FilterState {
+  selectedClinicId: string | null
+  selectedDepartmentIds: string[]
+  selectedStatuses: Appointment.Status[]
+  searchQuery: string
+}
+
+// type AppointmentsFilters = {
+//   status: Appointment.Status
+//   startDate: Date
+//   endDate: Date
+//   clinicId: string[]
+//   searchQuery: string
+//   departmentIds: string[]
+// }
+
+type AppointmentsFilters = {
+  status: Appointment.Status | "all"
+  date: Date
+  clinicId: string
+  searchQuery: string
+  departmentIds: string[]
+}
+
+const initialFilters: AppointmentsFilters = {
+  status: "pending",
+  date: startOfDay(new Date()),
+  clinicId: "",
+  searchQuery: "",
+  departmentIds: [],
+}
+
+export const AppointmentsListScreen: FC<AppointmentsListScreenProps> = ({ navigation }) => {
+  const { themed } = useAppTheme()
+  const {
+    id: providerId,
+    clinic_id,
+    clinic_name,
+    name: providerName,
+  } = useSelector(providerStore, (state) => state.context)
+  const propsClinicId = Option.getOrElse(clinic_id, () => "")
+  const clinicName = Option.getOrElse(clinic_name, () => "")
+
+  const [filters, setFilters] = useState<AppointmentsFilters>({
+    ...initialFilters,
+    clinicId: propsClinicId,
+    date: startOfDay(new Date()),
+  })
+
+  const [appointmentResults, setAppointmentResults] = useState<Appointment.T[]>([])
+
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useDebounceValue(filters.searchQuery, 500)
+  useEffect(() => {
+    setDebouncedSearchQuery(filters.searchQuery)
+  }, [filters.searchQuery])
+
+  const fetchAppointments = async (offset: number = 0) => {
+    try {
+      const results = await Appointment.DB.search(
+        debouncedSearchQuery,
+        filters.clinicId,
+        filters.departmentIds,
+        [filters.status],
+        filters.date,
+        {
+          limit: 100,
+          offset,
+        },
+      )
+
+      setAppointmentResults(results)
+    } catch (error) {
+      console.error(error)
+      setAppointmentResults([])
+    }
+  }
+
+  useEffect(() => {
+    fetchAppointments(0)
+  }, [
+    filters.clinicId,
+    filters.date.toISOString(),
+    debouncedSearchQuery,
+    filters.departmentIds,
+    filters.status,
+  ])
+
+  // const {
+  //   appointments: appointmentsByDate,
+  //   isLoading,
+  //   refresh: refreshAppointments,
+  //   loadMore: loadMoreAppointments,
+  //   appointmentsCount,
+  //   loadedAppointmentsCount,
+  // } = useDBAppointmentsList(
+  //   filters.startDate,
+  //   filters.endDate,
+  //   selectedClinicIds,
+  //   filters.status,
+  //   400,
+  // )
+
+  const { clinics: clinicsList, isLoading: isLoadingClinics } = useDBClinicsList()
+  const activeClinic = clinicsList.find((clinic) => clinic.id === filters.clinicId)
+
+  const handleFiltersChange = (newFilters: Partial<FilterState>) => {
+    console.warn("handleFiltersChange called", newFilters)
+    setFilters((prev) => ({ ...prev, ...newFilters }))
+  }
+
+  const clearFilters = () => {
+    setFilters({ ...initialFilters, clinicId: propsClinicId, date: startOfDay(new Date()) })
+  }
+
+  const loadMoreAppointments = async () => {
+    fetchAppointments(appointmentResults.length)
+  }
+
+  const handleAppointmentPress = (appointment: { patientId: string; id: string }) => {
+    if (!appointment.patientId) return
+    navigation.navigate("AppointmentView", {
+      patientId: appointment.patientId,
+      appointmentId: appointment.id,
+    })
+  }
+
+  if (isLoadingClinics) {
+    return (
+      <View style={$root}>
+        <Text>Loading Clinics...</Text>
+      </View>
+    )
+  }
+
   return (
-    <Screen style={$root} preset="scroll">
-      <Text text="appointmentsList" />
-    </Screen>
+    <LegendList
+      ListHeaderComponent={
+        <AppointmentListHeader
+          clinicsList={clinicsList}
+          clinic={activeClinic}
+          clearFilters={clearFilters}
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
+        />
+      }
+      // ItemSeparatorComponent={ItemSeparatorComponent}
+      data={appointmentResults}
+      // data={[]}
+      // renderItem={({ item }) => <AppointmentItem appointment={item} />}
+      renderItem={({ item }) => {
+        return (
+          <View px={10}>
+            <AppointmentItem onPress={() => handleAppointmentPress(item)} appointment={item} />
+          </View>
+        )
+      }}
+      estimatedItemSize={100}
+      recycleItems={false}
+      keyExtractor={(item) => item.id}
+      ListEmptyComponent={
+        <View justifyContent="center" px={10} alignItems="center" pt={"40%"}>
+          <LucideListTodo size={120} color={colors.textDim} />
+          <Text text="No appointments found" size="xl" />
+        </View>
+      }
+      ListFooterComponent={<View mb={64}></View>}
+      onEndReached={() => {
+        loadMoreAppointments()
+      }}
+      onEndReachedThreshold={0.5}
+      extraData={`${filters.status}_${filters.clinicId}_${filters.searchQuery}__${filters.date.toDateString()}__${filters.departmentIds}`}
+      // extraData={appointmentsCount * loadedAppointmentsCount}
+    />
   )
 }
 
+interface AppointmentListHeaderProps {
+  clinicsList: Clinic.DBClinic[]
+  clinic?: Clinic.DBClinic
+  filters: AppointmentsFilters
+  clearFilters: () => void
+  onFiltersChange: (filters: Partial<AppointmentsFilters>) => void
+}
+
+// Add patient, clinic, and provider to the appointment
+const enhanceHeader = withObservables(["clinic"], ({ clinic }: { clinic?: Clinic.DBClinic }) => ({
+  clinic: clinic?.observe().pipe(catchError(() => of$(null))),
+  departmentList: clinic?.departments.observe().pipe(catchError(() => of$(null))) || [],
+}))
+
+const statusesList = Appointment.statusList
+
+export const AppointmentListHeader: FC<AppointmentListHeaderProps> = enhanceHeader(
+  ({
+    filters,
+    clearFilters,
+    onFiltersChange,
+    departmentList = [],
+    clinicsList,
+  }: {
+    filters: AppointmentsFilters
+    clearFilters: () => void
+    onFiltersChange: (filters: Partial<AppointmentsFilters>) => void
+    departmentList: ClinicDepartmentModel[]
+    clinicsList: Clinic.DBClinic[]
+  }) => {
+    const { themed } = useAppTheme()
+    const [openDropdown, setOpenDropdown] = useState<"clinic" | "status" | "department" | null>(
+      null,
+    )
+    const [isCollapsed, setIsCollapsed] = useState(true)
+
+    const selectedClinic = clinicsList.find((clinic) => clinic.id === filters.clinicId)
+    const selectedStatus = filters.status
+    const selectedDepartments = departmentList.filter((department) =>
+      filters.departmentIds.includes(department.id),
+    )
+
+    return (
+      <View style={themed($headerContainer)}>
+        {/* Search Bar */}
+        <TextField
+          placeholder="Search appointments..."
+          value={filters.searchQuery}
+          onChangeText={(text) => onFiltersChange({ searchQuery: text })}
+          style={$searchField}
+          // TODO: Center the icon and add right side padding
+          RightAccessory={() => <LucideSearch style={$searchIcon} />}
+        />
+
+        <If condition={isCollapsed}>
+          <View>
+            {selectedClinic && <Text text={`Clinic: ${selectedClinic.name}`} />}
+
+            {selectedStatus && <Text text={`Status: ${friendlyString(selectedStatus)}`} />}
+
+            {selectedDepartments.length > 0 && (
+              <Text
+                text={`Departments: ${selectedDepartments.map((department) => department.name).join(", ")}`}
+              />
+            )}
+
+            <View direction="row" justifyContent="flex-end">
+              <Pressable style={$collapsibleButton} onPress={() => setIsCollapsed(false)}>
+                <Text text="Expand Filters" color={colors.palette.primary700} />
+                <LucideChevronDown size={24} color={colors.palette.primary700} />
+              </Pressable>
+            </View>
+          </View>
+        </If>
+        <If condition={!isCollapsed}>
+          <View direction="row" justifyContent="flex-end">
+            <Pressable style={$collapsibleButton} onPress={() => setIsCollapsed(true)}>
+              <Text text="Hide Filters" color={colors.palette.primary700} />
+              <LucideChevronUp size={24} color={colors.palette.primary700} />
+            </Pressable>
+          </View>
+          <View mt={10}>
+            <Text preset="formLabel" text="Clinic" />
+
+            <DropDownPicker
+              open={openDropdown === "clinic"}
+              setOpen={(open) => {
+                if (open as unknown as boolean) setOpenDropdown("clinic")
+                else setOpenDropdown(null)
+              }}
+              modalTitle="Clinic"
+              style={$dropDownPickerStyle}
+              zIndex={990000}
+              zIndexInverse={990000}
+              listMode="MODAL"
+              items={clinicsList.map((clinic) => ({
+                label: clinic.name,
+                value: clinic.id,
+              }))}
+              value={filters.clinicId || ""}
+              setValue={(cb) => {
+                const data = cb(filters.clinicId)
+                onFiltersChange({ clinicId: data })
+              }}
+            />
+          </View>
+
+          <View mt={10}>
+            <Text preset="formLabel" text="Department" />
+
+            <DropDownPicker
+              open={openDropdown === "department"}
+              setOpen={(open) => {
+                if (open as unknown as boolean) setOpenDropdown("department")
+                else setOpenDropdown(null)
+              }}
+              modalTitle="Department"
+              style={$dropDownPickerStyle}
+              zIndex={990000}
+              zIndexInverse={990000}
+              listMode="MODAL"
+              items={departmentList.map((department) => ({
+                label: department.name,
+                value: department.id,
+              }))}
+              mode="BADGE"
+              multiple
+              value={filters.departmentIds || ""}
+              onSelectItem={(items) => {
+                const data = items.map((item) => item.value).filter(Boolean)
+                onFiltersChange({ departmentIds: data })
+              }}
+              // setValue={(cb) => {
+              //   const data = cb(filters.departmentIds)
+              //   onFiltersChange({ departmentIds: data })
+              // }}
+            />
+          </View>
+
+          <View mt={10}>
+            <Text preset="formLabel" text="Status" />
+
+            <View direction="row" flexWrap="wrap" gap={5}>
+              {statusesList.map((status) => (
+                <Pressable
+                  style={[$statusChip, status === filters.status ? $statusChipActive : null]}
+                  key={status}
+                  onPress={() => {
+                    onFiltersChange({ status: status })
+                  }}
+                >
+                  <Text
+                    style={[
+                      status === filters.status ? $statusChipActiveText : $statusChipText,
+                      null,
+                    ]}
+                    size="xxs"
+                  >
+                    {upperFirst(status.replaceAll("_", " "))}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
+          {/*<View mt={10}>
+          <Text preset="formLabel" text="Status" />
+
+          <DropDownPicker
+            open={openDropdown === "status"}
+            setOpen={(open) => {
+              if (open as unknown as boolean) setOpenDropdown("status")
+              else setOpenDropdown(null)
+            }}
+            modalTitle="Appointment Status"
+            style={$dropDownPickerStyle}
+            zIndex={990000}
+            zIndexInverse={990000}
+            listMode="MODAL"
+            items={stringsListToOptions(Appointment.statusList, true)}
+            value={filters.status || ""}
+            setValue={(cb) => {
+              const data = cb(filters.status)
+              onFiltersChange({ status: data })
+            }}
+          />
+        </View>*/}
+
+          {/*<View mt={10}>
+          <Checkbox
+            label="Include in department visits"
+            labelStyle={{
+              fontSize: 14,
+            }}
+          />
+        </View>*/}
+        </If>
+        <View>
+          <AgendaDateSetter date={filters.date} setDate={(date) => onFiltersChange({ date })} />
+        </View>
+      </View>
+    )
+  },
+)
+
+/**
+ * Date setter component to set the date of view
+ * @param {date} date - The current / active date
+ * @param {(date: Date) => void} setDate - The function to set the date
+ */
+const AgendaDateSetter = ({ date, setDate }: { date: Date; setDate: (date: Date) => void }) => {
+  const { themed } = useAppTheme()
+
+  const month = date.toLocaleString("default", { month: "long" })
+
+  /**
+   * Given a date d, return the dates in the future until d+n days and all the days before d until d-n days
+   * @param {Date} date - The date to calculate the range for
+   * @param {number} n - The number of days to include in the range
+   * @returns {Date[]} An array of dates in the range
+   * */
+  const getRange = (date: Date, n: number): Date[] => {
+    const range = []
+    for (let i = -n; i <= n; i++) {
+      range.push(new Date(date.getTime() + i * 24 * 60 * 60 * 1000))
+    }
+    return range
+  }
+
+  return (
+    <View py={10}>
+      <View>
+        <Text text={month} size="xs" align="center" />
+      </View>
+      <View direction="row" justifyContent="space-around" style={$datesContainer}>
+        {getRange(date, 2).map((d) => (
+          <Pressable
+            key={d.toISOString()}
+            onPress={() => setDate(d)}
+            style={[
+              $dateItem,
+              isSameDay(d, date) ? $activeDate : null,
+              isToday(d) ? $todayDate : null,
+            ]}
+          >
+            <Text
+              color={isSameDay(d, date) ? colors.palette.neutral100 : colors.text}
+              text={d.toLocaleString("default", { day: "numeric" })}
+            />
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  )
+}
+
+const $dateItem: ViewStyle = {
+  padding: 10,
+  borderRadius: 10,
+  marginHorizontal: 5,
+}
+
+const $activeDate: ViewStyle = {
+  backgroundColor: colors.palette.primary500,
+}
+
+const $collapsibleButton: ViewStyle = {
+  flexDirection: "row",
+  justifyContent: "center",
+  alignItems: "center",
+  gap: 4,
+}
+
+const $todayDate: ViewStyle = {
+  // borderBottomWidth: 2,
+  // borderColor: "green",
+  borderColor: colors.palette.neutral400,
+  borderWidth: 1,
+}
+
+const $datesContainer: ViewStyle = {
+  flexDirection: "row",
+  justifyContent: "space-around",
+  paddingVertical: 4,
+  borderWidth: 1,
+  borderColor: colors.palette.neutral400,
+  borderRadius: 10,
+}
+
+// Add patient, clinic, and provider to the appointment
+const enhance = compose(
+  withObservables(["appointment"], ({ appointment }: { appointment: Appointment.T }) => ({
+    appointment: db.get("appointments").findAndObserve(appointment.id),
+    // patient: appointment.patient?.observe(),
+    // patient: appointment.patient?.observe().pipe(catchError(() => of$(null))),
+    // clinic: appointment.clinic?.observe().pipe(catchError(() => of$(null))),
+    // provider: item.provider?.observe(),
+  })),
+  withObservables(
+    ["appointment"],
+    ({ appointment }: { appointment: Appointment.DBAppointment }) => ({
+      patient: appointment.patient ? appointment.patient.observe() : of$(null),
+      clinic: appointment.clinic ? appointment.clinic.observe() : of$(null),
+    }),
+  ),
+)
+
+const AppointmentItem = enhance(
+  ({
+    appointment,
+    patient,
+    clinic,
+    onPress,
+  }: {
+    appointment: Appointment.DBAppointment
+    patient: Patient.DBPatient | null | undefined
+    clinic: Clinic.DBClinic | null | undefined
+    onPress: () => void
+  }) => {
+    const { themed } = useAppTheme()
+    console.log(patient, appointment.patientId)
+
+    return (
+      <Pressable onPress={onPress}>
+        <View style={$appointmentListItem}>
+          <View direction="row" justifyContent="space-between">
+            <View direction="row" alignItems="baseline" gap={4}>
+              <View
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: 100,
+                  backgroundColor: appointment.metadata?.colorTag || colors.palette.neutral100,
+                }}
+              />
+              <Text
+                text={patient ? upperFirst(Patient.displayName(patient as any)) : ""}
+                size="md"
+              />
+            </View>
+            <View style={{}}>
+              <Text
+                color={colors.palette.primary500}
+                text={appointment?.status?.replace("_", " ") || "Pending"}
+                size="xxs"
+              />
+            </View>
+          </View>
+          <If condition={!!clinic && clinic.name !== undefined}>
+            <Text
+              color={colors.palette.primary500}
+              textDecorationLine="underline"
+              text={clinic?.name || ""}
+              size="xs"
+            />
+          </If>
+          <Text text={`Time: ${format(appointment.timestamp, "h:mm a")}`} size="xs" />
+          <Text text={`Created at ${format(appointment.createdAt, "MMM dd, h:mm a")}`} size="xs" />
+          {/* Status */}
+        </View>
+      </Pressable>
+    )
+  },
+)
+
+// TODO: move this to a single shared location across files
+const $dropDownPickerStyle: ViewStyle = {
+  marginTop: 2,
+  borderWidth: 1,
+  borderRadius: 4,
+  backgroundColor: colors.palette.neutral200,
+  borderColor: colors.palette.neutral400,
+  zIndex: 990000,
+  flex: 1,
+}
+
+const $statusChip: ViewStyle = {
+  paddingVertical: 4,
+  paddingHorizontal: 8,
+  borderRadius: 10,
+  backgroundColor: colors.palette.neutral200,
+  borderColor: colors.palette.neutral400,
+  borderWidth: 1,
+}
+
+const $statusChipText: TextStyle = {
+  color: colors.palette.neutral800,
+}
+
+const $statusChipActive: ViewStyle = {
+  backgroundColor: colors.palette.primary500,
+  borderColor: colors.palette.primary500,
+}
+
+const $statusChipActiveText: TextStyle = {
+  color: colors.palette.neutral100,
+}
+
+const $appointmentListItem: ViewStyle = {
+  padding: 8,
+  borderBottomWidth: 1,
+  borderBottomColor: "#ccc",
+  marginHorizontal: 10,
+  marginVertical: 5,
+  marginBottom: 10,
+}
+
+export const ItemSeparatorComponent = () => {
+  const { themed } = useAppTheme()
+  return <View style={themed($separator)} />
+}
+
+// Helper function to count active filters
+const getActiveFilterCount = (filters: FilterState): number => {
+  let count = 0
+  if (filters.selectedClinicId) count++
+  if (filters.selectedDepartmentIds.length > 0) count++
+  if (filters.selectedStatuses.length > 0) count++
+  if (filters.searchQuery.length > 0) count++
+  return count
+}
+
+// Styles
 const $root: ViewStyle = {
   flex: 1,
 }
+
+const $headerContainer: ThemedStyle<ViewStyle> = ({ spacing, colors }) => ({
+  paddingHorizontal: spacing.md,
+  paddingVertical: spacing.md,
+  paddingTop: spacing.xl,
+  backgroundColor: colors.background,
+  borderBottomWidth: 1,
+  borderBottomColor: colors.border,
+})
+
+const $searchField: ViewStyle = {
+  marginBottom: 12,
+}
+
+const $searchIcon: ViewStyle = {
+  marginRight: 8,
+  alignSelf: "center",
+}
+
+const $filterToggleButton: ViewStyle = {
+  flex: 1,
+  marginRight: 8,
+}
+
+const $filterToggleIcon: ViewStyle = {
+  marginLeft: 4,
+}
+
+const $separator: ThemedStyle<ViewStyle> = ({ colors }) => ({
+  height: 1,
+  backgroundColor: colors.border,
+})
+
+const $emptySubtext: ThemedStyle<TextStyle> = ({ colors }) => ({
+  color: colors.textDim,
+  marginTop: 8,
+})
