@@ -50,10 +50,10 @@ export type AppStackParamList = {
   PatientRegistrationForm: { editPatientId?: string }
   SyncSettings: undefined
   VitalHistory: undefined
-	VitalForm: undefined
-	AppointmentEditorForm: undefined
-	AppointmentView: undefined
-	// IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
+  VitalForm: undefined
+  AppointmentEditorForm: undefined
+  AppointmentView: undefined
+  // IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
 }
 
 /**
@@ -75,6 +75,7 @@ const Drawer = createDrawerNavigator()
 const AppStack = () => {
   const {
     theme: { colors },
+    setThemeContextOverride,
   } = useAppTheme()
 
   const provider = useSelector(providerStore, (state) => state.context)
@@ -143,7 +144,11 @@ export interface NavigationProps
   extends Partial<ComponentProps<typeof NavigationContainer<AppStackParamList>>> {}
 
 export const AppNavigator = (props: NavigationProps) => {
-  const { navigationTheme } = useAppTheme()
+  const { navigationTheme, setThemeContextOverride } = useAppTheme()
+
+  useEffect(() => {
+    setThemeContextOverride("light")
+  }, [])
 
   useBackButtonHandler((routeName) => exitRoutes.includes(routeName))
 

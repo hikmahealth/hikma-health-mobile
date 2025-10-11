@@ -1,4 +1,5 @@
 import { Q } from "@nozbe/watermelondb"
+import * as Sentry from "@sentry/react-native"
 import { Option, Either } from "effect"
 import { camelToSnake } from "effect/String"
 
@@ -39,6 +40,36 @@ namespace UserClinicPermissions {
     | "canDeleteRecords"
     | "isClinicAdmin"
   >
+
+  /**
+   * Function to retrieve the SQL permission name for a given permission type.
+   * This function maps the permission type to its corresponding SQL column name.
+   *
+   * @param permission - The permission type to retrieve the SQL name for.
+   * @returns The SQL permission name as a string.
+   */
+  export function getSQLPermissionName(permission: UserPermissionsT): string {
+    switch (permission) {
+      case "canRegisterPatients":
+        return "can_register_patients"
+      case "canViewHistory":
+        return "can_view_history"
+      case "canEditRecords":
+        return "can_edit_records"
+      case "canDeleteRecords":
+        return "can_delete_records"
+      case "isClinicAdmin":
+        return "is_clinic_admin"
+      default:
+        Sentry.captureEvent({
+          message: `Unknown permission: ${permission}`,
+          extra: {
+            permission,
+          },
+        })
+        return permission
+    }
+  }
 
   /** Default empty UserClinicPermissions Item */
   export const empty: T = {
@@ -187,7 +218,7 @@ namespace UserClinicPermissions {
         .query(
           Q.where("user_id", userId),
           Q.where("clinic_id", clinicId),
-          Q.where(permission, true),
+          Q.where(getSQLPermissionName(permission), true),
           Q.take(1),
         )
         .fetch()

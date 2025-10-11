@@ -2,7 +2,7 @@
   "name": "Hikma Health",
   "slug": "hikma-health-mobile",
   "scheme": "hikma-health-mobile",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "orientation": "portrait",
   "userInterfaceStyle": "light",
   "icon": "./assets/images/app-icon-all.png",
@@ -16,19 +16,21 @@
   "android": {
     "icon": "./assets/images/app-icon-android-legacy.png",
     "package": "com.hikmahealth",
+    "userInterfaceStyle": "light",
     "adaptiveIcon": {
       "foregroundImage": "./assets/images/app-icon-android-adaptive-foreground.png",
       "backgroundImage": "./assets/images/app-icon-android-adaptive-background.png"
     },
     "allowBackup": false,
     "edgeToEdgeEnabled": true,
-    "versionCode": 41,
-    "versionName": "0.4.1"
+    "versionCode": 42,
+    "versionName": "0.4.2"
   },
   "ios": {
     "icon": "./assets/images/app-icon-ios.png",
     "supportsTablet": true,
     "bundleIdentifier": "com.hikmahealthmobile",
+    "userInterfaceStyle": "light",
     "privacyManifests": {
       "NSPrivacyAccessedAPITypes": [
         {
@@ -76,7 +78,7 @@
         "image": "./assets/images/app-icon-android-adaptive-foreground.png",
         "imageWidth": 300,
         "resizeMode": "contain",
-        "backgroundColor": "#fff"
+        "backgroundColor": "#ffffff"
       }
     ],
     [

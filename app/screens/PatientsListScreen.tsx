@@ -17,8 +17,8 @@ import { usePatientsList } from "@/hooks/usePatientsList"
 import { translate } from "@/i18n/translate"
 import { PatientNavigatorParamList } from "@/navigators/PatientNavigator"
 import { languageStore } from "@/store/language"
-import { colors } from "@/theme/colors"
 import { providerStore } from "@/store/provider"
+import { colors } from "@/theme/colors"
 
 interface PatientsListScreenProps
   extends NativeStackScreenProps<PatientNavigatorParamList, "PatientsList"> {}
@@ -92,9 +92,9 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = ({ navigation }) 
             //   translate("patientList.deletePatientQuestion"),
             //   translate("patientList.confirmDeletePatient"),
             //   [
-            //     { text: translate("cancel") },
+            //     { text: translate("common:cancel") },
             //     {
-            //       text: translate("delete"),
+            //       text: translate("common:delete"),
             //       onPress: () => {
             //         patientApi.deleteById(patientId)
             //       },
@@ -239,8 +239,10 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = ({ navigation }) 
         ItemSeparatorComponent={() => <View style={$separator} />}
         ListFooterComponent={() => <View style={{ height: 40 }} />}
         data={patients}
-        extraData={isFocused}
-        keyExtractor={(item) => item.id}
+        recycleItems={false}
+        extraData={`${isFocused ? "focused" : "not_focused"}_${patients.length}_${totalPatientsCount}`}
+        // the key contains the updatedAt, to ensure that the list is updated when the patient data changes
+        keyExtractor={(item, index) => `${item.id}_${item.updatedAt}`}
         renderItem={({ item }) => (
           <PatientListItem
             onPatientLongPress={openPatientEditOptions}

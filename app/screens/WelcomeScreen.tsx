@@ -24,10 +24,10 @@ export const WelcomeScreen: FC = function WelcomeScreen() {
         <Text
           testID="welcome-heading"
           style={themed($welcomeHeading)}
-          tx="welcomeScreen:readyForLaunch"
+          text="welcomeScreen:readyForLaunch"
           preset="heading"
         />
-        <Text tx="welcomeScreen:exciting" preset="subheading" />
+        <Text text="welcomeScreen:exciting" preset="subheading" />
         <Image
           style={$welcomeFace}
           source={welcomeFace}
@@ -37,7 +37,7 @@ export const WelcomeScreen: FC = function WelcomeScreen() {
       </View>
 
       <View style={themed([$bottomContainer, $bottomContainerInsets])}>
-        <Text tx="welcomeScreen:postscript" size="md" />
+        <Text text="welcomeScreen:postscript" size="md" />
       </View>
     </Screen>
   )

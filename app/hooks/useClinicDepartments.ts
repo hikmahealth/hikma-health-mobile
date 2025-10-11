@@ -33,7 +33,7 @@ export const useClinicDepartments = (clinicId: string) => {
     // Set up subscription
     const subscription = db.collections
       .get<Clinic.DBClinicDepartment>("clinic_departments")
-      .query(Q.where("clinic_id", clinicId), Q.where("is_archived", false))
+      .query(Q.where("clinic_id", clinicId))
       .observe()
       .subscribe((departments) => {
         setDepartments(departments)

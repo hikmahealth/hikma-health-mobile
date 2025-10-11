@@ -3,11 +3,11 @@ import { Option, Schema } from "effect"
 
 import database from "@/db"
 import AppointmentModel from "@/db/model/Appointment"
+import ClinicDepartmentModel from "@/db/model/ClinicDepartment"
 import PatientModel from "@/db/model/Patient"
 import VisitModel from "@/db/model/Visit"
 
 import User from "./User"
-import ClinicDepartmentModel from "@/db/model/ClinicDepartment"
 
 namespace Appointment {
   export const Status = {
@@ -59,7 +59,8 @@ namespace Appointment {
     notes: string
     status: Status
     isWalkIn: boolean
-    departments: EncodedDepartment[]
+    // This is a hack!! TODO: must pick one.
+    departments: (EncodedDepartment | EncodedDepartmentT)[]
     metadata: Record<string, any>
     isDeleted: boolean
     createdAt: Date
@@ -416,6 +417,59 @@ namespace Appointment {
       })
     }
 
+    export const createSearchQueryConditions = (
+      searchQuery: string,
+      clinicId: string,
+      status: string[],
+      date: Date,
+      options: { offset?: number; limit?: number } = { offset: 0, limit: 25 },
+    ): Q.Clause[] => {
+      // Build query conditions
+      const conditions = [Q.where("clinic_id", clinicId), Q.where("is_deleted", false)]
+
+      // Add date filter - filter by day
+      const startOfDay = new Date(date)
+      startOfDay.setHours(0, 0, 0, 0)
+      const endOfDay = new Date(date)
+      endOfDay.setHours(23, 59, 59, 999)
+
+      conditions.push(
+        Q.where("timestamp", Q.gte(startOfDay.getTime())),
+        Q.where("timestamp", Q.lte(endOfDay.getTime())),
+      )
+
+      // Add status filter if provided
+      if (status.length > 0) {
+        conditions.push(Q.where("status", Q.oneOf(status)))
+      }
+
+      // Add patient name search if search query is provided
+      if (searchQuery.trim()) {
+        const searchTerm = searchQuery.trim()
+        const terms = searchTerm.split(" ")
+        conditions.push(
+          Q.experimentalJoinTables(["patients"]),
+          Q.or(
+            ...terms.flatMap((t) => [
+              Q.on("patients", "given_name", Q.like(`%${Q.sanitizeLikeString(t)}%`)),
+              Q.on("patients", "surname", Q.like(`%${Q.sanitizeLikeString(t)}%`)),
+            ]),
+          ),
+        )
+      }
+
+      // Add pagination
+      const { offset = 0, limit = 25 } = options
+      if (offset > 0) {
+        conditions.push(Q.skip(offset))
+      }
+      if (limit > 0) {
+        conditions.push(Q.take(limit))
+      }
+
+      return conditions
+    }
+
     /**
      * Search for appointments by different parameters
      * @param {string} searchQuery
@@ -431,51 +485,11 @@ namespace Appointment {
       departmentIds: string[],
       status: string[],
       date: Date,
-      options: { offset?: number; limit?: number } = { offset: 0, limit: 25 },
+      options: { offset?: number; limit?: number } = { offset: 0, limit: 50 },
     ): Promise<Appointment.T[]> => {
       try {
-        // Build query conditions
-        const conditions = [Q.where("clinic_id", clinicId), Q.where("is_deleted", false)]
-
-        // Add date filter - filter by day
-        const startOfDay = new Date(date)
-        startOfDay.setHours(0, 0, 0, 0)
-        const endOfDay = new Date(date)
-        endOfDay.setHours(23, 59, 59, 999)
-
-        conditions.push(
-          Q.where("timestamp", Q.gte(startOfDay.getTime())),
-          Q.where("timestamp", Q.lte(endOfDay.getTime())),
-        )
-
-        // Add status filter if provided
-        if (status.length > 0) {
-          conditions.push(Q.where("status", Q.oneOf(status)))
-        }
-
-        // Add patient name search if search query is provided
-        if (searchQuery.trim()) {
-          const searchTerm = searchQuery.trim()
-          const terms = searchTerm.split(" ")
-          conditions.push(
-            Q.experimentalJoinTables(["patients"]),
-            Q.or(
-              ...terms.flatMap((t) => [
-                Q.on("patients", "given_name", Q.like(`%${Q.sanitizeLikeString(t)}%`)),
-                Q.on("patients", "surname", Q.like(`%${Q.sanitizeLikeString(t)}%`)),
-              ]),
-            ),
-          )
-        }
-
-        // Add pagination
-        const { offset = 0, limit = 25 } = options
-        if (offset > 0) {
-          conditions.push(Q.skip(offset))
-        }
-        if (limit > 0) {
-          conditions.push(Q.take(limit))
-        }
+        // build the conditions
+        const conditions = createSearchQueryConditions(searchQuery, clinicId, status, date, options)
 
         // Execute query
         const appointments = await database
@@ -484,29 +498,7 @@ namespace Appointment {
           .fetch()
 
         // Convert to Appointment.T format
-        const results: Appointment.T[] = appointments.map((appointment) => ({
-          id: appointment.id,
-          providerId: appointment.providerId ? Option.some(appointment.providerId) : Option.none(),
-          clinicId: appointment.clinicId,
-          patientId: appointment.patientId,
-          userId: appointment.userId,
-          currentVisitId: appointment.currentVisitId,
-          fulfilledVisitId: appointment.fulfilledVisitId
-            ? Option.some(appointment.fulfilledVisitId)
-            : Option.none(),
-          timestamp: new Date(appointment.timestamp),
-          duration: appointment.duration || 0,
-          reason: appointment.reason,
-          notes: appointment.notes,
-          status: appointment.status,
-          isWalkIn: appointment.isWalkIn,
-          departments: appointment.departments,
-          metadata: appointment.metadata,
-          isDeleted: appointment.isDeleted,
-          createdAt: appointment.createdAt,
-          updatedAt: appointment.updatedAt,
-          deletedAt: appointment.deletedAt ? Option.some(appointment.deletedAt) : Option.none(),
-        }))
+        const results: Appointment.T[] = appointments.map(rawToT)
 
         // Filter by department IDs if provided (client-side filtering)
         if (departmentIds.length > 0) {
@@ -519,6 +511,35 @@ namespace Appointment {
       } catch (error) {
         console.error("Error searching appointments:", error)
         throw error
+      }
+    }
+
+    export function rawToT(rawAppointment: AppointmentModel): Appointment.T {
+      return {
+        id: rawAppointment.id,
+        providerId: rawAppointment.providerId
+          ? Option.some(rawAppointment.providerId)
+          : Option.none(),
+        clinicId: rawAppointment.clinicId,
+        patientId: rawAppointment.patientId,
+        userId: rawAppointment.userId,
+        currentVisitId: rawAppointment.currentVisitId,
+        fulfilledVisitId: rawAppointment.fulfilledVisitId
+          ? Option.some(rawAppointment.fulfilledVisitId)
+          : Option.none(),
+        timestamp: new Date(rawAppointment.timestamp),
+        duration: rawAppointment.duration || 0,
+        reason: rawAppointment.reason,
+        notes: rawAppointment.notes,
+        status: rawAppointment.status,
+        isWalkIn: rawAppointment.isWalkIn,
+        // FIXME: look into this. either remove all Options at this level or figure something else out.
+        departments: rawAppointment.departments,
+        metadata: rawAppointment.metadata,
+        isDeleted: rawAppointment.isDeleted,
+        createdAt: rawAppointment.createdAt,
+        updatedAt: rawAppointment.updatedAt,
+        deletedAt: rawAppointment.deletedAt ? Option.some(rawAppointment.deletedAt) : Option.none(),
       }
     }
   }

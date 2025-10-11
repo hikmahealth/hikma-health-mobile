@@ -10,20 +10,22 @@ if (LaunchArguments.value().isE2E) {
   LogBox.ignoreAllLogs()
 }
 
-if (!__DEV__) {
-  Sentry.init({
-    dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
-    // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
-    // We recommend adjusting this value in production.
-    tracesSampleRate: 1.0,
-    // integrations: [captureConsoleIntegration({ levels: ["error"] })],
-    _experiments: {
-      // profilesSampleRate is relative to tracesSampleRate.
-      // Here, we'll capture profiles for 100% of transactions.
-      profilesSampleRate: 1.0,
-    },
-  })
-}
+const sentryDsnDev = process.env.EXPO_PUBLIC_SENTRY_DSN_DEV
+const sentryDsnProd = process.env.EXPO_PUBLIC_SENTRY_DSN
+
+Sentry.init({
+  dsn: __DEV__ ? sentryDsnDev : sentryDsnProd,
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+  // We recommend adjusting this value in production.
+  tracesSampleRate: 1.0,
+  environment: __DEV__ ? "development" : "production",
+  // integrations: [captureConsoleIntegration({ levels: ["error"] })],
+  _experiments: {
+    // profilesSampleRate is relative to tracesSampleRate.
+    // Here, we'll capture profiles for 100% of transactions.
+    profilesSampleRate: 1.0,
+  },
+})
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
 // It also ensures that whether you load the app in Expo Go or in a native build,

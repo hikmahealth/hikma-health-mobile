@@ -1,25 +1,22 @@
 import { I18nManager } from "react-native"
 import * as Localization from "expo-localization"
+import { Option } from "effect"
 import i18n from "i18next"
-import { initReactI18next } from "react-i18next"
 import "intl-pluralrules"
+import { initReactI18next } from "react-i18next"
 
 // if English isn't your default language, move Translations to the appropriate language file.
+import Language from "@/models/Language"
+
 import ar from "./ar"
 import en, { Translations } from "./en"
 import es from "./es"
-import fr from "./fr"
-import hi from "./hi"
-import ja from "./ja"
-import ko from "./ko"
-import Language from "@/models/Language"
-import { Option } from "effect"
 
 const fallbackLocale = "en-US"
 
 const systemLocales = Localization.getLocales()
 
-const resources = { ar, en, ko, es, fr, ja, hi }
+const resources = { ar, en, es }
 const supportedTags = Object.keys(resources)
 
 // Checks to see if the device locale matches any of the supported locales

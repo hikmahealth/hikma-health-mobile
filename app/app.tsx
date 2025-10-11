@@ -37,7 +37,7 @@ import { AppNavigator } from "./navigators/AppNavigator"
 import { useNavigationPersistence } from "./navigators/navigationUtilities"
 import { languageStore } from "./store/language"
 import { providerStore } from "./store/provider"
-import { ThemeProvider } from "./theme/context"
+import { ThemeProvider, useAppTheme } from "./theme/context"
 import { customFontsToLoad } from "./theme/typography"
 import { loadDateFnsLocale } from "./utils/formatDate"
 import * as storage from "./utils/storage"
@@ -77,7 +77,6 @@ export function App() {
     onNavigationStateChange,
     isRestored: isNavigationStateRestored,
   } = useNavigationPersistence(storage, NAVIGATION_PERSISTENCE_KEY)
-
   const netInfo = useNetInfo()
 
   const language = useSelector(languageStore, (state) => state.context.language)

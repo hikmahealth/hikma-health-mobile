@@ -1,4 +1,11 @@
 const en = {
+  emptyStateComponent: {
+    generic: {
+      heading: "No Data Available",
+      content: "There is no data available for this section.",
+      button: "Try again",
+    },
+  },
   login: {
     signIn: "Sign In",
     email: "Email Address",
@@ -172,6 +179,7 @@ const en = {
     },
   },
   common: {
+    ok: "OK",
     today: "Today",
     departments: "Departments",
     chooseLanguage: "Choose Language",

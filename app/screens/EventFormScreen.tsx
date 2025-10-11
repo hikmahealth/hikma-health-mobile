@@ -44,6 +44,7 @@ import { PatientNavigatorParamList } from "@/navigators/PatientNavigator"
 import { languageStore } from "@/store/language"
 import { providerStore } from "@/store/provider"
 import { colors } from "@/theme/colors"
+import Toast from "react-native-root-toast"
 
 type ModalState =
   | { activeModal: null }
@@ -222,10 +223,24 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
     }
     // If eventId is null, this is a new form being created, so it should be editable
     // Otherwise, respect the form's isEditable property
+    if (form?.isEditable === false) {
+      Toast.show("Form is not editable", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.BOTTOM,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+      })
+      return false
+    }
     return (eventId === null || form?.isEditable) ?? false
   }, [form?.isEditable, loading, eventId])
 
+  console.log("canSaveForm", canSaveForm)
+
   const onSubmit = async (data: Record<string, any>) => {
+    console.log("onSubmit", data)
     if (loading) {
       return
     }

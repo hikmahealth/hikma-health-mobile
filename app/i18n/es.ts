@@ -1,5 +1,12 @@
 import type { Translations as ENTranslations } from "./en"
 const es: ENTranslations = {
+  emptyStateComponent: {
+    generic: {
+      heading: "No hay datos disponibles",
+      content: "No hay datos disponibles para esta sección.",
+      button: "Intentar de nuevo",
+    },
+  },
   login: {
     signIn: "Iniciar Sesión",
     email: "Correo electrónico",
@@ -174,6 +181,7 @@ const es: ENTranslations = {
     },
   },
   common: {
+    ok: "OK",
     today: "Hoy",
     departments: "Departamentos",
     chooseLanguage: "Elige un idioma",

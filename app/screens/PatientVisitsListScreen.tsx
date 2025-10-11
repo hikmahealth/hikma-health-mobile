@@ -26,6 +26,8 @@ export const PatientVisitsListScreen: FC<PatientVisitsListScreenProps> = ({
     <PatientVisitItem visit={item} onPress={onVisitPress} onDelete={onDeleteVisit} />
   )
 
+  console.log("PatientVisitsListScreen", patientVisits)
+
   const onVisitPress = (visit: VisitModel) => {
     navigation.navigate("VisitEventsList", {
       patientId,
@@ -72,15 +74,13 @@ export const PatientVisitsListScreen: FC<PatientVisitsListScreenProps> = ({
   }
 
   return (
-    <Screen style={$root} preset="fixed">
-      <LegendList
-        data={patientVisits}
-        contentContainerStyle={{ paddingHorizontal: 14 }}
-        renderItem={renderItem}
-        recycleItems={true}
-        estimatedItemSize={137}
-      />
-    </Screen>
+    <LegendList
+      data={patientVisits}
+      contentContainerStyle={{ paddingHorizontal: 14 }}
+      renderItem={renderItem}
+      recycleItems={false}
+      estimatedItemSize={137}
+    />
   )
 }
 

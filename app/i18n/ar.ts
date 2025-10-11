@@ -1,6 +1,13 @@
 import { Translations } from "./en"
 
 const ar: Translations = {
+  emptyStateComponent: {
+    generic: {
+      heading: "لا توجد بيانات متاحة",
+      content: "لا توجد بيانات متاحة لهذا القسم.",
+      button: "حاول مرة أخرى",
+    },
+  },
   login: {
     signIn: "تسجيل الدخول",
     email: "البريد الإلكتروني",
@@ -168,6 +175,7 @@ const ar: Translations = {
     },
   },
   common: {
+    ok: "موافق",
     today: "اليوم",
     departments: "الاقسام",
     chooseLanguage: "اختر اللغة",

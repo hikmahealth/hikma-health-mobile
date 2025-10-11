@@ -225,7 +225,6 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = ({
           .filter((field) => field.visible)
           .map((field) => {
             const { type, label, value } = field
-            // console.log(type, label, value)
             return (
               <View key={field.id}>
                 {(type === "text" || type === "number") && field.column !== "primary_clinic_id" && (

@@ -78,6 +78,12 @@ export type ViewProps = {
 
   /** Height */
   height?: number
+
+  /** Width */
+  width?: number
+
+  /** Border Radius */
+  borderRadius?: number
 } & RNViewProps
 
 /**
@@ -104,7 +110,10 @@ export const View = (props: ViewProps) => {
     flexWrap,
     justifyContent,
     alignItems,
+    alignContent,
     height,
+    width,
+    borderRadius,
     ...rest
   } = props
   const $styles = [
@@ -127,7 +136,10 @@ export const View = (props: ViewProps) => {
       flexWrap,
       justifyContent,
       alignItems,
+      alignContent,
       height,
+      width,
+      borderRadius,
     }),
     style,
   ]
@@ -146,6 +158,7 @@ const styleMapping: Record<string, keyof ViewStyle> = {
   flexWrap: "flexWrap",
   justifyContent: "justifyContent",
   alignItems: "alignItems",
+  alignContent: "alignContent",
   m: "margin",
   mt: "marginTop",
   mb: "marginBottom",
@@ -158,6 +171,8 @@ const styleMapping: Record<string, keyof ViewStyle> = {
   px: "paddingHorizontal",
   p: "padding",
   height: "height",
+  width: "width",
+  borderRadius: "borderRadius",
 }
 
 const composeStyles = (styles: Record<string, unknown>): ViewStyle => {

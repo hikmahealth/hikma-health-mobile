@@ -1,8 +1,9 @@
-import { FC, useState, useEffect } from "react"
+import { FC, useState, useEffect, useCallback } from "react"
 import { ViewStyle, TextStyle, Pressable } from "react-native"
 import { LegendList } from "@legendapp/list"
 import { compose } from "@nozbe/watermelondb/react"
 import withObservables from "@nozbe/watermelondb/react/withObservables"
+import { useFocusEffect } from "@react-navigation/native"
 import type { NativeStackScreenProps } from "@react-navigation/native-stack"
 import { useSelector } from "@xstate/react"
 import { format, isSameDay, isToday, startOfDay } from "date-fns"
@@ -36,41 +37,10 @@ import { colors } from "@/theme/colors"
 import { useAppTheme } from "@/theme/context"
 import type { ThemedStyle } from "@/theme/types"
 import { friendlyString } from "@/utils/misc"
+import { AppointmentsFilters, useDBAppointmentsFilter } from "@/hooks/useDBAppointmentsFilter"
 
 interface AppointmentsListScreenProps
   extends NativeStackScreenProps<AppointmentNavigatorParamList, "AppointmentsList"> {}
-
-interface FilterState {
-  selectedClinicId: string | null
-  selectedDepartmentIds: string[]
-  selectedStatuses: Appointment.Status[]
-  searchQuery: string
-}
-
-// type AppointmentsFilters = {
-//   status: Appointment.Status
-//   startDate: Date
-//   endDate: Date
-//   clinicId: string[]
-//   searchQuery: string
-//   departmentIds: string[]
-// }
-
-type AppointmentsFilters = {
-  status: Appointment.Status | "all"
-  date: Date
-  clinicId: string
-  searchQuery: string
-  departmentIds: string[]
-}
-
-const initialFilters: AppointmentsFilters = {
-  status: "pending",
-  date: startOfDay(new Date()),
-  clinicId: "",
-  searchQuery: "",
-  departmentIds: [],
-}
 
 export const AppointmentsListScreen: FC<AppointmentsListScreenProps> = ({ navigation }) => {
   const { themed } = useAppTheme()
@@ -81,82 +51,13 @@ export const AppointmentsListScreen: FC<AppointmentsListScreenProps> = ({ naviga
     name: providerName,
   } = useSelector(providerStore, (state) => state.context)
   const propsClinicId = Option.getOrElse(clinic_id, () => "")
-  const clinicName = Option.getOrElse(clinic_name, () => "")
+  // const clinicName = Option.getOrElse(clinic_name, () => "")
 
-  const [filters, setFilters] = useState<AppointmentsFilters>({
-    ...initialFilters,
-    clinicId: propsClinicId,
-    date: startOfDay(new Date()),
-  })
-
-  const [appointmentResults, setAppointmentResults] = useState<Appointment.T[]>([])
-
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useDebounceValue(filters.searchQuery, 500)
-  useEffect(() => {
-    setDebouncedSearchQuery(filters.searchQuery)
-  }, [filters.searchQuery])
-
-  const fetchAppointments = async (offset: number = 0) => {
-    try {
-      const results = await Appointment.DB.search(
-        debouncedSearchQuery,
-        filters.clinicId,
-        filters.departmentIds,
-        [filters.status],
-        filters.date,
-        {
-          limit: 100,
-          offset,
-        },
-      )
-
-      setAppointmentResults(results)
-    } catch (error) {
-      console.error(error)
-      setAppointmentResults([])
-    }
-  }
-
-  useEffect(() => {
-    fetchAppointments(0)
-  }, [
-    filters.clinicId,
-    filters.date.toISOString(),
-    debouncedSearchQuery,
-    filters.departmentIds,
-    filters.status,
-  ])
-
-  // const {
-  //   appointments: appointmentsByDate,
-  //   isLoading,
-  //   refresh: refreshAppointments,
-  //   loadMore: loadMoreAppointments,
-  //   appointmentsCount,
-  //   loadedAppointmentsCount,
-  // } = useDBAppointmentsList(
-  //   filters.startDate,
-  //   filters.endDate,
-  //   selectedClinicIds,
-  //   filters.status,
-  //   400,
-  // )
+  const { appointments, clearFilters, filters, handleFiltersChange, loadMore } =
+    useDBAppointmentsFilter(propsClinicId)
 
   const { clinics: clinicsList, isLoading: isLoadingClinics } = useDBClinicsList()
   const activeClinic = clinicsList.find((clinic) => clinic.id === filters.clinicId)
-
-  const handleFiltersChange = (newFilters: Partial<FilterState>) => {
-    console.warn("handleFiltersChange called", newFilters)
-    setFilters((prev) => ({ ...prev, ...newFilters }))
-  }
-
-  const clearFilters = () => {
-    setFilters({ ...initialFilters, clinicId: propsClinicId, date: startOfDay(new Date()) })
-  }
-
-  const loadMoreAppointments = async () => {
-    fetchAppointments(appointmentResults.length)
-  }
 
   const handleAppointmentPress = (appointment: { patientId: string; id: string }) => {
     if (!appointment.patientId) return
@@ -186,7 +87,7 @@ export const AppointmentsListScreen: FC<AppointmentsListScreenProps> = ({ naviga
         />
       }
       // ItemSeparatorComponent={ItemSeparatorComponent}
-      data={appointmentResults}
+      data={appointments}
       // data={[]}
       // renderItem={({ item }) => <AppointmentItem appointment={item} />}
       renderItem={({ item }) => {
@@ -196,9 +97,9 @@ export const AppointmentsListScreen: FC<AppointmentsListScreenProps> = ({ naviga
           </View>
         )
       }}
-      estimatedItemSize={100}
       recycleItems={false}
-      keyExtractor={(item) => item.id}
+      // Re-render items if the appointment status changes
+      keyExtractor={(item) => `${item.id}_${item.updatedAt}`}
       ListEmptyComponent={
         <View justifyContent="center" px={10} alignItems="center" pt={"40%"}>
           <LucideListTodo size={120} color={colors.textDim} />
@@ -206,9 +107,7 @@ export const AppointmentsListScreen: FC<AppointmentsListScreenProps> = ({ naviga
         </View>
       }
       ListFooterComponent={<View mb={64}></View>}
-      onEndReached={() => {
-        loadMoreAppointments()
-      }}
+      onEndReached={loadMore}
       onEndReachedThreshold={0.5}
       extraData={`${filters.status}_${filters.clinicId}_${filters.searchQuery}__${filters.date.toDateString()}__${filters.departmentIds}`}
       // extraData={appointmentsCount * loadedAppointmentsCount}
@@ -536,7 +435,6 @@ const AppointmentItem = enhance(
     onPress: () => void
   }) => {
     const { themed } = useAppTheme()
-    console.log(patient, appointment.patientId)
 
     return (
       <Pressable onPress={onPress}>
@@ -575,11 +473,72 @@ const AppointmentItem = enhance(
           <Text text={`Time: ${format(appointment.timestamp, "h:mm a")}`} size="xs" />
           <Text text={`Created at ${format(appointment.createdAt, "MMM dd, h:mm a")}`} size="xs" />
           {/* Status */}
+          <If condition={appointment?.departments?.length > 0}>
+            <View pt={4}>
+              <Text text="Departments:" size="xs" textDecorationLine="underline" />
+              <View direction="column">
+                {appointment?.departments?.map((department) => (
+                  <View key={department.id} direction="row" alignItems="center" gap={4}>
+                    <Text text={department.name} size="xs" />
+                    <Text>-</Text>
+                    <View
+                      style={{
+                        backgroundColor: getStatusColor(department.status)[0],
+                        alignSelf: "center",
+                      }}
+                      py={2}
+                      px={4}
+                      height={10}
+                      width={10}
+                      borderRadius={5}
+                    />
+                    <Text text={friendlyString(department.status)} size="xs" />
+                  </View>
+                ))}
+              </View>
+            </View>
+          </If>
         </View>
       </Pressable>
     )
   },
 )
+
+// export const Status = {
+//   PENDING: "pending",
+//   SCHEDULED: "scheduled",
+//   CHECKED_IN: "checked_in",
+//   IN_PROGRESS: "in_progress",
+//   CONFIRMED: "confirmed",
+//   CANCELLED: "cancelled",
+//   COMPLETED: "completed",
+// } as const
+
+/**
+ * Mapping of appointment status to color
+ * @param {Appointment.Status} status
+ * @returns {[color, textColor]}
+ */
+function getStatusColor(status: Appointment.Status): [string, string] {
+  switch (status) {
+    case "pending":
+      return ["#a16207", "#ffffff"] // amber-700
+    case "scheduled":
+      return ["#1e40af", "#ffffff"] // blue-700
+    case "checked_in":
+      return ["#6d28d9", "#ffffff"] // violet-700
+    case "in_progress":
+      return ["#0369a1", "#ffffff"] // sky-700
+    case "confirmed":
+      return ["#15803d", "#ffffff"] // green-700
+    case "cancelled":
+      return ["#a21caf", "#ffffff"] // fuchsia-700
+    case "completed":
+      return ["#059669", "#ffffff"] // emerald-700
+    default:
+      return ["#374151", "#ffffff"] // gray-700
+  }
+}
 
 // TODO: move this to a single shared location across files
 const $dropDownPickerStyle: ViewStyle = {

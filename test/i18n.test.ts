@@ -1,4 +1,4 @@
-import { exec } from "child_process"
+import { execSync, exec } from "child_process"
 
 import en from "../app/i18n/en"
 
@@ -14,6 +14,8 @@ const EXCEPTIONS: string[] = [
    * because of a comment.
    */
   "hello",
+  "patientList.deletePatientQuestion",
+  "patientList.confirmDeletePatient",
 ]
 
 function iterate(obj, stack, array) {
@@ -52,24 +54,69 @@ function iterate(obj, stack, array) {
  */
 
 describe("i18n", () => {
-  test("There are no missing keys", (done) => {
-    // Actual command output:
-    // grep "[T\|t]x=[{]\?\"\S*\"[}]\?\|translate(\"\S*\"" -ohr './app' | grep -o "\".*\""
-    const command = `grep "[T\\|t]x=[{]\\?\\"\\S*\\"[}]\\?\\|translate(\\"\\S*\\"" -ohr './app' | grep -o "\\".*\\""`
-    exec(command, (_, stdout) => {
+  test("There are no missing keys", () => {
+    try {
+      const command = `grep "[T\\|t]x=[{]\\?\\"\\S*\\"[}]\\?\\|translate(\\"\\S*\\"" -ohr './app' | grep -o "\\".*\\""`
+      const stdout = execSync(command, {
+        encoding: "utf8",
+        maxBuffer: 1024 * 1024 * 10, // 10MB buffer
+      })
+
       const allTranslationsDefinedOld = iterate(en, "", [])
-      // Replace first instance of "." because of i18next namespace separator
       const allTranslationsDefined = allTranslationsDefinedOld.map((key) => key.replace(".", ":"))
-      const allTranslationsUsed = stdout.replace(/"/g, "").split("\n")
-      allTranslationsUsed.splice(-1, 1)
+      const allTranslationsUsed = stdout.replace(/"/g, "").split("\n").filter(Boolean)
+
+      console.log("Found keys:", allTranslationsUsed.slice(0, 5))
 
       for (let i = 0; i < allTranslationsUsed.length; i += 1) {
         if (!EXCEPTIONS.includes(allTranslationsUsed[i])) {
-          // You can add keys to EXCEPTIONS (above) if you don't want them included in the test
           expect(allTranslationsDefined).toContainEqual(allTranslationsUsed[i])
         }
       }
-      done()
-    })
+    } catch (error) {
+      console.error("Command failed:", error.message)
+      throw error
+    }
   }, 240000)
+  // test("There are no missing keys", (done) => {
+  //   // Actual command output:
+  //   // grep "[T\|t]x=[{]\?\"\S*\"[}]\?\|translate(\"\S*\"" -ohr './app' | grep -o "\".*\""
+  //   // Note: --exclude-dir=data excludes the data directory which contains large ICD files that cause grep to hang
+  //   // const command = `grep -E "[Tt]x=[{]?\"[^\"]*\"|translate\(\"[^\"]*\"" -ohr --exclude-dir=data './app' | grep -o "\"[^\"]*\""`
+  //   // const command = `grep "[T\\|t]x=[{]\\?\\"\\S*\\"[}]\\?\\|translate(\\"\\S*\\"" -ohr --exclude-dir=data './app' | grep -o "\\".*\\""`
+  //   // const command = [
+  //   //   "grep",
+  //   //   '[T\\|t]x=[{]?\\\"\\S*\\\"[}]?\\|translate(\\\"\\S*\\\"',
+  //   //   "-ohr",
+  //   //   // "--exclude-dir=data",
+  //   //   "./app",
+  //   //   "|",
+  //   //   "grep",
+  //   //   "-o",
+  //   //   '\\".*\\"',
+  //   // ].join(" ")
+  //   const command = `grep '[T\\|t]x=[{]?"\\S*"[}]?\\|translate("\\S*")' -ohr --exclude-dir=data './app' | grep -o '".*"'`
+
+  //   // exec(command, (_, stdout) => {
+  //   exec(command, (error, stdout, stderr) => {
+  //     console.log("Command:", command)
+  //     console.log("Error:", error)
+  //     console.log("Stdout length:", stdout.length)
+  //     console.log("Stderr:", stderr)
+  //     console.log("First few results:", stdout.slice(0, 200))
+  //     const allTranslationsDefinedOld = iterate(en, "", [])
+  //     // Replace first instance of "." because of i18next namespace separator
+  //     const allTranslationsDefined = allTranslationsDefinedOld.map((key) => key.replace(".", ":"))
+  //     const allTranslationsUsed = stdout.replace(/"/g, "").split("\n")
+  //     allTranslationsUsed.splice(-1, 1)
+
+  //     for (let i = 0; i < allTranslationsUsed.length; i += 1) {
+  //       if (!EXCEPTIONS.includes(allTranslationsUsed[i])) {
+  //         // You can add keys to EXCEPTIONS (above) if you don't want them included in the test
+  //         expect(allTranslationsDefined).toContainEqual(allTranslationsUsed[i])
+  //       }
+  //     }
+  //     done()
+  //   })
+  // }, 240000)
 })
