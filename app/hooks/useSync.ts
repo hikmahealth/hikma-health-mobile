@@ -53,6 +53,10 @@ export interface UseSyncReturn {
    */
   startSync: () => Promise<void>
   /**
+   * Force reset sync operation
+   */
+  forceReset: () => Promise<void>
+  /**
    * Check if sync is available (app is activated)
    */
   checkSyncAvailability: () => Promise<boolean>
@@ -107,6 +111,10 @@ export const useSync = (): UseSyncReturn => {
     return startSyncService(provider.email)
   }, [provider.email])
 
+  const forceReset = useCallback(async () => {
+    return syncStore.trigger.force_reset()
+  }, [provider.email])
+
   const checkSyncAvailability = useCallback(async () => {
     return isSyncAvailable()
   }, [])
@@ -123,6 +131,7 @@ export const useSync = (): UseSyncReturn => {
     fetched: syncContext.stats.fetched,
     pushed: syncContext.stats.pushed,
     startSync,
+    forceReset,
     checkSyncAvailability,
   }
 }

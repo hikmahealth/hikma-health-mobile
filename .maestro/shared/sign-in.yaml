@@ -1,0 +1,67 @@
+# flow: Login Screen Test
+# Test logging in with email and password credentials
+
+appId: ${MAESTRO_APP_ID}
+---
+# Test: Login with email and password
+- assertVisible: "HIKMA HEALTH"
+- assertVisible: "Email Address"
+- assertVisible: "Password"
+
+# Enter email credentials
+- tapOn:
+    id: ".*email.*"
+    optional: true
+- tapOn: "Email Address"
+- eraseText
+- inputText: ${TESTER_EMAIL}
+
+# Enter password credentials
+- tapOn:
+    id: ".*password.*"
+    optional: true
+- tapOn: "Password"
+- eraseText
+- inputText: ${TESTER_PASSWORD}
+
+# hide the keyboard
+- hideKeyboard
+
+# Tap sign in button
+- tapOn: "Sign in"
+
+# Wait for login to complete
+- waitForAnimationToEnd
+
+# Wait for the confirmation to sign in as a tester
+- extendedWaitUntil:
+    visible: "You are about to sign in as a Tester"
+    timeout: 5000
+
+- tapOn: "Continue as Tester"
+
+# Verify successful login by checking we've navigated away from login screen
+# The HIKMA HEALTH branding should no longer be visible after successful login
+- assertNotVisible: "HIKMA HEALTH"
+
+# Wait for the patient list to load using extendedWaitUntil
+- extendedWaitUntil:
+    visible: "Showing.*"
+    timeout: 5000
+
+# Verify we're on the patients list screen
+- assertVisible: "Patients" # title of the page in english
+# the menu is visible
+- assertVisible:
+    id: "drawerButton"
+
+- assertVisible:
+    id: "patientList"
+
+# Verify the new patient button is visible
+- assertVisible: "New Patient"
+
+# Verify that there is at least one patient list item
+- assertVisible:
+    id: "patientListItem.*"
+# THIS IS THE END

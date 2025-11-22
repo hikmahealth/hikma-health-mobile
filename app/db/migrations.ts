@@ -1,7 +1,132 @@
 import { addColumns, createTable, schemaMigrations } from "@nozbe/watermelondb/Schema/migrations"
 
+const decimal = "string"
+
 export default schemaMigrations({
   migrations: [
+    // V8
+    {
+      toVersion: 8,
+      steps: [
+        addColumns({
+          table: "clinic_inventory",
+          columns: [
+            { name: "batch_number", type: "string" },
+            { name: "batch_expiry_date", type: "number" },
+          ],
+        }),
+      ],
+    },
+    // V7
+    // Adds event_id to patient_vitals table
+    // Creates a new clinic_inventory table
+    // New prescrption items table that expands out the "items" of a prescription into their own table.
+    // - This is part of the effort to add inventory management, more robust prescripton and pharmacy process. and to bring patient level records.
+    // New dispensing records - tracks medication dispensing events and actions.
+    {
+      toVersion: 7,
+      steps: [
+        addColumns({
+          table: "patient_vitals",
+          columns: [{ name: "event_id", type: "string", isOptional: true }],
+        }),
+        createTable({
+          name: "drug_catalogue",
+          columns: [
+            { name: "barcode", type: "string", isOptional: true, isIndexed: true },
+            { name: "generic_name", type: "string" },
+            { name: "brand_name", type: "string", isOptional: true },
+            { name: "form", type: "string" },
+            { name: "route", type: "string" },
+            { name: "dosage_quantity", type: decimal },
+            { name: "dosage_units", type: "string" },
+            { name: "manufacturer", type: "string", isOptional: true },
+            { name: "sale_price", type: decimal },
+            { name: "sale_currency", type: "string", isOptional: true },
+            { name: "min_stock_level", type: "number" },
+            { name: "max_stock_level", type: "number", isOptional: true },
+            { name: "is_controlled", type: "boolean" },
+            { name: "requires_refrigeration", type: "boolean" },
+            { name: "is_active", type: "boolean" },
+            { name: "notes", type: "string", isOptional: true },
+            { name: "recorded_by_user_id", type: "string", isOptional: true },
+            { name: "metadata", type: "string" },
+            { name: "is_deleted", type: "boolean" },
+            { name: "deleted_at", type: "number", isOptional: true },
+            { name: "last_modified", type: "number" },
+            { name: "server_created_at", type: "number", isOptional: true },
+            { name: "created_at", type: "number" },
+            { name: "updated_at", type: "number" },
+          ],
+        }),
+        createTable({
+          name: "clinic_inventory",
+          columns: [
+            { name: "clinic_id", type: "string" },
+            { name: "drug_id", type: "string", isIndexed: true },
+            { name: "batch_id", type: "string" },
+            { name: "quantity_available", type: "number" },
+            { name: "reserved_quantity", type: "number" },
+            { name: "last_counted_at", type: "number", isOptional: true },
+            { name: "recorded_by_user_id", type: "string", isOptional: true },
+            { name: "metadata", type: "string" },
+            { name: "is_deleted", type: "boolean" },
+            { name: "deleted_at", type: "number", isOptional: true },
+            { name: "last_modified", type: "number" },
+            { name: "server_created_at", type: "number", isOptional: true },
+            { name: "created_at", type: "number" },
+            { name: "updated_at", type: "number" },
+          ],
+        }),
+        createTable({
+          name: "prescription_items",
+          columns: [
+            { name: "prescription_id", type: "string", isIndexed: true },
+            { name: "patient_id", type: "string", isIndexed: true },
+            { name: "drug_id", type: "string", isIndexed: true },
+            { name: "clinic_id", type: "string" }, // similar to pickup_clinic_id from the prescription item
+            { name: "dosage_instructions", type: "string" },
+            { name: "quantity_prescribed", type: "number" },
+            { name: "quantity_dispensed", type: "number" },
+            { name: "refills_authorized", type: "number" },
+            { name: "refills_used", type: "number" },
+            { name: "item_status", type: "string" }, //
+            { name: "notes", type: "string", isOptional: true },
+            { name: "created_at", type: "number" },
+            { name: "updated_at", type: "number" },
+            { name: "recorded_by_user_id", type: "string", isOptional: true },
+            { name: "metadata", type: "string" },
+            { name: "is_deleted", type: "boolean" },
+            { name: "deleted_at", type: "number", isOptional: true },
+            { name: "last_modified", type: "number" },
+            { name: "server_created_at", type: "number", isOptional: true },
+          ],
+        }),
+        createTable({
+          name: "dispensing_records",
+          columns: [
+            { name: "clinic_id", type: "string", isIndexed: true },
+            { name: "drug_id", type: "string", isIndexed: true },
+            { name: "batch_id", type: "string", isOptional: true },
+            { name: "prescription_item_id", type: "string", isOptional: true, isIndexed: true },
+            { name: "patient_id", type: "string", isIndexed: true },
+            { name: "quantity_dispensed", type: "number" },
+            { name: "dosage_instructions", type: "string", isOptional: true },
+            { name: "days_supply", type: "number", isOptional: true },
+            { name: "dispensed_by", type: "string", isIndexed: true },
+            { name: "dispensed_at", type: "number", isIndexed: true },
+            { name: "recorded_by_user_id", type: "string", isOptional: true },
+            { name: "metadata", type: "string" },
+            { name: "is_deleted", type: "boolean" },
+            { name: "deleted_at", type: "number", isOptional: true },
+            { name: "last_modified", type: "number" },
+            { name: "server_created_at", type: "number", isOptional: true },
+            { name: "created_at", type: "number" },
+            { name: "updated_at", type: "number" },
+          ],
+        }),
+      ],
+    },
     // V6
     // Clinics Table:
     //  - Adds an is_archived column to the clinics table

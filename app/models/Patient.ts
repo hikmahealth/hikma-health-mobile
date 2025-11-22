@@ -204,6 +204,7 @@ namespace Patient {
 
   export namespace DB {
     export type T = PatientModel
+    export const table_name = "patients"
 
     /**
      * Subscription to a patient record in the database
@@ -350,12 +351,12 @@ namespace Patient {
       const primaryClinicId =
         getPatientFieldByName(patientRecord, "primary_clinic_id", "") || clinic.id
       const permission = "canRegisterPatients"
-      const hasPermission = await UserClinicPermissions.DB.userHasPermission(
+      const permissionClinicIds = await UserClinicPermissions.DB.getClinicIdsWithPermission(
         provider.id,
-        primaryClinicId,
         permission,
       )
-      if (Either.isLeft(hasPermission)) {
+      const hasPermission = permissionClinicIds?.includes(primaryClinicId)
+      if (!hasPermission) {
         throw new Error("Permission denied")
       }
 

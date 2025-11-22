@@ -20,14 +20,23 @@ const getLocale = (i18n: typeof i18nLib = i18nLib): Locale => {
 
 /**
  * Returns a formatted date string in the current locale.
- * @param {Date} date The date to format.
- * @param {string} dateFormat The date format.
- * @param {Options} options The date-fns options.
- * @returns {string} The formatted date string.
+ * Falls back to en-US if the date is invalid.
  */
-export function localeDate(date: Date, dateFormat = "MMM dd, yyyy", options: Options = {}): string {
-  // console.log(getLocale())
-  return format(date, dateFormat, { ...options, locale: getLocale() })
+export function localeDate(
+  date: Date | string | number | null | undefined,
+  dateFormat = "MMM dd, yyyy",
+  options: Options = {},
+): string {
+  if (!date) return ""
+
+  const dateObj = date instanceof Date ? date : new Date(date)
+
+  if (isNaN(dateObj.getTime())) {
+    console.warn(`Invalid date provided to localeDate: ${date}`)
+    return ""
+  }
+
+  return format(dateObj, dateFormat, { ...options, locale: getLocale() })
 }
 
 /**

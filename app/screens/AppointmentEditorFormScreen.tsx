@@ -5,7 +5,7 @@ import { useSelector } from "@xstate/react"
 import { format, set } from "date-fns"
 import { Option, Schema } from "effect"
 import { cloneDeep } from "es-toolkit"
-import { sortBy } from "es-toolkit/compat"
+import { sortBy } from "es-toolkit"
 import { Controller, useForm } from "react-hook-form"
 import DatePicker from "react-native-date-picker"
 import DropDownPicker from "react-native-dropdown-picker"
@@ -200,8 +200,6 @@ export const AppointmentEditorFormScreen: FC<AppointmentEditorFormScreenProps> =
     setValue("timestamp", new Date(time))
   }
 
-  console.log("Hello World")
-
   return (
     <Screen style={$root} preset="scroll">
       <View gap={spacing.md} pt={20}>
@@ -235,7 +233,7 @@ export const AppointmentEditorFormScreen: FC<AppointmentEditorFormScreenProps> =
               </View> */}
               <PlatformPicker
                 isIos={isIos}
-                options={sortBy(clinics, "name").map((clinic) => ({
+                options={sortBy(clinics, ["name"]).map((clinic) => ({
                   label: clinic.name,
                   value: clinic.id,
                 }))}

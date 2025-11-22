@@ -1,4 +1,4 @@
-import { Model } from "@nozbe/watermelondb"
+import { Model, Q } from "@nozbe/watermelondb"
 import {
   date,
   readonly,
@@ -7,13 +7,18 @@ import {
   json,
   immutableRelation,
   relation,
+  lazy,
+  children,
 } from "@nozbe/watermelondb/decorators"
 import { Associations } from "@nozbe/watermelondb/Model"
 
 import Prescription from "@/models/Prescription"
 
+import database from ".."
 import ClinicModel from "./Clinic"
+import DrugCatalogueModel from "./DrugCatalogue"
 import PatientModel from "./Patient"
+import PrescriptionItemModel from "./PrescriptionItem"
 import UserModel from "./User"
 
 export default class PrescriptionModel extends Model {
@@ -23,6 +28,7 @@ export default class PrescriptionModel extends Model {
     patients: { type: "belongs_to", key: "patient_id" },
     users: { type: "belongs_to", key: "user_id" },
     clinics: { type: "belongs_to", key: "pickup_clinic_id" },
+    prescription_items: { type: "has_many", foreignKey: "prescription_id" },
   }
 
   @text("patient_id") patientId!: string
@@ -48,6 +54,21 @@ export default class PrescriptionModel extends Model {
   @immutableRelation("patients", "patient_id") patient!: PatientModel
   @immutableRelation("users", "user_id") user!: UserModel
   @relation("clinics", "pickup_clinic_id") pickupClinic!: ClinicModel
+  @children("prescription_items")
+  prescriptionItems!: PrescriptionItemModel[]
+
+  @lazy
+  drugs = this.collections
+    .get<DrugCatalogueModel>("drug_catalogue")
+    .query(Q.on("prescription_items", "prescription_id", this.id))
+
+  // @lazy
+  // getDrugs(): DrugCatalogueModel[] {
+  //   database
+  //     .get<DrugCatalogueModel>("drug_catalogue")
+  //     .query(Q.on("prescription_items", "prescription_id", this.id))
+  //     .fetch()
+  // }
 }
 
 function sanitizeMetadata(metadata: Record<string, any>) {

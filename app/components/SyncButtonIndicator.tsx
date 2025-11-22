@@ -25,7 +25,7 @@ export interface SyncButtonIndicatorProps {
 export const SyncButtonIndicator = (props: SyncButtonIndicatorProps) => {
   const { style } = props
   const $styles = [$container, style]
-  const { isFetching, isResolving, isPushing, isIdle, startSync } = useSync()
+  const { isFetching, isResolving, isPushing, isIdle, startSync, forceReset, hasError } = useSync()
 
   const rotation = useSharedValue(0)
 
@@ -49,11 +49,21 @@ export const SyncButtonIndicator = (props: SyncButtonIndicatorProps) => {
   }, [isFetching, isResolving, isPushing, rotation])
 
   const handlePress = () => {
+    if (hasError) {
+      forceReset()
+    }
     // Only trigger sync if not already syncing
     if (isIdle) {
-      startSync().catch((err) => {
-        console.log("Failed to start sync:", err)
-      })
+      startSync()
+        .then(() => {
+          //   // Second sync ensures we get any server computed values. We need this for correct stock count values.
+          //   return startSync()
+          forceReset()
+        })
+        .catch((err) => {
+          forceReset()
+          console.log("Failed to start sync:", err)
+        })
     }
   }
 

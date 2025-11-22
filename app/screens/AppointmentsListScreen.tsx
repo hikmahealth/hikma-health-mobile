@@ -1,6 +1,7 @@
 import { FC, useState, useEffect, useCallback } from "react"
 import { ViewStyle, TextStyle, Pressable } from "react-native"
 import { LegendList } from "@legendapp/list"
+import { Q } from "@nozbe/watermelondb"
 import { compose } from "@nozbe/watermelondb/react"
 import withObservables from "@nozbe/watermelondb/react/withObservables"
 import { useFocusEffect } from "@react-navigation/native"
@@ -20,6 +21,7 @@ import DropDownPicker from "react-native-dropdown-picker"
 import { catchError, of as of$ } from "rxjs"
 import { useDebounceValue } from "usehooks-ts"
 
+import { AgendaDateSetter } from "@/components/AgendaDateSetter"
 import { If } from "@/components/If"
 import { Text } from "@/components/Text"
 import { TextField } from "@/components/TextField"
@@ -27,6 +29,7 @@ import { Checkbox } from "@/components/Toggle/Checkbox"
 import { View } from "@/components/View"
 import db from "@/db"
 import ClinicDepartmentModel from "@/db/model/ClinicDepartment"
+import { AppointmentsFilters, useDBAppointmentsFilter } from "@/hooks/useDBAppointmentsFilter"
 import { useDBClinicsList } from "@/hooks/useDBClinicsList"
 import Appointment from "@/models/Appointment"
 import Clinic from "@/models/Clinic"
@@ -36,8 +39,7 @@ import { providerStore } from "@/store/provider"
 import { colors } from "@/theme/colors"
 import { useAppTheme } from "@/theme/context"
 import type { ThemedStyle } from "@/theme/types"
-import { friendlyString } from "@/utils/misc"
-import { AppointmentsFilters, useDBAppointmentsFilter } from "@/hooks/useDBAppointmentsFilter"
+import { friendlyString, getAppintmentStatusColor } from "@/utils/misc"
 
 interface AppointmentsListScreenProps
   extends NativeStackScreenProps<AppointmentNavigatorParamList, "AppointmentsList"> {}
@@ -125,8 +127,14 @@ interface AppointmentListHeaderProps {
 
 // Add patient, clinic, and provider to the appointment
 const enhanceHeader = withObservables(["clinic"], ({ clinic }: { clinic?: Clinic.DBClinic }) => ({
-  clinic: clinic?.observe().pipe(catchError(() => of$(null))),
-  departmentList: clinic?.departments.observe().pipe(catchError(() => of$(null))) || [],
+  clinic: clinic ? clinic.observe().pipe(catchError(() => of$(null))) : of$(null),
+  departmentList: clinic
+    ? db
+        .get<ClinicDepartmentModel>("clinic_departments")
+        .query(Q.where("clinic_id", clinic.id))
+        .observe()
+        .pipe(catchError(() => of$([])))
+    : of$([]),
 }))
 
 const statusesList = Appointment.statusList
@@ -320,67 +328,6 @@ export const AppointmentListHeader: FC<AppointmentListHeaderProps> = enhanceHead
   },
 )
 
-/**
- * Date setter component to set the date of view
- * @param {date} date - The current / active date
- * @param {(date: Date) => void} setDate - The function to set the date
- */
-const AgendaDateSetter = ({ date, setDate }: { date: Date; setDate: (date: Date) => void }) => {
-  const { themed } = useAppTheme()
-
-  const month = date.toLocaleString("default", { month: "long" })
-
-  /**
-   * Given a date d, return the dates in the future until d+n days and all the days before d until d-n days
-   * @param {Date} date - The date to calculate the range for
-   * @param {number} n - The number of days to include in the range
-   * @returns {Date[]} An array of dates in the range
-   * */
-  const getRange = (date: Date, n: number): Date[] => {
-    const range = []
-    for (let i = -n; i <= n; i++) {
-      range.push(new Date(date.getTime() + i * 24 * 60 * 60 * 1000))
-    }
-    return range
-  }
-
-  return (
-    <View py={10}>
-      <View>
-        <Text text={month} size="xs" align="center" />
-      </View>
-      <View direction="row" justifyContent="space-around" style={$datesContainer}>
-        {getRange(date, 2).map((d) => (
-          <Pressable
-            key={d.toISOString()}
-            onPress={() => setDate(d)}
-            style={[
-              $dateItem,
-              isSameDay(d, date) ? $activeDate : null,
-              isToday(d) ? $todayDate : null,
-            ]}
-          >
-            <Text
-              color={isSameDay(d, date) ? colors.palette.neutral100 : colors.text}
-              text={d.toLocaleString("default", { day: "numeric" })}
-            />
-          </Pressable>
-        ))}
-      </View>
-    </View>
-  )
-}
-
-const $dateItem: ViewStyle = {
-  padding: 10,
-  borderRadius: 10,
-  marginHorizontal: 5,
-}
-
-const $activeDate: ViewStyle = {
-  backgroundColor: colors.palette.primary500,
-}
-
 const $collapsibleButton: ViewStyle = {
   flexDirection: "row",
   justifyContent: "center",
@@ -388,26 +335,23 @@ const $collapsibleButton: ViewStyle = {
   gap: 4,
 }
 
-const $todayDate: ViewStyle = {
-  // borderBottomWidth: 2,
-  // borderColor: "green",
-  borderColor: colors.palette.neutral400,
-  borderWidth: 1,
+const $container: ViewStyle = {
+  justifyContent: "center",
 }
 
-const $datesContainer: ViewStyle = {
-  flexDirection: "row",
-  justifyContent: "space-around",
-  paddingVertical: 4,
-  borderWidth: 1,
-  borderColor: colors.palette.neutral400,
-  borderRadius: 10,
-}
+const $text: ThemedStyle<TextStyle> = ({ colors, typography }) => ({
+  fontFamily: typography.primary.normal,
+  fontSize: 14,
+  color: colors.palette.primary500,
+})
 
 // Add patient, clinic, and provider to the appointment
 const enhance = compose(
   withObservables(["appointment"], ({ appointment }: { appointment: Appointment.T }) => ({
-    appointment: db.get("appointments").findAndObserve(appointment.id),
+    appointment: db
+      .get("appointments")
+      .findAndObserve(appointment.id)
+      .pipe(catchError(() => of$(null))),
     // patient: appointment.patient?.observe(),
     // patient: appointment.patient?.observe().pipe(catchError(() => of$(null))),
     // clinic: appointment.clinic?.observe().pipe(catchError(() => of$(null))),
@@ -416,8 +360,8 @@ const enhance = compose(
   withObservables(
     ["appointment"],
     ({ appointment }: { appointment: Appointment.DBAppointment }) => ({
-      patient: appointment.patient ? appointment.patient.observe() : of$(null),
-      clinic: appointment.clinic ? appointment.clinic.observe() : of$(null),
+      patient: appointment?.patient ? appointment.patient.observe() : of$(null),
+      clinic: appointment?.clinic ? appointment.clinic.observe() : of$(null),
     }),
   ),
 )
@@ -435,6 +379,14 @@ const AppointmentItem = enhance(
     onPress: () => void
   }) => {
     const { themed } = useAppTheme()
+
+    if (!appointment) {
+      return (
+        <View>
+          <Text text="No Appointment" size="md" />
+        </View>
+      )
+    }
 
     return (
       <Pressable onPress={onPress}>
@@ -483,7 +435,7 @@ const AppointmentItem = enhance(
                     <Text>-</Text>
                     <View
                       style={{
-                        backgroundColor: getStatusColor(department.status)[0],
+                        backgroundColor: getAppintmentStatusColor(department.status)[0],
                         alignSelf: "center",
                       }}
                       py={2}
@@ -503,42 +455,6 @@ const AppointmentItem = enhance(
     )
   },
 )
-
-// export const Status = {
-//   PENDING: "pending",
-//   SCHEDULED: "scheduled",
-//   CHECKED_IN: "checked_in",
-//   IN_PROGRESS: "in_progress",
-//   CONFIRMED: "confirmed",
-//   CANCELLED: "cancelled",
-//   COMPLETED: "completed",
-// } as const
-
-/**
- * Mapping of appointment status to color
- * @param {Appointment.Status} status
- * @returns {[color, textColor]}
- */
-function getStatusColor(status: Appointment.Status): [string, string] {
-  switch (status) {
-    case "pending":
-      return ["#a16207", "#ffffff"] // amber-700
-    case "scheduled":
-      return ["#1e40af", "#ffffff"] // blue-700
-    case "checked_in":
-      return ["#6d28d9", "#ffffff"] // violet-700
-    case "in_progress":
-      return ["#0369a1", "#ffffff"] // sky-700
-    case "confirmed":
-      return ["#15803d", "#ffffff"] // green-700
-    case "cancelled":
-      return ["#a21caf", "#ffffff"] // fuchsia-700
-    case "completed":
-      return ["#059669", "#ffffff"] // emerald-700
-    default:
-      return ["#374151", "#ffffff"] // gray-700
-  }
-}
 
 // TODO: move this to a single shared location across files
 const $dropDownPickerStyle: ViewStyle = {

@@ -31,6 +31,12 @@ import { getHHApiUrl } from "@/utils/storage"
  * Starts a sync operation with the configured server.
  * This function handles both local and remote sync scenarios.
  *
+ * You can (probably should always) call startSync twice in a row.
+ * The first sync does: PULL --> local data conflict resolution ---> PUSH
+ * The second sync does: PULL ---> local data conflict resolution (no push since there are no changes)
+ * The extra sync gets any updated counts in the server (like stock counts)
+ *
+ *
  * @param providerEmail - Optional email to check for test accounts
  * @returns Promise that resolves when sync is complete or rejects on error
  *
@@ -122,6 +128,15 @@ export const startSync = async (providerEmail?: string): Promise<void> => {
       })
     } else {
       // Remote sync
+      Sentry.addBreadcrumb({
+        category: "sync",
+        message: "Starting remote sync",
+        level: "info",
+        data: {
+          hasLocalChangesToPush,
+        },
+      })
+
       return syncDB(
         hasLocalChangesToPush,
         startSyncState,
@@ -131,18 +146,51 @@ export const startSync = async (providerEmail?: string): Promise<void> => {
         errorSync,
         finishSync,
       ).catch((err) => {
+        let showToast = true
+        try {
+          if (String(err).includes("Concurrent synchronization")) {
+            Sentry.addBreadcrumb({
+              category: "sync",
+              message: "Concurrent synchronization detected",
+              level: "warning",
+            })
+            // no need to show any warnings
+            showToast = false
+          }
+        } catch {
+          // handle any other errors
+          // fail silently
+          Sentry.addBreadcrumb({
+            category: "sync",
+            message: "Error parsing sync error",
+            level: "warning",
+          })
+        }
         finishSync()
         console.error("Remote sync error:", err)
-        Toast.show(
-          "❌ Error syncing. Please make sure you have internet or contact your administrator.",
-          {
-            position: Toast.positions.BOTTOM,
-            containerStyle: {
-              marginBottom: 100,
-            },
-            duration: Toast.durations.LONG,
+
+        Sentry.addBreadcrumb({
+          category: "sync",
+          message: "Remote sync failed",
+          level: "error",
+          data: {
+            errorMessage: String(err),
+            showToast,
           },
-        )
+        })
+
+        if (showToast) {
+          Toast.show(
+            "❌ Error syncing. Please make sure you have internet or contact your administrator.",
+            {
+              position: Toast.positions.BOTTOM,
+              containerStyle: {
+                marginBottom: 100,
+              },
+              duration: Toast.durations.LONG,
+            },
+          )
+        }
         Sentry.captureException(err)
         throw err
       })

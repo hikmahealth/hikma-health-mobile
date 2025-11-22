@@ -1,4 +1,4 @@
-import { ReactNode, useRef, useState } from "react"
+import { ReactNode, useEffect, useRef, useState } from "react"
 import {
   KeyboardAvoidingView,
   KeyboardAvoidingViewProps,
@@ -10,6 +10,7 @@ import {
   View,
   ViewStyle,
 } from "react-native"
+import * as ScreenOrientation from "expo-screen-orientation"
 import { useScrollToTop } from "@react-navigation/native"
 import { SystemBars, SystemBarsProps, SystemBarStyle } from "react-native-edge-to-edge"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
@@ -243,14 +244,46 @@ export function Screen(props: ScreenProps) {
     theme: { colors },
     themeContext,
   } = useAppTheme()
+
+  const [isLandscape, setIsLandscape] = useState(false)
+
+  useEffect(() => {
+    // Get initial orientation
+    ScreenOrientation.getOrientationAsync().then((orientation) => {
+      setIsLandscape(
+        orientation === ScreenOrientation.Orientation.LANDSCAPE_LEFT ||
+          orientation === ScreenOrientation.Orientation.LANDSCAPE_RIGHT,
+      )
+    })
+
+    // Listen for orientation changes
+    const subscription = ScreenOrientation.addOrientationChangeListener(({ orientationInfo }) => {
+      setIsLandscape(
+        orientationInfo.orientation === ScreenOrientation.Orientation.LANDSCAPE_LEFT ||
+          orientationInfo.orientation === ScreenOrientation.Orientation.LANDSCAPE_RIGHT,
+      )
+    })
+
+    return () => {
+      ScreenOrientation.removeOrientationChangeListener(subscription)
+    }
+  }, [])
+
+  // Compute default safe area edges based on orientation
+  const defaultSafeAreaEdges: ExtendedEdge[] = isLandscape
+    ? ["top", "bottom", "start", "end"]
+    : ["top", "bottom"]
+
   const {
     backgroundColor,
     KeyboardAvoidingViewProps,
     keyboardOffset = 0,
-    safeAreaEdges = ["top", "bottom"],
+    safeAreaEdges = defaultSafeAreaEdges,
     SystemBarsProps,
     systemBarStyle,
   } = props
+
+  console.log({ defaultSafeAreaEdges })
 
   const $containerInsets = useSafeAreaInsetsStyle(safeAreaEdges)
 

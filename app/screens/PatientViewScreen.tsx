@@ -10,19 +10,24 @@ import { upperFirst } from "es-toolkit/compat"
 import {
   ChevronRight,
   DownloadCloudIcon,
+  LucideActivity,
+  LucideActivitySquare,
   LucideArrowRight,
   LucideCircleDot,
+  LucidePillBottle,
   LucidePlus,
   PencilIcon,
   PlusIcon,
 } from "lucide-react-native"
 
 import logoStr from "@/assets/images/logoStr"
+import { Card } from "@/components/Card"
 import { If } from "@/components/If"
 import { PatientProfileSummary } from "@/components/PatientProfileSummary"
 import { Screen } from "@/components/Screen"
 import { Text } from "@/components/Text"
 import { View } from "@/components/View"
+import { usePatientAppointments } from "@/hooks/useDBPatientAppointments"
 import { useEventForms } from "@/hooks/useEventForms"
 import { usePatientRecord } from "@/hooks/usePatientRecord"
 import { translate } from "@/i18n/translate"
@@ -36,7 +41,6 @@ import { appStateStore } from "@/store/appState"
 import { languageStore } from "@/store/language"
 import { colors } from "@/theme/colors"
 import { localeDate } from "@/utils/date"
-import { usePatientAppointments } from "@/hooks/useDBPatientAppointments"
 
 const { height } = Dimensions.get("window")
 
@@ -124,6 +128,18 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = ({ route, navigatio
     // TODO: Implement appointment long press
   }
 
+  const handleVitalsPress = () => {
+    navigation.navigate("VitalHistory", {
+      patientId: patient?.value.id,
+    })
+  }
+
+  const handlePrescriptionsPress = () => {
+    navigation.navigate("PatientPrescriptionsList", {
+      patientId: patient?.value.id,
+    })
+  }
+
   if (Option.isNone(patient)) {
     return (
       <Screen style={$root} preset="scroll">
@@ -135,8 +151,13 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = ({ route, navigatio
   }
   return (
     <>
-      <Screen style={$root} contentContainerStyle={$contentContainer} preset="scroll">
-        <View pt={40} pb={40} style={{ backgroundColor: colors.palette.primary50 }}>
+      <Screen
+        style={$root}
+        contentContainerStyle={$contentContainer}
+        safeAreaEdges={[]}
+        preset="scroll"
+      >
+        <View pt={30} pb={30} style={{ backgroundColor: colors.palette.primary50 }}>
           <PatientProfileSummary
             patient={Patient.DB.fromDB(patient.value)}
             onPressEdit={() => {}}
@@ -202,10 +223,53 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = ({ route, navigatio
             </View>
           </If>
 
-          {/* Hide the appointments until the module is ready  */}
+          <View direction="row" flex={1} gap={12} pb={22}>
+            <Card
+              verticalAlignment="center"
+              testID="patient-medications-btn"
+              onPress={handlePrescriptionsPress}
+              HeadingComponent={
+                <LucidePillBottle
+                  style={{ alignSelf: "center" }}
+                  size={34}
+                  color={colors.textDim}
+                />
+              }
+              ContentComponent={
+                <View pt={8}>
+                  <Text tx="common:prescriptions" align="center" size="md" />
+                </View>
+              }
+              style={{
+                flex: 1,
+                elevation: 1,
+                paddingTop: 40,
+                paddingBottom: 24,
+              }}
+            />
+            <Card
+              verticalAlignment="center"
+              onPress={handleVitalsPress}
+              testID="patient-vitals-btn"
+              HeadingComponent={
+                <LucideActivitySquare
+                  size={34}
+                  style={{ alignSelf: "center" }}
+                  color={colors.textDim}
+                />
+              }
+              ContentComponent={
+                <View pt={8}>
+                  <Text tx="common:vitals" align="center" size="md" />
+                </View>
+              }
+              style={{ flex: 1, elevation: 1, paddingTop: 40, paddingBottom: 24 }}
+            />
+          </View>
+
           <View gap={10} mb={4} style={$appointmentContainer}>
             <View direction="row" gap={10} alignItems="center">
-              <Text text="Appointments" />
+              <Text preset="formLabel" text="Appointments" />
               <If condition={appointments.length > 0}>
                 <Pressable onPress={createNewAppointment}>
                   <LucidePlus color={colors.palette.primary500} size={20} />
@@ -252,15 +316,15 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = ({ route, navigatio
             </If>
           </View>
 
-          <SnapshotFormLink
-            onPress={() =>
+          {/*<SnapshotFormLink
+            onPress={() => {
               navigation.navigate("VitalHistory", {
                 patientId: patient.value.id,
               })
-            }
+            }}
             label={translate("patientFile:vitalHistory")}
             description={translate("patientFile:vitalHistoryDescription")}
-          />
+          />*/}
 
           <SnapshotFormLink
             onPress={() =>
@@ -296,6 +360,24 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = ({ route, navigatio
   )
 }
 
+const $actionCard: ViewStyle = {
+  flex: 1,
+  padding: 16,
+  borderRadius: 8,
+  gap: 5,
+  paddingTop: 28,
+  paddingBottom: 12,
+  alignItems: "center",
+  borderStyle: "solid",
+  borderWidth: 1,
+  borderColor: colors.border,
+  elevation: 1,
+  shadowColor: colors.palette.neutral300,
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.15,
+  shadowRadius: 0.84,
+}
+
 const $root: ViewStyle = {
   flex: 1,
 }
@@ -325,7 +407,7 @@ function SnapshotFormLink({ onPress, label, description }: SnapshotFormLinkProps
       onPress={onPress}
     >
       <View style={{ flex: 5 }}>
-        <Text text={label} />
+        <Text preset="formLabel" text={label} />
         <Text size="xs" text={description} />
       </View>
       <View style={{ flex: 1 }} alignItems="flex-end">
@@ -502,6 +584,8 @@ async function printHTML(props: PDFReportProps) {
 
   console.log("File has been saved to:", uri)
   await shareAsync(uri, { UTI: ".pdf", mimeType: "application/pdf" })
+  // TODO: Offer a print/pdf option instead of just sharing
+  // download
 }
 
 const $newVisitFAB: ViewStyle = {

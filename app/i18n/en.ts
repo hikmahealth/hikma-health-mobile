@@ -171,6 +171,42 @@ const en = {
   appointmentsList: {
     title: "Appointments List",
   },
+  pharmacyView: {
+    title: "Pharmacy",
+  },
+  prescriptionEditorForm: {
+    title: "Prescription Form",
+  },
+  prescriptionView: {
+    title: "Prescription",
+  },
+  prescriptions: {
+    title: "Prescriptions",
+    description: "View and manage your prescriptions",
+    newEntry: "New Entry",
+    urgent: "Urgent",
+    high: "High",
+    low: "Low",
+    routine: "Normal",
+    normal: "Normal",
+    prn: "PRN",
+    pending: "Pending",
+    prepared: "Prepared",
+    filled: "Filled",
+    partiallyFilled: "Partially Filled",
+    cancelled: "Cancelled",
+    expired: "Expired",
+    refillRequested: "Refill Requested",
+    onHold: "On Hold",
+    newPrescription: "New Prescription",
+    noPrescriptions: "No Prescriptions",
+    pendingPrescriptions: "Pending Prescriptions",
+    prescribed: "Prescribed",
+    expires: "Expires",
+    medications: "Medications",
+    notes: "Notes",
+    refills: "Refills",
+  },
   component: {
     dateOfBirthInput: {
       unknown: "Unknown",
@@ -179,6 +215,7 @@ const en = {
     },
   },
   common: {
+    restartApp: "Restart App",
     ok: "OK",
     today: "Today",
     departments: "Departments",

@@ -1,6 +1,7 @@
 import { FC, useCallback, useEffect, useState } from "react"
 import { Alert, Platform, Pressable, TextStyle, ViewStyle } from "react-native"
 import { withObservables } from "@nozbe/watermelondb/react"
+import { catchError, of as of$ } from "rxjs"
 import { Picker } from "@react-native-picker/picker"
 import { NativeStackScreenProps } from "@react-navigation/native-stack"
 import { format } from "date-fns"
@@ -325,7 +326,7 @@ export const AppointmentViewScreen: FC<AppointmentViewScreenProps> = ({ route, n
         })
     }
 
-  console.log({ appointmentDepts: appointment?.departments })
+  // console.log({ appointmentDepts: appointment?.departments })
 
   if (isLoading) {
     return (
@@ -589,13 +590,13 @@ const $statusBtn = (isSelected: boolean): ViewStyle => ({
 
 const enhanceAppointmentEvent = withObservables(["event"], ({ event }) => ({
   event, // shortcut syntax for `event: event.observe()`
-  visit: event.visit.observe(),
+  visit: event.visit ? event.visit.observe().pipe(catchError(() => of$(null))) : of$(null),
 }))
 
 type AppointmentEventProps = {
   appointment: Appointment.DBAppointment
   event: Event.DBEvent
-  visit: Visit.DBVisit
+  visit: Visit.DBVisit | null
   // navigation: AppStackScreenProps<"AppointmentView">["navigation"]
   patient: Patient.DBPatient
   onPress: (visitId: string, checkInTimestamp: number) => void
@@ -605,6 +606,10 @@ const AppointmentEvent = enhanceAppointmentEvent(function AppointmentEvent(
   props: AppointmentEventProps,
 ) {
   const { event, visit, onPress, patient, appointment } = props
+
+  if (!visit) {
+    return null
+  }
 
   return (
     <Pressable onPress={() => onPress(visit.id, appointment.timestamp)}>

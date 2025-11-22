@@ -644,7 +644,8 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
                   />
                 </If>
 
-                <If condition={field.inputType === "file"}>
+                {/* File UPLOADS ARE NOT SUPPORTED YET */}
+                <If condition={field.inputType === "file" && false}>
                   <Controller
                     render={() => (
                       <View gap={4}>

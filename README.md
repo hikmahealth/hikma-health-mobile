@@ -284,6 +284,25 @@ pnpm eas:update:prod
   <img src="https://drive.google.com/uc?export=view&id=1Xcu6_-3cHqRTLfhuiFZmxeSvApd4tEEK" style="width: 200px; height:auto" alt="Hikma Health" />
 </div>
 
+
+
+## Troubleshooting
+
+#### iOS application fails to start with an error to do with the RN DatePicker
+
+Apply the patch in patches/react-native-date-picker+5.0.13.patch:
+
+In your terminal:
+
+```bash
+# Navigate to the specific package
+cd node_modules/react-native-date-picker 
+
+# Apply the patch
+git apply ../../patches/react-native-date-picker+5.0.13.patch 
+```
+
+
 ## FAQ
 
 #### How do I delete the local data during testing?

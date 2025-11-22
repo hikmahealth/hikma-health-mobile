@@ -5,13 +5,17 @@
  * and a "main" flow which the user will use once logged in.
  */
 import { ComponentProps, useEffect } from "react"
+import * as SecureStore from "expo-secure-store"
+import { useNetInfo } from "@react-native-community/netinfo"
 import { createDrawerNavigator } from "@react-navigation/drawer"
 import { NavigationContainer } from "@react-navigation/native"
 import { createNativeStackNavigator, NativeStackScreenProps } from "@react-navigation/native-stack"
+import * as Sentry from "@sentry/react-native"
 import { useSelector } from "@xstate/react"
 
 import { AppDrawer } from "@/components/AppDrawer"
 import Config from "@/config"
+import User from "@/models/User"
 import { ErrorBoundary } from "@/screens/ErrorScreen/ErrorBoundary"
 import { LoginScreen } from "@/screens/LoginScreen"
 import { PrivacyPolicyScreen } from "@/screens/PrivacyPolicyScreen"
@@ -23,8 +27,10 @@ import { providerStore } from "@/store/provider"
 import { useAppTheme } from "@/theme/context"
 
 import { AppointmentNavigator } from "./AppointmentNavigator"
+import { PharmacyNavigator } from "./PharmacyNavigator"
 import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
 import { PatientNavigator } from "./PatientNavigator"
+import { getHHApiUrl } from "@/utils/storage"
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -53,6 +59,12 @@ export type AppStackParamList = {
   VitalForm: undefined
   AppointmentEditorForm: undefined
   AppointmentView: undefined
+  PharmacyView: undefined
+  PatientPrescriptionsList: undefined
+  PrescriptionEditorForm: undefined
+  VisitPrescriptions: undefined
+  PrescriptionView: undefined
+  DispensePrescriptionItem: undefined
   // IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
 }
 
@@ -78,6 +90,12 @@ const AppStack = () => {
     setThemeContextOverride,
   } = useAppTheme()
 
+  useEffect(() => {
+    setThemeContextOverride("light")
+  }, [])
+
+  const { isInternetReachable } = useNetInfo()
+
   const provider = useSelector(providerStore, (state) => state.context)
   const { isRTL } = useSelector(languageStore, (state) => state.context)
 
@@ -89,11 +107,69 @@ const AppStack = () => {
 
   useEffect(() => {
     if (isSignedIn) {
-      startSync(provider.email).catch((err) => {
-        console.log("Failed to start sync:", err)
-      })
+      // If there is internet, send email and password to server to re-authenticate
+      // ONly run the below if there is access to internet
+      if (isInternetReachable) {
+        getHHApiUrl().then(async (api) => {
+          console.log("Re-Signing in")
+          if (!api) {
+            // HANDLE API NOT FOUND
+            return
+          }
+
+          const email = await SecureStore.getItemAsync("provider_email")
+          const password = await SecureStore.getItemAsync("provider_password")
+
+          console.log("Email:", email)
+          console.log("Password:", password)
+
+          if (!email || !password) {
+            // HANDLE EMAIL OR PASSWORD NOT FOUND
+            return
+          }
+
+          await User.signIn(email, password)
+            .then((res) => {
+              // a provider is present
+              if (res.id) {
+                // HANDLE SUCCESSFUL SIGN IN
+              } else {
+                // HANDLE FAILED SIGN IN
+              }
+            })
+            .catch((err) => {
+              // HANDLE SIGN IN ERROR
+              Sentry.captureException(err, {
+                level: "warning",
+                extra: {
+                  message:
+                    "Failed sign in on re-authentication. App store has user, but failed to re-authenticate them",
+                },
+              })
+
+              // TODO: possibly sign the user out.
+            })
+            .finally(() => {
+              // HANDLE FINALLY
+            })
+        })
+      }
+      startSync(provider.email)
+        // .then(() => {
+        // Second sync ensures we get any server computed values. We need this for correct stock count values.
+        // return startSync(provider.email)
+        // })
+        .catch((err) => {
+          console.log("Failed to start sync:", err)
+          Sentry.captureException(err, {
+            level: "error",
+            extra: {
+              message: "Failed to start sync",
+            },
+          })
+        })
     }
-  }, [isSignedIn, provider.email])
+  }, [isSignedIn, provider.email, isInternetReachable])
 
   // FIXME: perform better check
   if (!isSignedIn) {
@@ -136,6 +212,7 @@ const AppStack = () => {
       />
       <Drawer.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
       <Drawer.Screen name="Appointment" component={AppointmentNavigator} />
+      <Drawer.Screen name="Pharmacy" component={PharmacyNavigator} />
     </Drawer.Navigator>
   )
 }
@@ -144,11 +221,7 @@ export interface NavigationProps
   extends Partial<ComponentProps<typeof NavigationContainer<AppStackParamList>>> {}
 
 export const AppNavigator = (props: NavigationProps) => {
-  const { navigationTheme, setThemeContextOverride } = useAppTheme()
-
-  useEffect(() => {
-    setThemeContextOverride("light")
-  }, [])
+  const { navigationTheme } = useAppTheme()
 
   useBackButtonHandler((routeName) => exitRoutes.includes(routeName))
 

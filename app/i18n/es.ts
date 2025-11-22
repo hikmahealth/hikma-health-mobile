@@ -1,4 +1,5 @@
 import type { Translations as ENTranslations } from "./en"
+
 const es: ENTranslations = {
   emptyStateComponent: {
     generic: {
@@ -173,6 +174,42 @@ const es: ENTranslations = {
   appointmentsList: {
     title: "Lista de Citas",
   },
+  pharmacyView: {
+    title: "Farmacia",
+  },
+  prescriptionEditorForm: {
+    title: "Formulario de Receta",
+  },
+  prescriptionView: {
+    title: "Receta",
+  },
+  prescriptions: {
+    title: "Recetas",
+    description: "Ver y gestionar tus recetas",
+    newEntry: "Nueva Entrada",
+    urgent: "Urgente",
+    high: "Alta",
+    low: "Baja",
+    routine: "Normal",
+    normal: "Normal",
+    prn: "PRN",
+    pending: "Pendiente",
+    prepared: "Preparada",
+    filled: "Completada",
+    partiallyFilled: "Parcialmente Completada",
+    cancelled: "Cancelada",
+    expired: "Vencida",
+    refillRequested: "Reposición Solicitada",
+    onHold: "En Espera",
+    newPrescription: "Nueva Receta",
+    noPrescriptions: "Sin Recetas",
+    pendingPrescriptions: "Recetas Pendientes",
+    prescribed: "Prescrita",
+    expires: "Vence",
+    medications: "Medicamentos",
+    notes: "Notas",
+    refills: "Reposiciones",
+  },
   component: {
     dateOfBirthInput: {
       unknown: "Desconocido",
@@ -181,6 +218,7 @@ const es: ENTranslations = {
     },
   },
   common: {
+    restartApp: "Reiniciar App",
     ok: "OK",
     today: "Hoy",
     departments: "Departamentos",

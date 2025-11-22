@@ -10,7 +10,7 @@ import { TxKeyPath } from "@/i18n"
 import { translate } from "@/i18n/translate"
 import Patient from "@/models/Patient"
 import { colors } from "@/theme/colors"
-import { parseYYYYMMDD } from "@/utils/date"
+import { localeDate, parseYYYYMMDD } from "@/utils/date"
 
 export interface PatientListItemProps {
   /**
@@ -102,9 +102,10 @@ const PatientListItemInner = memo(
     const displayName = useMemo(() => Patient.displayName(patient), [patient])
 
     const formattedDob = useMemo(() => {
-      if (!patient.dateOfBirth) return ""
-      const date = parseYYYYMMDD(patient.dateOfBirth, "")
-      return isValid(date) ? format(date, "dd MMM yyyy") : ""
+      // if (!patient.dateOfBirth) return ""
+      // const date = parseYYYYMMDD(patient.dateOfBirth, "")
+      // return isValid(date) ? format(date, "dd MMM yyyy") : ""
+      return localeDate(patient.dateOfBirth, "dd MMM yyyy")
     }, [patient.dateOfBirth])
 
     const sexDisplay = useMemo(() => {

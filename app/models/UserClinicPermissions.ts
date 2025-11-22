@@ -10,6 +10,7 @@ import UserClinicPermissionModel from "@/db/model/UserClinicPermissions"
 import { providerStore } from "@/store/provider"
 
 import User from "./User"
+import AppConfig from "./AppConfig"
 
 namespace UserClinicPermissions {
   export type T = {
@@ -197,6 +198,7 @@ namespace UserClinicPermissions {
     export type T = UserClinicPermissionModel
     /**
      * Given a user id, a clinic id and a permission to check for, returns a Result object for whether or not the user has the permission.
+     * @deprecated
      * @param userId User ID
      * @param clinicId Clinic ID
      * @param permission Permission to check for
@@ -213,6 +215,7 @@ namespace UserClinicPermissions {
       if (userRole === "super_admin") {
         return Either.right(true)
       }
+
       const hasPermission = await database
         .get<UserClinicPermissionModel>("user_clinic_permissions")
         .query(
@@ -268,8 +271,19 @@ namespace UserClinicPermissions {
       const user = providerStore.getSnapshot().context
       const userRole = Option.getOrNull(user.role)
 
+      /**
+       * isPermissionDisabled - can be set in the admin server, this effectively disables permissions checking across clinics.
+       * As long as the user is signed in. all other permissions can fall back on roles.
+       */
+      const isPermissionDisabled =
+        (await AppConfig.DB.getValue(
+          AppConfig.Namespaces.AUTH,
+          "disable-mobile-permissions-checking",
+        )) || false
+
       /// SUPER ADMIN CAN ACCESS EVERYTHING.
-      if (userRole === "super_admin") {
+      // If the permissions are disabled by the super admin, the users have access to all clinics
+      if (userRole === "super_admin" || isPermissionDisabled) {
         return database
           .get<ClinicModel>("clinics")
           .query()

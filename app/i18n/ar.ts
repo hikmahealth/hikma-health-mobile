@@ -167,6 +167,42 @@ const ar: Translations = {
   appointmentsList: {
     title: "قائمة المواعيد",
   },
+  pharmacyView: {
+    title: "الصيدلية",
+  },
+  prescriptionEditorForm: {
+    title: "نموذج الوصفة الطبية",
+  },
+  prescriptionView: {
+    title: "الوصفة الطبية",
+  },
+  prescriptions: {
+    title: "الوصفات الطبية",
+    description: "عرض وإدارة وصفاتك الطبية",
+    newEntry: "إدخال جديد",
+    urgent: "عاجل",
+    high: "عالي",
+    low: "منخفض",
+    routine: "عادي",
+    normal: "عادي",
+    prn: "عند الحاجة",
+    pending: "قيد الانتظار",
+    prepared: "جاهز",
+    filled: "تم الصرف",
+    partiallyFilled: "تم الصرف جزئياً",
+    cancelled: "ملغى",
+    expired: "منتهي الصلاحية",
+    refillRequested: "طلب إعادة الصرف",
+    onHold: "معلق",
+    newPrescription: "وصفة طبية جديدة",
+    noPrescriptions: "لا توجد وصفات طبية",
+    pendingPrescriptions: "الوصفات الطبية قيد الانتظار",
+    prescribed: "موصوف",
+    expires: "تنتهي الصلاحية",
+    medications: "الأدوية",
+    notes: "ملاحظات",
+    refills: "إعادة الصرف",
+  },
   component: {
     dateOfBirthInput: {
       unknown: "غير معروف",
@@ -175,6 +211,7 @@ const ar: Translations = {
     },
   },
   common: {
+    restartApp: "إعادة تشغيل التطبيق",
     ok: "موافق",
     today: "اليوم",
     departments: "الاقسام",

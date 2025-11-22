@@ -62,22 +62,25 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = ({
     isLoading: isPatientRecordLoading,
   } = usePatientRecordEditor(editPatientId, language)
 
-  // on mount, set the primary_clinic_id to the user's current clinic id;
+  // on mount, set the primary_clinic_id to the user's current clinic id (only for new patients or if not set);
   useEffect(() => {
     const primaryClinicFieldId = getBaseFieldByColumn("primary_clinic_id")
-    console.log({
-      primaryClinicFieldId: primaryClinicFieldId?.id,
-      clinicId: Option.getOrElse(clinicId, () => ""),
-      clinicOptionsList,
-      isPatientRecordLoading,
-    })
+
     if (primaryClinicFieldId && isPatientRecordLoading === false) {
-      updateField(
-        primaryClinicFieldId.id,
-        Option.getOrElse(clinicId, () => ""),
-      )
+      // Get the current value of the primary_clinic_id field
+      const currentPrimaryClinicValue = patientRecord.values[primaryClinicFieldId.id]
+
+      // Only set it if:
+      // 1. We're creating a new patient (no editPatientId), OR
+      // 2. The field is empty/undefined (patient doesn't have a primary clinic set)
+      if (!editPatientId || !currentPrimaryClinicValue) {
+        updateField(
+          primaryClinicFieldId.id,
+          Option.getOrElse(clinicId, () => ""),
+        )
+      }
     }
-  }, [clinicId, isPatientRecordLoading])
+  }, [clinicId, isPatientRecordLoading, editPatientId])
 
   const { givenName, surname } = useMemo(() => {
     const givenName = Patient.getPatientFieldByName(patientRecord, "given_name", "") || ""
@@ -233,6 +236,7 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = ({
                     value={String(value)}
                     onChangeText={(t) => updateField(field.id, type === "number" ? Number(t) : t)}
                     label={label}
+                    testID={`patient_form_input__${field.type}__${field.column}`}
                     inputWrapperStyle={
                       field.column === "government_id" && existingGovtId
                         ? {
@@ -254,6 +258,7 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = ({
                       if (open as unknown as boolean) setOpenDropdown(field.column as any)
                       else setOpenDropdown(null)
                     }}
+                    testID={`patient_form_input__${field.type}__${field.column}`}
                     modalTitle="Primary Clinic"
                     style={$dropDownPickerStyle}
                     zIndex={990000}
@@ -272,6 +277,7 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = ({
                   <View style={$rtl}>
                     <DateOfBirthInput
                       label={label}
+                      testId={`patient_form_input__${field.type}__${field.column}`}
                       date={parseYYYYMMDD(value, new Date())}
                       onChangeDate={(d) => {
                         if (d && parseYYYYMMDD(d.toDateString(), undefined)) {
@@ -292,6 +298,7 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = ({
                       <DatePickerButton
                         locale="en-US"
                         modal
+                        testID={`patient_form_input__${field.type}__${field.column}`}
                         theme="light"
                         maximumDate={new Date()}
                         title={label}

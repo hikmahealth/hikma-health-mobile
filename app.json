@@ -2,8 +2,8 @@
   "name": "Hikma Health",
   "slug": "hikma-health-mobile",
   "scheme": "hikma-health-mobile",
-  "version": "0.4.2",
-  "orientation": "portrait",
+  "version": "0.4.4",
+  "orientation": "default",
   "userInterfaceStyle": "light",
   "icon": "./assets/images/app-icon-all.png",
   "updates": {
@@ -23,12 +23,13 @@
     },
     "allowBackup": false,
     "edgeToEdgeEnabled": true,
-    "versionCode": 42,
-    "versionName": "0.4.2"
+    "versionCode": 44,
+    "versionName": "0.4.4"
   },
   "ios": {
     "icon": "./assets/images/app-icon-ios.png",
     "supportsTablet": true,
+    "requireFullScreen": true,
     "bundleIdentifier": "com.hikmahealthmobile",
     "userInterfaceStyle": "light",
     "privacyManifests": {
@@ -67,6 +68,12 @@
             "pickFirst": ["**/libc++_shared.so"]
           }
         }
+      }
+    ],
+    [
+      "expo-screen-orientation",
+      {
+        "initialOrientation": "DEFAULT"
       }
     ],
     "expo-secure-store",

@@ -11,6 +11,10 @@ import migrations from "./migrations"
 import AppConfig from "./model/AppConfig"
 import Appointment from "./model/Appointment"
 import Clinic from "./model/Clinic"
+import ClinicDepartment from "./model/ClinicDepartment"
+import ClinicInventory from "./model/ClinicInventory"
+import DispensingRecord from "./model/DispensingRecord"
+import DrugCatalogue from "./model/DrugCatalogue"
 import Event from "./model/Event"
 import EventForm from "./model/EventForm"
 import Patient from "./model/Patient"
@@ -19,10 +23,10 @@ import PatientProblems from "./model/PatientProblems"
 import PatientRegistrationForm from "./model/PatientRegistrationForm"
 import PatientVitals from "./model/PatientVitals"
 import Prescription from "./model/Prescription"
+import PrescriptionItem from "./model/PrescriptionItem"
 import User from "./model/User"
 import UserClinicPermissions from "./model/UserClinicPermissions"
 import Visit from "./model/Visit"
-import ClinicDepartment from "./model/ClinicDepartment"
 import schema from "./schema"
 
 setGenerator(() => uuidv1())
@@ -115,6 +119,12 @@ export const database = new Database({
 
     // v6
     ClinicDepartment,
+
+    // V7
+    DrugCatalogue,
+    ClinicInventory,
+    PrescriptionItem,
+    DispensingRecord,
   ],
 })
 

@@ -1,0 +1,80 @@
+# flow: Login Screen Test
+# Test logging in with email and password credentials
+
+appId: ${MAESTRO_APP_ID}
+---
+# Verify successful login by checking we've navigated away from login screen
+# The HIKMA HEALTH branding should no longer be visible after successful login
+- assertNotVisible: "HIKMA HEALTH"
+
+# Wait for the patient list to load using extendedWaitUntil
+- extendedWaitUntil:
+    visible: "Showing.*"
+    timeout: 5000
+
+# Verify we're on the patients list screen
+- assertVisible: "Patients" # title of the page in english
+# the menu is visible
+- assertVisible:
+    id: "drawerButton"
+
+- assertVisible:
+    id: "patientList"
+
+# Verify the new patient button is visible
+- assertVisible: "New Patient"
+
+# Verify that there is at least one patient list item
+- assertVisible:
+    id: "patientListItem.*"
+
+# Open the drawer menu
+# Look for the hamburger menu icon in the header
+- tapOn:
+    id: "drawerButton"
+    optional: true
+- tapOn:
+    index: 0
+    optional: true
+
+# Wait for drawer to open
+- waitForAnimationToEnd
+
+# Verify drawer is open by checking for drawer content
+- assertVisible: "HIKMA HEALTH"
+
+# Navigate to Settings
+- tapOn: "Settings"
+
+# Wait for settings screen to load
+- waitForAnimationToEnd
+
+# Verify we're on the settings screen
+- assertVisible: "User Account"
+
+# Scroll down to find the Sign Out button
+- scrollUntilVisible:
+    element:
+      text: "Sign Out"
+    direction: DOWN
+
+# Tap the Sign Out button
+- tapOn: "Sign Out"
+
+# Wait for confirmation dialog
+- waitForAnimationToEnd
+
+# Confirm sign out by tapping the second "Sign Out" option in the alert
+- assertVisible: "Are you sure.*"
+
+- tapOn:
+    text: "Confirm Sign Out"
+
+# Wait for sign out to complete
+- waitForAnimationToEnd
+
+# Verify we're back at the login screen
+- assertVisible: "HIKMA HEALTH"
+- assertVisible: "Email Address"
+- assertVisible: "Password"
+- assertVisible: "Sign in"

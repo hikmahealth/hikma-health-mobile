@@ -206,6 +206,8 @@ namespace Sync {
     }
     const SYNC_API = `${HH_API.value}/api/v2/sync`
 
+    console.warn("SYNC_API:", SYNC_API)
+
     const result = await fetch(`${SYNC_API}?${urlParams}`, {
       // Headers include the username and password in base64 encoded string
       headers: headers,

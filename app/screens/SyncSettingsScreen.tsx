@@ -13,6 +13,7 @@ import { CameraType, useCameraPermissions, BarcodeScanningResult } from "expo-ca
 import { Option } from "effect"
 import CameraView from "expo-camera/build/CameraView"
 import { LucideCamera, LucideRefreshCcw } from "lucide-react-native"
+import Toast from "react-native-root-toast"
 import { v1 as uuidV1 } from "uuid"
 
 import { Screen } from "@/components/Screen"
@@ -23,7 +24,7 @@ import { translate } from "@/i18n/translate"
 import Sync from "@/models/Sync"
 import type { AppStackScreenProps } from "@/navigators/AppNavigator"
 import { colors } from "@/theme/colors"
-import { getHHApiUrl } from "@/utils/storage"
+import { getHHApiUrl, setHHApiUrl } from "@/utils/storage"
 
 interface SyncSettingsScreenProps extends AppStackScreenProps<"SyncSettings"> {}
 
@@ -57,6 +58,7 @@ export const SyncSettingsScreen: FC<SyncSettingsScreenProps> = () => {
   const [isCameraScannerActive, setIsCameraScannerActive] = useState(false)
   const [facing, setFacing] = useState<CameraType>("back")
   const [permission, requestPermission] = useCameraPermissions()
+  const [serverTypeScanner, setServerTypeScanner] = useState<Sync.ServerType>("local")
 
   const { servers, refresh } = useSyncServerDetails()
 
@@ -106,45 +108,46 @@ export const SyncSettingsScreen: FC<SyncSettingsScreenProps> = () => {
     }
   }, [isCameraScannerActive])
 
-  // whether or not there exists a local sync server
-  const hasLocalServer = servers.some((server) => server.type === "local")
-
-  const handleAddLocalServer = async () => {
+  async function setCameraActive(serverType: Sync.ServerType) {
     const { status } = await requestPermission()
     console.log("status", status)
     if (status === "granted") {
       setIsCameraScannerActive(true)
+      setServerTypeScanner(serverType)
     } else {
       Alert.alert(translate("login:requiredCameraPermissions"))
     }
   }
 
-  const handleBarCodeScanned = async ({ data }: BarcodeScanningResult) => {
-    try {
-      await Sync.Server.set("local", {
-        id: uuidV1(),
-        name: "local",
-        url: data,
-        isActive: false,
-        type: "local",
-      })
-      await refresh()
+  // whether or not there exists a local sync server
+  const hasLocalServer = servers.some((server) => server.type === "local")
 
-      Vibration.vibrate(500)
+  const handleBarCodeScanned =
+    (serverType: Sync.ServerType) =>
+    async ({ data }: BarcodeScanningResult) => {
+      try {
+        await Sync.Server.set(serverType, {
+          id: uuidV1(),
+          name: serverType,
+          url: data,
+          isActive: false,
+          type: serverType,
+        })
+        await setHHApiUrl(data)
+        await refresh()
 
-      // FIXME: Check that the scanned data is valid
-    } catch (error) {
-      console.error(error)
-      Alert.alert(translate("login:invalidQRCode"))
+        Vibration.vibrate(500)
+
+        // FIXME: Check that the scanned data is valid
+      } catch (error) {
+        console.error(error)
+        Alert.alert(translate("login:invalidQRCode"))
+      }
+      setIsCameraScannerActive(false)
     }
-    setIsCameraScannerActive(false)
-  }
-
-  const handleCameraScanClose = () => {
-    setIsCameraScannerActive(false)
-  }
 
   const handleSetActiveServer = (type: Sync.ServerType) => {
+    console.log({ type })
     Alert.alert(
       translate("syncSettingsScreen:confirmSetDefault"),
       translate("syncSettingsScreen:confirmSetDefaultDescription"),
@@ -154,7 +157,13 @@ export const SyncSettingsScreen: FC<SyncSettingsScreenProps> = () => {
           text: translate("common:confirm"),
           onPress: () => {
             Sync.Server.setActive(type)
-              .then(() => refresh())
+              .then(() => {
+                refresh()
+                Toast.show("Server set as default", {
+                  position: Toast.positions.BOTTOM,
+                  duration: Toast.durations.SHORT,
+                })
+              })
               .catch((error) => {
                 console.error(error)
                 Alert.alert(translate("syncSettingsScreen:syncError"))
@@ -167,12 +176,16 @@ export const SyncSettingsScreen: FC<SyncSettingsScreenProps> = () => {
 
   const handleAddServer = (type: Sync.ServerType) => {
     if (type === "local") {
-      handleAddLocalServer()
+      setCameraActive("local")
+    } else if (type === "cloud") {
+      setCameraActive("cloud")
     }
   }
 
   const cloudServer = servers.find((server) => server.type === "cloud")
   const localServer = servers.find((server) => server.type === "local")
+
+  const { isSyncing, startSync } = useSync()
 
   if (isCameraScannerActive && permission?.granted) {
     return (
@@ -182,22 +195,52 @@ export const SyncSettingsScreen: FC<SyncSettingsScreenProps> = () => {
             barcodeTypes: ["qr"],
           }}
           facing={facing}
-          onBarcodeScanned={handleBarCodeScanned}
+          onBarcodeScanned={handleBarCodeScanned(serverTypeScanner)}
           style={StyleSheet.absoluteFillObject}
         />
       </View>
     )
   }
 
-  const { isSyncing, startSync } = useSync()
-
   const handleManualSync = async () => {
     try {
+      await startSync()
       await startSync()
     } catch (error) {
       console.error("Manual sync failed:", error)
     }
   }
+
+  const handleClearServer = async (type: Sync.ServerType) => {
+    handleBarCodeScanned(type)({
+      type,
+      data: "",
+      raw: undefined,
+      cornerPoints: [],
+      bounds: {
+        origin: { x: 0, y: 0 },
+        size: { width: 0, height: 0 },
+      },
+      extra: undefined,
+    })
+  }
+
+  // TODO: All time re-sync. Get all data from server.
+  const handleAllTimeSync = async () => {
+    // try {
+    //   await startSync()
+    // } catch (error) {
+    //   console.error("All time sync failed:", error)
+    // }
+  }
+
+  getHHApiUrl()
+    .then((url) => {
+      console.log("HH API URL:", url)
+    })
+    .catch((error) => {
+      console.error("Failed to get HH API URL:", error)
+    })
 
   return (
     <Screen style={$root} preset="scroll">
@@ -234,6 +277,7 @@ export const SyncSettingsScreen: FC<SyncSettingsScreenProps> = () => {
           handleAddServer={handleAddServer}
           handleSetActiveServer={handleSetActiveServer}
           server={localServer}
+          clearServer={handleClearServer}
         />
       )}
 
@@ -244,7 +288,7 @@ export const SyncSettingsScreen: FC<SyncSettingsScreenProps> = () => {
             <Text text="Not Configured" size="xxs" />
           </View>
 
-          <ConnectButton onPress={handleAddLocalServer} mode="connect" />
+          <ConnectButton onPress={() => handleAddServer("local")} mode="connect" />
         </View>
       )}
     </Screen>
@@ -274,16 +318,20 @@ function ConnectButton({ onPress, mode }: { onPress: () => void; mode: "connect"
  * Server type component
  * @param {Sync.Server.T} server - The server to display
  * @param {Function} handleSetActiveServer - The function to call when the server is set as active
+ * @param {Function} handleAddServer - The function to call when the server is added
+ * @param {Function} clearServer - The function to call when the server is cleared
  * @returns {JSX.Element} The server type component
  */
 function ServerTypeComponent({
   server,
   handleSetActiveServer,
   handleAddServer,
+  clearServer,
 }: {
   server: Sync.Server.T
   handleSetActiveServer: (type: Sync.ServerType) => void
   handleAddServer: (type: Sync.ServerType) => void
+  clearServer?: (type: Sync.ServerType) => Promise<void>
 }) {
   return (
     <View style={$withBottomBorder} py={12} direction="column" gap={4}>
@@ -307,9 +355,22 @@ function ServerTypeComponent({
           </Pressable>
         )}
 
-        {server.type === "local" && (
-          <ConnectButton onPress={() => handleAddServer(server.type)} mode="change" />
+        {clearServer && (
+          <Pressable onPress={() => clearServer(server.type)} hitSlop={10}>
+            <View>
+              <Text
+                size="xs"
+                color={colors.palette.primary700}
+                text="Clear"
+                textDecorationLine="underline"
+              />
+            </View>
+          </Pressable>
         )}
+
+        {/*{server.type === "local" && (*/}
+        <ConnectButton onPress={() => handleAddServer(server.type)} mode="change" />
+        {/*)}*/}
       </View>
     </View>
   )

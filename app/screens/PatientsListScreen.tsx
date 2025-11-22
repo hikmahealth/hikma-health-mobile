@@ -19,6 +19,7 @@ import { PatientNavigatorParamList } from "@/navigators/PatientNavigator"
 import { languageStore } from "@/store/language"
 import { providerStore } from "@/store/provider"
 import { colors } from "@/theme/colors"
+import { useSafeArea, useSafeAreaInsets } from "react-native-safe-area-context"
 
 interface PatientsListScreenProps
   extends NativeStackScreenProps<PatientNavigatorParamList, "PatientsList"> {}
@@ -112,6 +113,8 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = ({ navigation }) 
       },
     )
   }
+
+  const insets = useSafeAreaInsets()
 
   return (
     <>
@@ -240,7 +243,7 @@ export const PatientsListScreen: FC<PatientsListScreenProps> = ({ navigation }) 
         ListFooterComponent={() => <View style={{ height: 40 }} />}
         data={patients}
         recycleItems={false}
-        extraData={`${isFocused ? "focused" : "not_focused"}_${patients.length}_${totalPatientsCount}`}
+        extraData={`${isFocused ? "focused" : "not_focused"}_${patients.length}_${totalPatientsCount}_${isPatientListLoading ? "loading" : "loaded"}`}
         // the key contains the updatedAt, to ensure that the list is updated when the patient data changes
         keyExtractor={(item, index) => `${item.id}_${item.updatedAt}`}
         renderItem={({ item }) => (

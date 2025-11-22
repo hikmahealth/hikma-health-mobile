@@ -33,6 +33,7 @@ import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-c
 
 import { initI18n } from "./i18n"
 import User from "./models/User"
+import UserClinicPermissions from "./models/UserClinicPermissions"
 import { AppNavigator } from "./navigators/AppNavigator"
 import { useNavigationPersistence } from "./navigators/navigationUtilities"
 import { languageStore } from "./store/language"
@@ -41,7 +42,6 @@ import { ThemeProvider, useAppTheme } from "./theme/context"
 import { customFontsToLoad } from "./theme/typography"
 import { loadDateFnsLocale } from "./utils/formatDate"
 import * as storage from "./utils/storage"
-import UserClinicPermissions from "./models/UserClinicPermissions"
 
 export const NAVIGATION_PERSISTENCE_KEY = "NAVIGATION_STATE"
 

@@ -4,8 +4,6 @@ import { useDebounceValue } from "usehooks-ts"
 
 import database from "@/db"
 import Appointment from "@/models/Appointment"
-import { t } from "node_modules/@faker-js/faker/dist/airline-CLphikKp"
-import { LucideHandFist, LucideHandGrab } from "lucide-react-native"
 
 type FilterState = {
   selectedClinicId: string | null
@@ -30,7 +28,7 @@ const initialFilters: AppointmentsFilters = {
   departmentIds: [],
 }
 
-const PAGE_SIZE = 50
+const PAGE_SIZE = 150
 
 type ISOStringDate = string
 
@@ -62,7 +60,6 @@ export function useDBAppointmentsFilter(
   }, [filters.searchQuery])
 
   useEffect(() => {
-    console.log("useEffect calledß")
     const { status, date, clinicId, searchQuery, departmentIds } = filters
     setLoading(true)
 
@@ -122,7 +119,6 @@ export function useDBAppointmentsFilter(
     // Check if we've received fewer results than requested
     // This indicates we've reached the end of available data
     if (appointmentResults.length < pagination.limit) {
-      console.log("Reached end of data")
       return
     }
     const nextPageLimit = pagination.limit + PAGE_SIZE

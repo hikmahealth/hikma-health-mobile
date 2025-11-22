@@ -43,7 +43,7 @@ export default class PatientVitals extends Model {
   // --- Timestamps (Read-only) ---
   @readonly @date("created_at") createdAt!: Date
   @readonly @date("updated_at") updatedAt!: Date
-  @readonly @date("deleted_at") deletedAt!: Date
+  @readonly @date("deleted_at") deletedAt!: Date | null
 
   // --- Relations ---
   @relation("patients", "patient_id") patient!: Patient

@@ -331,12 +331,11 @@ export function usePatientsList(
     }
 
     // If the user is doing any kind of search, sort by given name and last name, otherwise show most recent first
-    const ptQueryConditions = []
+    // Always sort by updated_at in descending order first
+    const ptQueryConditions = [Q.sortBy("updated_at", "desc")]
     if (ptQueryConditionsWithStr.length > 0) {
       ptQueryConditions.push(Q.sortBy("given_name", "asc"))
       ptQueryConditions.push(Q.sortBy("surname", "asc"))
-    } else {
-      ptQueryConditions.push(Q.sortBy("updated_at", "desc"))
     }
 
     const sub = patientsRef

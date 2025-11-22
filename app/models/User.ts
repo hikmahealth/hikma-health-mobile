@@ -85,6 +85,9 @@ namespace User {
 
       const result = await response.json()
 
+      // console.log("Response:", response)
+      console.log("Result:", result)
+
       if (response.status === 200 && result.message === undefined) {
         // Store credentials securely
         await SecureStorage.setItemAsync("provider_password", password)

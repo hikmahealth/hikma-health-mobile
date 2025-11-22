@@ -1,4 +1,13 @@
-import { Image, StyleProp, TextStyle, ViewStyle, Dimensions, TouchableOpacity } from "react-native"
+import {
+  Image,
+  StyleProp,
+  TextStyle,
+  ViewStyle,
+  Dimensions,
+  TouchableOpacity,
+  Alert,
+} from "react-native"
+import * as Updates from "expo-updates"
 import { DrawerContentScrollView } from "@react-navigation/drawer"
 import {
   LucideUsers,
@@ -6,15 +15,21 @@ import {
   LucideShield,
   LucideCalendar,
   LucideChevronRight,
+  LucideCirclePower,
+  LucidePillBottle,
 } from "lucide-react-native"
 
 import { Text } from "@/components/Text"
 import { View } from "@/components/View"
+import { translate } from "@/i18n/translate"
 import { useAppTheme } from "@/theme/context"
 import type { ThemedStyle } from "@/theme/types"
+
 import { LanguageToggle } from "./LanguageToggle"
 import { NetworkStatusIndicator } from "./NetworkStatusIndicator"
 import { SyncButtonIndicator } from "./SyncButtonIndicator"
+import { resetRoot, useNavigationPersistence } from "@/navigators/navigationUtilities"
+import { CommonActions, DrawerActions, StackActions, useNavigation } from "@react-navigation/native"
 
 const { height } = Dimensions.get("window")
 
@@ -55,12 +70,12 @@ const drawerItems: DrawerItem[] = [
     icon: LucideCalendar,
     routeName: "Appointment",
   },
-  // {
-  //   name: "Prescription",
-  //   label: "Prescriptions",
-  //   icon: LucideCalendar,
-  //   routeName: "Prescription",
-  // },
+  {
+    name: "Pharmacy",
+    label: "Pharmacy",
+    icon: LucidePillBottle,
+    routeName: "Pharmacy",
+  },
   {
     name: "Settings",
     label: "Settings",
@@ -80,6 +95,7 @@ const drawerItems: DrawerItem[] = [
  */
 export const AppDrawer = (props: AppDrawerProps) => {
   const { navigation, state, style } = props
+  const globalNavigation = useNavigation()
   const $styles = [$container, style]
   const { themed } = useAppTheme()
 
@@ -91,6 +107,35 @@ export const AppDrawer = (props: AppDrawerProps) => {
 
   const isActiveRoute = (routeName: string) => {
     return state.routeNames[state.index] === routeName
+  }
+
+  const handleAppRestart = async () => {
+    Alert.alert(
+      "Restart",
+      "Restarting the app will re-open the app and could help resolve any issues you may be experiencing.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Restart",
+          onPress: async () => {
+            let canGoBack = globalNavigation.canGoBack()
+            while (canGoBack) {
+              console.log({ canGoBack })
+              globalNavigation.goBack()
+              canGoBack = globalNavigation.canGoBack()
+            }
+
+            await Updates.reloadAsync()
+          },
+        },
+      ],
+      {
+        cancelable: true,
+      },
+    )
   }
 
   return (
@@ -105,15 +150,16 @@ export const AppDrawer = (props: AppDrawerProps) => {
       <View>
         {/* Logo Section */}
         <View
-          pt={height * 0.08}
-          pb={height * 0.04}
+          pt={height * 0.04}
+          pb={height * 0.02}
           direction="column"
           alignItems="center"
           justifyContent="center"
           style={{ flexGrow: 1 }}
         >
-          <Image source={launchIcon} style={{ height: 160, width: 160 }} resizeMode="contain" />
+          <Image source={launchIcon} style={{ height: 140, width: 140 }} resizeMode="contain" />
           <Text size="xl">HIKMA HEALTH</Text>
+          {/*TODO: show the clinic name from the customization page of the app configuration*/}
         </View>
 
         {/* Navigation Items */}
@@ -140,6 +186,17 @@ export const AppDrawer = (props: AppDrawerProps) => {
               </TouchableOpacity>
             )
           })}
+          <TouchableOpacity onPress={handleAppRestart} style={themed($drawerItem(false))}>
+            <View style={themed($itemContent)}>
+              <View style={themed($leftSection)}>
+                <LucideCirclePower size={20} color={themed($iconColor(false)).color} />
+                <Text style={themed($itemText(false))} preset="default" size="sm">
+                  {translate("common:restartApp")}
+                </Text>
+              </View>
+              <LucideChevronRight size={16} color={themed($chevronColor(false)).color} />
+            </View>
+          </TouchableOpacity>
         </View>
       </View>
       <View style={{ alignSelf: "center", paddingBottom: 20 }}>

@@ -1,13 +1,5 @@
 import { Model, Q } from "@nozbe/watermelondb"
-import {
-  date,
-  readonly,
-  field,
-  text,
-  immutableRelation,
-  children,
-  lazy,
-} from "@nozbe/watermelondb/decorators"
+import { date, readonly, field, text, children } from "@nozbe/watermelondb/decorators"
 import { Associations } from "@nozbe/watermelondb/Model"
 
 import ClinicDepartmentModel from "./ClinicDepartment"

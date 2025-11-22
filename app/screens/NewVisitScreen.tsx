@@ -42,6 +42,15 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = ({ route, navigation }) =
     }
   }, [visitId, navigation])
 
+  const handlePrescriptionsPress = () => {
+    navigation.navigate("PrescriptionEditorForm", {
+      patientId,
+      visitId: Option.getOrElse(visitId, () => undefined),
+      eventDate,
+      departmentId,
+    })
+  }
+
   // TODO: Add provider check, make sure a provider is signed in and exists
   // console.log({ isLoadingEvents, isLoadingForms })
 
@@ -54,6 +63,29 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = ({ route, navigation }) =
           maximumDate={new Date()}
           onDateChange={(d) => setEventDate(d.getTime())}
         />
+
+        {/* Moved to the patient view screen */}
+        {/*<Pressable onPress={handlePrescriptionsPress} style={$formListItem}>
+          <View>
+            <View direction="row" gap={8}>
+              {false && <LucideCheckCheck color="green" />}
+              <Text weight="bold">Prescriptions</Text>
+              <Text></Text>
+              <View justifyContent="flex-end">
+                <View
+                  alignContent="center"
+                  justifyContent="center"
+                  alignItems="center"
+                  style={$languageBadge}
+                >
+                  <Text text={"en"} color="white" size="xxs" />
+                </View>
+              </View>
+            </View>
+            <Text size="xs">Prescription details.</Text>
+          </View>
+          <ChevronRight color={colors.palette.neutral500} />
+        </Pressable>*/}
 
         {forms.map((form, idx) => {
           return (

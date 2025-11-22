@@ -106,6 +106,8 @@ web-build/
 .env.local
 .env.*
 
+*.log
+
 
 # Hikma Health JSON files
 /hikma-health*.json

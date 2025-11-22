@@ -97,3 +97,16 @@ export async function getHHApiUrl(): Promise<Option.Option<string>> {
   }
   return Option.fromNullable(await SecureStore.getItemAsync("HIKMA_API"))
 }
+
+/**
+ * Set the HH api URL stored in encrypted storage
+ * @param {string} url The url to store.
+ */
+export async function setHHApiUrl(url: string): Promise<boolean> {
+  try {
+    await SecureStore.setItemAsync("HIKMA_API", url)
+    return true
+  } catch {
+    return false
+  }
+}

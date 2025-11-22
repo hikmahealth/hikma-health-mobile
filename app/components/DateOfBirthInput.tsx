@@ -68,6 +68,8 @@ export interface DateOfBirthInputProps {
    * Callback function called when the date of birth value changes
    */
   onChangeDate: (date: Date | null) => void
+
+  testId?: string
 }
 
 /**
@@ -84,6 +86,7 @@ export const DateOfBirthInput = (props: DateOfBirthInputProps) => {
     descriptionTx,
     date: defaultDate,
     onChangeDate,
+    testId,
   } = props
   const $styles = [$container, style]
   const { themed } = useAppTheme()
@@ -169,7 +172,7 @@ export const DateOfBirthInput = (props: DateOfBirthInputProps) => {
       )}
       <View direction="row" gap={6}>
         <View style={getInputStyle("date-picker")}>
-          <Pressable onPress={() => setDobMode("date-picker")}>
+          <Pressable testID={testId} onPress={() => setDobMode("date-picker")}>
             <Text
               size="xs"
               tx="component:dateOfBirthInput.datePicker"
@@ -179,7 +182,7 @@ export const DateOfBirthInput = (props: DateOfBirthInputProps) => {
         </View>
         <Text tx="common:or" />
         <View style={getInputStyle("age-input")}>
-          <Pressable onPress={() => setDobMode("age-input")}>
+          <Pressable testID={testId} onPress={() => setDobMode("age-input")}>
             <Text
               size="xs"
               tx="component:dateOfBirthInput.ageInput"
@@ -189,7 +192,7 @@ export const DateOfBirthInput = (props: DateOfBirthInputProps) => {
         </View>
         <Text tx="common:or" />
         <View style={getInputStyle("unknown")}>
-          <Pressable onPress={() => setDobMode("unknown")}>
+          <Pressable testID={testId} onPress={() => setDobMode("unknown")}>
             <Text
               size="xs"
               tx="component:dateOfBirthInput.unknown"

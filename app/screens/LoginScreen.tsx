@@ -29,7 +29,7 @@ import type { AppStackScreenProps } from "@/navigators/AppNavigator"
 import { providerStore } from "@/store/provider"
 import { colors } from "@/theme/colors"
 import { useAppTheme } from "@/theme/context"
-import { getHHApiUrl } from "@/utils/storage"
+import { getHHApiUrl, setHHApiUrl } from "@/utils/storage"
 
 const HIKMA_API_TESTING = process.env.EXPO_PUBLIC_HIKMA_API_TESTING
 
@@ -174,7 +174,8 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
     }
 
     if (canOpen) {
-      await SecureStore.setItemAsync("HIKMA_API", data)
+      // await SecureStore.setItemAsync("HIKMA_API", data)
+      setHHApiUrl(data)
       Toast.show("✅ " + translate("login:qrCodeRegistered"), {
         duration: Toast.durations.LONG,
         position: Toast.positions.BOTTOM,
@@ -202,36 +203,38 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
 
   if (scannerVisible) {
     return (
-      <View style={{ ...StyleSheet.absoluteFillObject }}>
-        <CameraView
-          barcodeScannerSettings={{
-            barcodeTypes: ["qr"],
-          }}
-          onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-          style={{ flex: 1, ...StyleSheet.absoluteFillObject }}
-        />
-        <View
-          style={{
-            position: "absolute",
-            top: 10,
-            right: 10,
-          }}
-        >
-          <Pressable style={{}} onPress={() => setScannerVisible(false)}>
-            <XIcon
-              size={24}
-              color={colors.palette.angry500}
-              style={{ backgroundColor: "white", borderRadius: 100, padding: 20 }}
-            />
-          </Pressable>
+      <Screen preset="fixed">
+        <View style={{ ...StyleSheet.absoluteFillObject }}>
+          <CameraView
+            barcodeScannerSettings={{
+              barcodeTypes: ["qr"],
+            }}
+            onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+            style={{ flex: 1, ...StyleSheet.absoluteFillObject }}
+          />
+          <View
+            style={{
+              position: "absolute",
+              top: 10,
+              right: 10,
+            }}
+          >
+            <Pressable style={{}} onPress={() => setScannerVisible(false)}>
+              <XIcon
+                size={24}
+                color={colors.palette.angry500}
+                style={{ backgroundColor: "white", borderRadius: 100, padding: 20 }}
+              />
+            </Pressable>
+          </View>
         </View>
-      </View>
+      </Screen>
     )
   }
 
   return (
     <>
-      <Screen style={$root} safeAreaEdges={["top", "bottom"]} preset="scroll">
+      <Screen style={$root} preset="scroll">
         <View
           style={$brandingContainer}
           pt={height * 0.08}
@@ -283,6 +286,9 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
             </View>
           </Pressable>
         </View>
+
+        {/* Spacer Component */}
+        <View height={40} />
       </Screen>
       <Pressable
         testID="login-privacy-policy"

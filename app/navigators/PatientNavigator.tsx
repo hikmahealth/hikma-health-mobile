@@ -15,15 +15,22 @@ import { AppointmentViewScreen } from "@/screens/AppointmentViewScreen"
 import { EventFormScreen } from "@/screens/EventFormScreen"
 import { FormEventsListScreen } from "@/screens/FormEventsListScreen"
 import { NewVisitScreen } from "@/screens/NewVisitScreen"
+import { PatientPrescriptionsListScreen } from "@/screens/PatientPrescriptionsListScreen"
 import { PatientRecordEditorScreen } from "@/screens/PatientRecordEditorScreen"
 import { PatientsListScreen } from "@/screens/PatientsListScreen"
 import { PatientViewScreen } from "@/screens/PatientViewScreen"
 import { PatientVisitsListScreen } from "@/screens/PatientVisitsListScreen"
+import { PrescriptionEditorFormScreen } from "@/screens/PrescriptionEditorFormScreen"
 import { VisitEventsListScreen } from "@/screens/VisitEventsListScreen"
 import { VitalFormScreen } from "@/screens/VitalFormScreen"
 import { VitalHistoryScreen } from "@/screens/VitalHistoryScreen"
 import { languageStore } from "@/store/language"
 import { colors } from "@/theme/colors"
+
+import { PharmacyNavigatorParamList } from "./PharmacyNavigator"
+import { PrescriptionViewScreen } from "@/screens/PrescriptionViewScreen"
+import { DispensePrescriptionItemScreen } from "@/screens/DispensePrescriptionItemScreen"
+import { useSafeAreaInsetsStyle } from "@/utils/useSafeAreaInsetsStyle"
 // import { useSafeAreaInsetsStyle } from "@/utils/useSafeAreaInsetsStyle"
 
 export type PatientNavigatorParamList = {
@@ -60,6 +67,12 @@ export type PatientNavigatorParamList = {
   PatientRecordEditor: { editPatientId?: string }
   VitalHistory: { patientId: string }
   VitalForm: { patientId: string }
+
+  // Prescriptions
+  PrescriptionEditorForm: PharmacyNavigatorParamList["PrescriptionEditorForm"]
+  PatientPrescriptionsList: PharmacyNavigatorParamList["PatientPrescriptionsList"]
+  PrescriptionView: PharmacyNavigatorParamList["PrescriptionView"]
+  DispensePrescriptionItem: PharmacyNavigatorParamList["DispensePrescriptionItem"]
 }
 
 const Stack = createNativeStackNavigator<PatientNavigatorParamList>()
@@ -153,6 +166,27 @@ export const PatientNavigator = () => {
         options={{ title: translate("vitalForm:title") }}
         component={VitalFormScreen}
       />
+
+      <Stack.Screen
+        name="PrescriptionEditorForm"
+        options={{ title: translate("prescriptionEditorForm:title") }}
+        component={PrescriptionEditorFormScreen}
+      />
+      <Stack.Screen
+        name="PatientPrescriptionsList"
+        options={{ title: translate("common:prescriptions") }}
+        component={PatientPrescriptionsListScreen}
+      />
+      <Stack.Screen
+        name="PrescriptionView"
+        options={{ title: translate("prescriptionView:title") }}
+        component={PrescriptionViewScreen}
+      />
+      <Stack.Screen
+        name="DispensePrescriptionItem"
+        options={{ title: "Dispense Medication" }}
+        component={DispensePrescriptionItemScreen}
+      />
     </Stack.Navigator>
   )
 }
@@ -166,6 +200,7 @@ interface StackHeaderProps {
 }
 
 export const StackHeader = ({ navigation, options, route, isRTL, back }: StackHeaderProps) => {
+  const $containerInsets = useSafeAreaInsetsStyle(["top"])
   const { title } = options
   const { params } = route
   const routeName = route.name
@@ -266,7 +301,7 @@ export const StackHeader = ({ navigation, options, route, isRTL, back }: StackHe
   }
 
   return (
-    <View style={$headerContainer}>
+    <View style={[$headerContainer, $containerInsets]}>
       <View style={$headerContent}>
         {leftContent()}
 

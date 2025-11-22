@@ -49,11 +49,7 @@ export const PatientProfileSummary: FC<PatientProfileSummaryProps> = ({ patient,
         )}`}</Text>
         <Text
           align="center"
-          text={`${translate("common:dob")}: ${
-            isValid(new Date(patient.dateOfBirth))
-              ? format(parseYYYYMMDD(patient.dateOfBirth, ""), "dd MMM yyyy")
-              : ""
-          }`}
+          text={`${translate("common:dob")}: ${localeDate(patient.dateOfBirth, "dd MMM yyyy")}`}
         />
 
         <Text align="center">Registered: {localeDate(patient.createdAt, "dd MMM yyyy", {})}</Text>

@@ -1,0 +1,228 @@
+# flow: Prescribe Medications Test - Comprehensive
+# Test the complete flow of prescribing medications including edge cases
+
+appId: ${MAESTRO_APP_ID}
+onFlowStart:
+  - runFlow: ../shared/_OnFlowStart.yaml
+  - runFlow: ../shared/sign-in.yaml
+  # - runFlow: login.yaml
+---
+# ==========================================
+# SCENARIO 1: Verify No Items - Negative Test
+# ==========================================
+# Verify that submit button is not visible without items
+
+# Step 1: Navigate to patients list and verify
+- assertVisible: "Patients"
+- assertVisible:
+    id: "patientList"
+- assertVisible:
+    id: "patientListItem.*"
+
+# Step 2: Click on the first patient
+- tapOn:
+    id: "patientListItem.*"
+    index: 0
+- waitForAnimationToEnd
+
+# Step 3: Click on the medications button
+- tapOn:
+    text: "Medications"
+    optional: true
+- tapOn:
+    id: ".*medications.*"
+    optional: true
+- waitForAnimationToEnd
+
+# Step 4: Click on the new patient prescription button
+- assertVisible:
+    id: "new-patient-prescription"
+- tapOn:
+    id: "new-patient-prescription"
+- waitForAnimationToEnd
+
+# Step 5: Verify we're on the PrescriptionEditorForm screen
+- assertVisible:
+    id: "patient-name"
+- assertVisible:
+    id: "patient-age"
+- assertVisible:
+    id: "patient-sex"
+
+# Step 6: Add a note (allowed without items)
+- tapOn:
+    id: "prescription-notes"
+- inputText: "Maestro comprehensive test"
+- hideKeyboard
+
+# Step 7: Verify there are no prescription items showing
+- assertNotVisible:
+    id: "prescription-item"
+
+# Step 8: Verify submit button is NOT visible (no items added)
+- assertNotVisible:
+    id: "submit-prescription"
+
+# Scroll and verify submit is still not visible
+- scroll
+- assertNotVisible:
+    id: "submit-prescription"
+
+# ==========================================
+# SCENARIO 2: Add and Remove Item
+# ==========================================
+# Test adding an item and then removing it
+
+# Open the add prescription item modal
+- assertVisible:
+    id: "open-add-prescription-item-form"
+- tapOn:
+    id: "open-add-prescription-item-form"
+- waitForAnimationToEnd
+
+# Verify modal is open
+- assertVisible:
+    id: "clinic-inventory-search"
+
+# Wait for medication list to load and select first item
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: "inventory-item-.*"
+    index: 0
+- waitForAnimationToEnd
+
+# Verify the prescription item is now showing
+- assertVisible:
+    id: "prescription-item"
+
+# Verify the submit button is now visible
+- assertVisible:
+    id: "submit-prescription"
+
+# Now remove the prescription item
+- assertVisible:
+    id: "remove-prescription-item"
+- tapOn:
+    id: "remove-prescription-item"
+- waitForAnimationToEnd
+
+# Verify the prescription item is gone
+- assertNotVisible:
+    id: "prescription-item"
+
+# Verify the submit button is hidden again
+- assertNotVisible:
+    id: "submit-prescription"
+
+# ==========================================
+# SCENARIO 3: Add Multiple Items and Submit
+# ==========================================
+# Test adding multiple prescription items
+
+# Add first prescription item
+- tapOn:
+    id: "open-add-prescription-item-form"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "clinic-inventory-search"
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: "inventory-item-.*"
+    index: 0
+- waitForAnimationToEnd
+
+# Verify first item is added
+- assertVisible:
+    id: "prescription-item"
+
+# Edit first item - add quantity
+- assertVisible:
+    id: "prescription-item-quantity"
+- tapOn:
+    id: "prescription-item-quantity"
+- inputText: "10"
+- hideKeyboard
+- waitForAnimationToEnd
+
+# Edit first item - add dosage instructions
+- assertVisible:
+    id: "prescription-item-instructions"
+- tapOn:
+    id: "prescription-item-instructions"
+- inputText: "Take 2 tablets twice daily after meals"
+- hideKeyboard
+- waitForAnimationToEnd
+
+# Scroll to see the add button
+- scroll
+
+# Add second prescription item
+- tapOn:
+    id: "open-add-prescription-item-form"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "clinic-inventory-search"
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: "inventory-item-.*"
+    index: 1
+- waitForAnimationToEnd
+
+# Add third prescription item
+- scroll
+- tapOn:
+    id: "open-add-prescription-item-form"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "clinic-inventory-search"
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: "inventory-item-.*"
+    index: 2
+- waitForAnimationToEnd
+
+# Verify submit button is visible with multiple items
+- scroll
+- assertVisible:
+    id: "submit-prescription"
+
+# Submit the prescription with multiple items
+- tapOn:
+    id: "submit-prescription"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# ==========================================
+# SCENARIO 4: Verify in Pharmacy
+# ==========================================
+# Verify the prescription appears in the pharmacy
+
+# Open the side nav menu
+- tapOn:
+    id: "drawerButton"
+    optional: true
+- waitForAnimationToEnd
+
+# Verify drawer is open
+- assertVisible: "HIKMA HEALTH"
+
+# Navigate to Pharmacy
+- tapOn: "Pharmacy"
+- waitForAnimationToEnd
+
+# Verify the prescription is in the pharmacy list
+- assertVisible:
+    id: "pharmacy-prescription-item-.*"
+
+# Verify patient name is visible in pharmacy prescription
+- assertVisible:
+    id: "pharmacy-patient-name-.*"
+
+# Verify prescription status is visible
+- assertVisible:
+    id: "pharmacy-prescription-status-.*"
+# Test completed successfully - all scenarios passed
