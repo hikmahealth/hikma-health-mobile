@@ -1,7 +1,6 @@
 import React from "react"
 import { Image } from "react-native"
 import { fireEvent } from "@testing-library/react-native"
-import { format } from "date-fns"
 
 // Mock all dependencies before importing the component
 jest.mock("@nozbe/watermelondb/react", () => ({
@@ -103,6 +102,25 @@ jest.mock("../../app/utils/date", () => ({
     if (isNaN(year) || isNaN(month) || isNaN(day)) return null
     return new Date(year, month - 1, day)
   }),
+  localeDate: jest.fn(
+    (date: Date | string | number | null | undefined, dateFormat = "MMM dd, yyyy") => {
+      if (!date) return ""
+      let dateObj: Date
+      if (date instanceof Date) {
+        dateObj = date
+      } else if (typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        // Parse YYYY-MM-DD format manually to avoid timezone issues
+        const [year, month, day] = date.split("-").map(Number)
+        dateObj = new Date(year, month - 1, day)
+      } else {
+        dateObj = new Date(date)
+      }
+      if (isNaN(dateObj.getTime())) return ""
+      // Use require to avoid out-of-scope variable reference in jest.mock
+      const { format } = require("date-fns")
+      return format(dateObj, dateFormat)
+    },
+  ),
 }))
 
 jest.mock("uuid", () => ({
