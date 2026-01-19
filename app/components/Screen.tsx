@@ -269,10 +269,12 @@ export function Screen(props: ScreenProps) {
     }
   }, [])
 
+  const baseDefaultSafeEdges = Platform.OS === "android" ? ["top", "bottom"] : ["bottom"]
+
   // Compute default safe area edges based on orientation
   const defaultSafeAreaEdges: ExtendedEdge[] = isLandscape
     ? ["top", "bottom", "start", "end"]
-    : ["top", "bottom"]
+    : baseDefaultSafeEdges
 
   const {
     backgroundColor,

@@ -32,7 +32,8 @@
     "eas:update:prod": "eas update --channel production",
     "eas:submit:android": "eas submit --platform android",
     "eas:build:submit:android": "pnpm build:android:prod && eas submit --platform android",
-    "eas:submit:ios": "eas submit --platform ios"
+    "eas:submit:ios": "eas submit --platform ios",
+    "eas:build:submit:ios": "pnpm build:ios:prod && eas submit --platform ios"
   },
   "dependencies": {
     "@expo-google-fonts/space-grotesk": "^0.4.0",
