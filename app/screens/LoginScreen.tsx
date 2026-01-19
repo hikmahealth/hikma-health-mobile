@@ -45,7 +45,7 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
   const { theme } = useAppTheme()
   const [isLoading, setIsLoading] = useState(false)
   const { language, isRTL } = useLanguage()
-  const { height } = useWindowDimensions()
+  const { height, width } = useWindowDimensions()
 
   const [creds, updateCreds] = useImmer({
     email: __DEV__ ? DEFAULT_ADMIN_EMAIL : "",
@@ -203,32 +203,31 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
 
   if (scannerVisible) {
     return (
-      <Screen preset="fixed">
-        <View style={{ ...StyleSheet.absoluteFillObject }}>
-          <CameraView
-            barcodeScannerSettings={{
-              barcodeTypes: ["qr"],
-            }}
-            onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-            style={{ flex: 1, ...StyleSheet.absoluteFillObject }}
-          />
-          <View
-            style={{
-              position: "absolute",
-              top: 10,
-              right: 10,
-            }}
-          >
-            <Pressable style={{}} onPress={() => setScannerVisible(false)}>
-              <XIcon
-                size={24}
-                color={colors.palette.angry500}
-                style={{ backgroundColor: "white", borderRadius: 100, padding: 20 }}
-              />
-            </Pressable>
-          </View>
+      <View style={{ ...StyleSheet.absoluteFillObject, flex: 1 }}>
+        <CameraView
+          barcodeScannerSettings={{
+            barcodeTypes: ["qr"],
+          }}
+          active={true}
+          onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+          style={{ height, ...StyleSheet.absoluteFillObject }}
+        />
+        <View
+          style={{
+            position: "absolute",
+            top: 40,
+            right: 10,
+          }}
+        >
+          <Pressable style={{}} onPress={() => setScannerVisible(false)}>
+            <XIcon
+              size={24}
+              color={colors.palette.angry500}
+              style={{ backgroundColor: "white", borderRadius: 100, padding: 20 }}
+            />
+          </Pressable>
         </View>
-      </Screen>
+      </View>
     )
   }
 

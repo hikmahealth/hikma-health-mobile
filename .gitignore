@@ -32,6 +32,9 @@ local.properties
 *.hprof
 .cxx/
 *.aab
+# Any build files generated locally
+**/build-**.tar.gz
+
 
 # node.js
 #
