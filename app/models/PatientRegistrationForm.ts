@@ -6,7 +6,7 @@ import RegistrationFormModel from "@/db/model/PatientRegistrationForm"
 import Language from "./Language"
 
 namespace PatientRegistrationForm {
-  export const inputTypes = ["number", "text", "select", "date", "boolean"] as const
+  export const inputTypes = ["number", "text", "select", "date", "boolean", "checkbox"] as const
 
   /**
    * A list of all the base columns that are required for a patient to be registered
@@ -43,6 +43,7 @@ namespace PatientRegistrationForm {
     SELECT: "select",
     DATE: "date",
     BOOLEAN: "boolean",
+    CHECKBOX: "checkbox",
   }
   export type InputType = (typeof InputType)[keyof typeof InputType]
 
@@ -52,6 +53,7 @@ namespace PatientRegistrationForm {
     InputType.SELECT,
     InputType.DATE,
     InputType.BOOLEAN,
+    InputType.CHECKBOX,
   ]
   export type FormField = {
     id: string

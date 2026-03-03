@@ -160,7 +160,7 @@ namespace Patient {
 
     if (attr.fieldType === "number") {
       return "number_value"
-    } else if (attr.fieldType === "select" || attr.fieldType === "text") {
+    } else if (attr.fieldType === "select" || attr.fieldType === "text" || attr.fieldType === "checkbox") {
       return "string_value"
     } else if (attr.fieldType === "date") {
       return "date_value"
@@ -183,7 +183,7 @@ namespace Patient {
     const values = registrationForm["fields"].reduce(
       (prev, field) => {
         const key = field.id
-        if (["text", "select"].includes(field.fieldType)) {
+        if (["text", "select", "checkbox"].includes(field.fieldType)) {
           prev[key] = ""
         } else if (field.fieldType === "number") {
           prev[key] = 0
@@ -212,38 +212,57 @@ namespace Patient {
      * @param {(patient: Option.Option<DB.T>, isLoading: boolean) => void} callback Function called when patient data updates
      * @returns {{unsubscribe: () => void}} Object containing unsubscribe function
      */
-    export async function subscribe(
+    export function subscribe(
       patientId: string,
       provider: {
         userId: string
         clinicId: string
       },
       callback: (patient: Option.Option<DB.T>, isLoading: boolean) => void,
-    ): Promise<{ unsubscribe: () => void }> {
+    ): { unsubscribe: () => void } {
       const { userId, clinicId } = provider
 
       if (!clinicId) {
         throw new Error("Provider does not belong to any clinic")
       }
 
-      const viewHistoryClinicIds = await UserClinicPermissions.DB.getClinicIdsWithPermission(
-        userId,
-        "canViewHistory",
-      )
       let isLoading = true
+      let permissionsLoaded = false
+      let viewHistoryClinicIds: string[] = []
+
+      // Kick off the async permission lookup
+      UserClinicPermissions.DB.getClinicIdsWithPermission(userId, "canViewHistory").then((ids) => {
+        viewHistoryClinicIds = ids
+        permissionsLoaded = true
+        // Re-evaluate with the latest patient if we already have one
+        if (latestPatient !== undefined) {
+          emitPatient(latestPatient)
+        }
+      })
+
+      let latestPatient: DB.T | undefined
+
+      function emitPatient(dbPatient: DB.T) {
+        // Don't emit until permissions are loaded
+        if (!permissionsLoaded) return
+        isLoading = false
+        // If the patient has no primary clinic, then just return the patient.
+        if (
+          !dbPatient.primaryClinicId ||
+          viewHistoryClinicIds.includes(dbPatient.primaryClinicId)
+        ) {
+          callback(Option.fromNullable(dbPatient), isLoading)
+        } else {
+          callback(Option.none(), isLoading)
+        }
+      }
 
       const subscription = database.collections
         .get<DB.T>("patients")
         .findAndObserve(patientId)
         .subscribe((dbPatient) => {
-          const patient = dbPatient
-          // If the patient has no primary clinic, then just return the patient.
-          if (!patient.primaryClinicId || viewHistoryClinicIds.includes(patient.primaryClinicId)) {
-            callback(Option.fromNullable(patient), isLoading)
-          } else {
-            callback(Option.none(), isLoading)
-          }
-          isLoading = false
+          latestPatient = dbPatient
+          emitPatient(dbPatient)
         })
 
       return {

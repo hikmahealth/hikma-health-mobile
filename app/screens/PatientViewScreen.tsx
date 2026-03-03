@@ -1,5 +1,5 @@
-import { FC } from "react"
-import { Pressable, ViewStyle, Dimensions } from "react-native"
+import { FC, useMemo } from "react"
+import { ActivityIndicator, Pressable, ViewStyle, Dimensions } from "react-native"
 import * as Print from "expo-print"
 import { shareAsync } from "expo-sharing"
 import type { NativeStackScreenProps } from "@react-navigation/native-stack"
@@ -10,15 +10,19 @@ import { upperFirst } from "es-toolkit/compat"
 import {
   ChevronRight,
   DownloadCloudIcon,
-  LucideActivity,
   LucideActivitySquare,
   LucideArrowRight,
+  LucideCheckCheck,
   LucideCircleDot,
+  LucideClipboardList,
+  LucideGalleryVerticalEnd,
+  LucideIcon,
   LucidePillBottle,
   LucidePlus,
   PencilIcon,
   PlusIcon,
 } from "lucide-react-native"
+import Toast from "react-native-root-toast"
 
 import logoStr from "@/assets/images/logoStr"
 import { Card } from "@/components/Card"
@@ -30,6 +34,9 @@ import { View } from "@/components/View"
 import { usePatientAppointments } from "@/hooks/useDBPatientAppointments"
 import { useEventForms } from "@/hooks/useEventForms"
 import { usePatientRecord } from "@/hooks/usePatientRecord"
+import { usePermissionGuard } from "@/hooks/usePermissionGuard"
+import { useDataAccess } from "@/providers/DataAccessProvider"
+import { useProviderPatient } from "@/hooks/useProviderPatient"
 import { translate } from "@/i18n/translate"
 import Appointment from "@/models/Appointment"
 import Event from "@/models/Event"
@@ -49,7 +56,18 @@ interface PatientViewScreenProps
 
 export const PatientViewScreen: FC<PatientViewScreenProps> = ({ route, navigation }) => {
   const { patientId } = route.params
-  const { patient, isLoading } = usePatientRecord(patientId)
+  const { isOnline } = useDataAccess()
+  const { patient: offlinePatient, isLoading: isLoadingOffline } = usePatientRecord(patientId)
+  const onlinePatientQuery = useProviderPatient(isOnline ? patientId : null)
+
+  // Normalize: offline returns Option<DBPatient>, online returns Patient.T | null
+  const patient = isOnline
+    ? onlinePatientQuery.data
+      ? Option.some(onlinePatientQuery.data as unknown as Patient.DBPatient)
+      : Option.none()
+    : offlinePatient
+  const isLoading = isOnline ? onlinePatientQuery.isLoading : isLoadingOffline
+
   const { hersEnabled } = useSelector(appStateStore, (store) => store.context)
   const language = useSelector(languageStore, (store) => store.context.language)
   const { forms: eventForms, isLoading: isLoadingForms } = useEventForms(
@@ -57,6 +75,7 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = ({ route, navigatio
   )
 
   const { appointments } = usePatientAppointments(patientId)
+  const { can } = usePermissionGuard()
 
   // const createNewAppointment = () => {
   //   navigation.navigate("AppointmentEditorForm", {
@@ -67,6 +86,12 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = ({ route, navigatio
   // }
 
   const downloadPatientReport = async () => {
+    if (!can("patient:downloadReport")) {
+      return Toast.show("You do not have permission to download patient reports", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.BOTTOM,
+      })
+    }
     if (!patient) {
       return alert(translate("patientFile:patientNotFound"))
     }
@@ -102,6 +127,12 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = ({ route, navigatio
   }
 
   const createNewVisit = () => {
+    if (!can("visit:create")) {
+      return Toast.show("You do not have permission to create visits", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.BOTTOM,
+      })
+    }
     navigation.navigate("NewVisit", {
       patientId,
       visitId: null,
@@ -117,6 +148,12 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = ({ route, navigatio
   }
 
   const createNewAppointment = () => {
+    if (!can("appointment:create")) {
+      return Toast.show("You do not have permission to create appointments", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.BOTTOM,
+      })
+    }
     navigation.navigate("AppointmentEditorForm", {
       patientId,
       visitId: null,
@@ -138,6 +175,24 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = ({ route, navigatio
     navigation.navigate("PatientPrescriptionsList", {
       patientId: patient?.value.id,
     })
+  }
+
+  const handleDiagnosesPress = () => {
+    navigation.navigate("DiagnosisHistory", {
+      patientId: patient?.value.id,
+    })
+  }
+
+  const snapshotForms = useMemo(() => EventForm.filterSnapshots(eventForms), [eventForms])
+
+  if (isLoading) {
+    return (
+      <Screen style={$root} preset="fixed">
+        <View pt={80} alignItems="center">
+          <ActivityIndicator size="large" color={colors.palette.primary500} />
+        </View>
+      </Screen>
+    )
   }
 
   if (Option.isNone(patient)) {
@@ -166,9 +221,15 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = ({ route, navigatio
           <View direction="row" justifyContent="center" alignItems="center" mt={10} gap={10}>
             <Pressable
               style={$editButton}
-              onPress={() =>
+              onPress={() => {
+                if (!can("patient:edit")) {
+                  return Toast.show("You do not have permission to edit patient records", {
+                    duration: Toast.durations.SHORT,
+                    position: Toast.positions.BOTTOM,
+                  })
+                }
                 navigation.navigate("PatientRecordEditor", { editPatientId: patient.value.id })
-              }
+              }}
             >
               <PencilIcon color={colors.palette.primary400} size={20} style={{ marginRight: 10 }} />
               <Text text="Edit" />
@@ -223,97 +284,87 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = ({ route, navigatio
             </View>
           </If>
 
-          <View direction="row" flex={1} gap={12} pb={22}>
-            <Card
-              verticalAlignment="center"
-              testID="patient-medications-btn"
-              onPress={handlePrescriptionsPress}
-              HeadingComponent={
-                <LucidePillBottle
-                  style={{ alignSelf: "center" }}
-                  size={34}
-                  color={colors.textDim}
-                />
-              }
-              ContentComponent={
-                <View pt={8}>
-                  <Text tx="common:prescriptions" align="center" size="md" />
-                </View>
-              }
-              style={{
-                flex: 1,
-                elevation: 1,
-                paddingTop: 40,
-                paddingBottom: 24,
-              }}
-            />
-            <Card
-              verticalAlignment="center"
-              onPress={handleVitalsPress}
-              testID="patient-vitals-btn"
-              HeadingComponent={
-                <LucideActivitySquare
-                  size={34}
-                  style={{ alignSelf: "center" }}
-                  color={colors.textDim}
-                />
-              }
-              ContentComponent={
-                <View pt={8}>
-                  <Text tx="common:vitals" align="center" size="md" />
-                </View>
-              }
-              style={{ flex: 1, elevation: 1, paddingTop: 40, paddingBottom: 24 }}
-            />
-          </View>
-
-          <View gap={10} mb={4} style={$appointmentContainer}>
-            <View direction="row" gap={10} alignItems="center">
-              <Text preset="formLabel" text="Appointments" />
-              <If condition={appointments.length > 0}>
+          <View gap={24}>
+            <View gap={10} mb={4} style={$appointmentContainer}>
+              <View direction="row" gap={10} alignItems="center">
+                <Text preset="formLabel" text="Appointments" />
+                <If condition={appointments.length > 0}>
+                  <Pressable onPress={createNewAppointment}>
+                    <LucidePlus color={colors.palette.primary500} size={20} />
+                  </Pressable>
+                </If>
+              </View>
+              <If condition={appointments?.length === 0 || !appointments}>
                 <Pressable onPress={createNewAppointment}>
-                  <LucidePlus color={colors.palette.primary500} size={20} />
+                  <Text
+                    textDecorationLine="underline"
+                    color={colors.palette.primary500}
+                    text="Create New Appointment"
+                  />
                 </Pressable>
               </If>
+              <If condition={appointments.length > 0}>
+                <View direction="row" py={6} gap={10} style={{ flexWrap: "wrap" }}>
+                  {appointments.map((appointment) => {
+                    return (
+                      <Pressable
+                        onPress={() => openAppointmentView(appointment)}
+                        style={{
+                          padding: 6,
+                          paddingHorizontal: 10,
+                          backgroundColor: colors.palette.primary300,
+                          borderRadius: 10,
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: 10,
+                        }}
+                        key={appointment.id}
+                      >
+                        <Text
+                          text={`${format(new Date(appointment.timestamp), "dd MMM yyyy")}`}
+                          size="xxs"
+                          color="#fff"
+                        />
+                        <LucideArrowRight color={colors.palette.neutral100} size={16} />
+                      </Pressable>
+                    )
+                  })}
+                </View>
+              </If>
             </View>
-            <If condition={appointments?.length === 0 || !appointments}>
-              <Pressable onPress={createNewAppointment}>
-                <Text
-                  textDecorationLine="underline"
-                  color={colors.palette.primary500}
-                  text="Create New Appointment"
-                />
-              </Pressable>
-            </If>
-            <If condition={appointments.length > 0}>
-              <View direction="row" gap={10} style={{ flexWrap: "wrap" }}>
-                {appointments.map((appointment) => {
-                  return (
-                    <Pressable
-                      onPress={() => openAppointmentView(appointment)}
-                      style={{
-                        padding: 6,
-                        paddingHorizontal: 10,
-                        backgroundColor: colors.palette.primary300,
-                        borderRadius: 10,
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        gap: 10,
-                      }}
-                      key={appointment.id}
-                    >
-                      <Text
-                        text={`${format(new Date(appointment.timestamp), "dd MMM yyyy")}`}
-                        size="xxs"
-                        color="#fff"
-                      />
-                      <LucideArrowRight color={colors.palette.neutral100} size={16} />
-                    </Pressable>
-                  )
-                })}
-              </View>
-            </If>
+            <PatientChartAction
+              onPress={() =>
+                navigation.navigate("PatientVisitsList", {
+                  patientId: patient.value.id,
+                })
+              }
+              label={translate("patientFile:visitHistory")}
+              description={translate("patientFile:visitHistoryDescription")}
+              testID="patient-history-btn"
+              icon={LucideGalleryVerticalEnd}
+            />
+            <PatientChartAction
+              label={translate("common:prescriptions")}
+              onPress={handlePrescriptionsPress}
+              testID="patient-medications-btn"
+              description={translate("patientFile:actions.prescriptionDescription")}
+              icon={LucidePillBottle}
+            />
+            <PatientChartAction
+              label={translate("common:vitals")}
+              onPress={handleVitalsPress}
+              testID="patient-vitals-btn"
+              description={translate("patientFile:actions.vitalsDescription")}
+              icon={LucideActivitySquare}
+            />
+            <PatientChartAction
+              label={translate("common:diagnoses")}
+              onPress={handleDiagnosesPress}
+              testID="patient-diagnoses-btn"
+              description={translate("patientFile:actions.diagnosisDescription")}
+              icon={LucideClipboardList}
+            />
           </View>
 
           {/*<SnapshotFormLink
@@ -326,30 +377,30 @@ export const PatientViewScreen: FC<PatientViewScreenProps> = ({ route, navigatio
             description={translate("patientFile:vitalHistoryDescription")}
           />*/}
 
-          <SnapshotFormLink
-            onPress={() =>
-              navigation.navigate("PatientVisitsList", {
-                patientId: patient.value.id,
-              })
-            }
-            label={translate("patientFile:visitHistory")}
-            description={translate("patientFile:visitHistoryDescription")}
-          />
-          {EventForm.filterSnapshots(eventForms).map((form) => {
-            return (
-              <SnapshotFormLink
-                key={form.id}
-                onPress={() =>
-                  navigation.navigate("FormEventsList", {
-                    patientId: patient.value.id,
-                    formId: form.id,
-                  })
-                }
-                label={form.name}
-                description={form.description}
-              />
-            )
-          })}
+          {/* Tombstone: Feb 19 2026. Disabling the snapshot forms information: This feature is being deprecated. */}
+          {/*<If condition={snapshotForms.length > 0}>
+            <View pt={10}>
+              <Text preset="formLabel" text="Quick Access & Snapshot Forms" />
+
+              <View py={6} gap={6}>
+                {snapshotForms.map((form) => {
+                  return (
+                    <SnapshotFormLink
+                      key={form.id}
+                      onPress={() =>
+                        navigation.navigate("FormEventsList", {
+                          patientId: patient.value.id,
+                          formId: form.id,
+                        })
+                      }
+                      label={form.name}
+                      description={form.description}
+                    />
+                  )
+                })}
+              </View>
+            </View>
+          </If>*/}
         </View>
       </Screen>
       <Pressable onPress={createNewVisit} style={$newVisitFAB}>
@@ -384,6 +435,48 @@ const $root: ViewStyle = {
 
 const $contentContainer: ViewStyle = {
   minHeight: height - 70,
+}
+
+type PatientChartActionProps = {
+  onPress: () => void
+  icon: LucideIcon
+  label: string
+  description: string
+  testID: string
+}
+
+function PatientChartAction({
+  onPress,
+  label,
+  icon: Icon,
+  description,
+  testID,
+}: PatientChartActionProps) {
+  return (
+    <Pressable testID={testID} style={$patientChartAction} onPress={onPress}>
+      <View style={{ flex: 1 }} alignItems="center">
+        <Icon color={colors.palette.neutral500} size={24} />
+      </View>
+      <View style={{ flex: 5 }}>
+        <Text preset="formLabel" text={label} />
+        <Text size="xs" text={description} />
+      </View>
+      <View style={{ flex: 1 }} alignItems="flex-end">
+        <ChevronRight color={colors.palette.neutral500} />
+      </View>
+    </Pressable>
+  )
+}
+
+const $patientChartAction: ViewStyle = {
+  borderBottomWidth: 1,
+  paddingBottom: 8,
+  display: "flex",
+  gap: 10,
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  borderBottomColor: colors.border,
 }
 
 type SnapshotFormLinkProps = {

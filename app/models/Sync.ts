@@ -39,6 +39,7 @@ namespace Sync {
     }
     /**
      * Get the last pull timestamp from storage
+     * @deprecated - prefer the use of the peers table
      * @param serverType The type of server to get the last pull timestamp for
      * @returns {number} The last pull timestamp
      */
@@ -51,6 +52,7 @@ namespace Sync {
 
     /**
      * Set the last pull timestamp in storage
+     * @deprecated - prefer the use of the peers table
      * @param serverType The type of server to set the last pull timestamp for
      * @param timestamp The timestamp to set
      * @returns {Promise<void>} A promise that resolves when the last pull timestamp is set
@@ -65,7 +67,9 @@ namespace Sync {
       }
     }
 
-    /** Get all the sync Servers */
+    /** Get all the sync Servers
+     * @deprecated - prefer the use of the peers table
+     */
     export function getAll(): Promise<Record<Key, T>> {
       const result: Record<Key, T> = {}
       const local = storage.getString("local-sync-server")
@@ -86,18 +90,25 @@ namespace Sync {
       }
       return Promise.resolve(result)
     }
-    /** Get a specific sync Server by id */
+    /** Get a specific sync Server by id
+     * @deprecated - prefer the use of the peers table
+     */
     export function getById(id: Key): Promise<Option.Option<T>> {
       return getAll().then((servers) => Option.fromNullable(servers[id]))
     }
 
-    /** Get a specific sync server by server type */
+    /**
+     * Get a specific sync server by server type
+     *  @deprecated - prefer the use of the peers table over the Sync set and get and remove methods
+     * */
     export function getByType(type: ServerType): Promise<Option.Option<T>> {
       return getAll().then((servers) => Option.fromNullable(servers[`${type}-sync-server`]))
     }
 
     /**
      * Set a sync server by server type
+     * @deprecated - prefer the use of the peers table over the Sync set and get and remove methods
+     *
      * @param {ServerType} serverType The type of server to set
      * @param {T} server The sync server to set
      * @returns {Promise<void>} A promise that resolves when the sync server is set
@@ -114,6 +125,8 @@ namespace Sync {
 
     /**
      * Remove a sync server by server type
+     * @deprecated - prefer the use of the peers table over the Sync set and get and remove methods
+     *
      * @param {ServerType} serverType The type of server to remove
      * @returns {Promise<void>} A promise that resolves when the sync server is removed
      */

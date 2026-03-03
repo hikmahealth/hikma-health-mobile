@@ -3,12 +3,16 @@ import { ViewStyle, TextStyle, ScrollView, Alert } from "react-native"
 import { useSelector } from "@xstate/react"
 import { Option } from "effect"
 
+import Toast from "react-native-root-toast"
+
 import { Button } from "@/components/Button"
 import { Screen } from "@/components/Screen"
 import { Text } from "@/components/Text"
 import { TextField } from "@/components/TextField"
 import { Radio } from "@/components/Toggle/Radio"
 import { View } from "@/components/View"
+import { usePermissionGuard } from "@/hooks/usePermissionGuard"
+import { useCreateVitals } from "@/hooks/useCreateVitals"
 import PatientVitals from "@/models/PatientVitals"
 import { PatientStackScreenProps } from "@/navigators/PatientNavigator"
 import { providerStore } from "@/store/provider"
@@ -34,6 +38,8 @@ interface VitalsState {
 export const VitalFormScreen: FC<VitalFormScreenProps> = ({ route, navigation }) => {
   const { patientId } = route.params
   const providerId = useSelector(providerStore, (state) => state.context.id)
+  const { can } = usePermissionGuard()
+  const createVitalsMutation = useCreateVitals()
 
   const [vitals, setVitals] = useState<VitalsState>({
     systolicBp: "",
@@ -174,6 +180,12 @@ export const VitalFormScreen: FC<VitalFormScreenProps> = ({ route, navigation })
   }
 
   const save = async () => {
+    if (!can("vitals:create")) {
+      return Toast.show("You do not have permission to record vitals", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.BOTTOM,
+      })
+    }
     if (!validateVitals()) {
       Alert.alert("Validation Error", "Please correct the errors before saving")
       return
@@ -221,8 +233,7 @@ export const VitalFormScreen: FC<VitalFormScreenProps> = ({ route, navigation })
     }
 
     try {
-      const vitalId = await PatientVitals.DB.create(vitalData)
-      console.log("Vitals saved with ID:", vitalId)
+      await createVitalsMutation.mutateAsync(vitalData)
 
       Alert.alert("Success", "Vitals saved successfully", [
         { text: "OK", onPress: () => navigation.goBack() },

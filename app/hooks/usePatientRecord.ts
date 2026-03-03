@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { useSelector } from "@xstate/react"
 import { Option } from "effect"
 
@@ -9,7 +9,7 @@ import { providerStore } from "@/store/provider"
  * Patient details hook that fetches a patient by their ID from the local database
  * @param patientId - The patient ID
  * @param defaultPatient - the default patient model to return while loading
- * @returns {{patient: Option.Option<Patient.T>, isLoading: boolean}} - The patient or undefined if not found
+ * @returns {{patient: Option.Option<Patient.DBPatient>, isLoading: boolean}} - The patient or undefined if not found
  */
 export function usePatientRecord(
   patientId: string,
@@ -24,22 +24,21 @@ export function usePatientRecord(
   )
   const [isLoading, setIsLoading] = useState(true)
 
-  const sub = useRef<{ unsubscribe: () => void }>(null)
-
   useEffect(() => {
     setIsLoading(true)
-    Patient.DB.subscribe(
+
+    // subscribe is now synchronous — no promise / race condition
+    const sub = Patient.DB.subscribe(
       patientId,
       { clinicId: Option.getOrElse(clinic_id, () => ""), userId },
-      (dbPatient, isLoading) => {
+      (dbPatient, loading) => {
         setPatient(dbPatient)
-        setIsLoading(isLoading)
+        setIsLoading(loading)
       },
-    ).then((res) => {
-      sub.current = res
-    })
+    )
+
     return () => {
-      sub.current?.unsubscribe()
+      sub.unsubscribe()
     }
   }, [patientId, clinic_id, userId])
 

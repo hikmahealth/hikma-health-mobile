@@ -20,12 +20,32 @@ import { Option } from "effect"
 import Toast from "react-native-root-toast"
 
 import database from "@/db"
-import { localSyncDB } from "@/db/localSync"
-import { syncDB } from "@/db/sync"
+import { syncDB } from "@/db/peerSync"
 import { translate } from "@/i18n/translate"
+import Peer from "@/models/Peer"
 import Sync from "@/models/Sync"
+import { appStateStore } from "@/store/appState"
+import { operationModeStore } from "@/store/operationMode"
 import { syncStore } from "@/store/sync"
 import { getHHApiUrl } from "@/utils/storage"
+
+/**
+ * Find the active peer to sync with.
+ * Uses the user-selected peer if set, otherwise falls back to
+ * the default priority: active hub first, then active cloud.
+ */
+const resolveActivePeer = async (): Promise<Peer.T | null> => {
+  const { activeSyncPeerId } = appStateStore.getSnapshot().context
+  if (activeSyncPeerId) {
+    try {
+      const peer = await Peer.DB.getById(activeSyncPeerId)
+      if (peer.status === "active" || peer.status === "untrusted") return peer
+    } catch {
+      // Peer no longer exists — fall through to default resolution
+    }
+  }
+  return Peer.DB.resolveActive()
+}
 
 /**
  * Starts a sync operation with the configured server.
@@ -61,6 +81,12 @@ import { getHHApiUrl } from "@/utils/storage"
  * - Server returns an error
  */
 export const startSync = async (providerEmail?: string): Promise<void> => {
+  // Skip sync in online mode — data flows directly via RPC
+  if (operationModeStore.getSnapshot().context.mode === "online") {
+    console.log("Skipping sync: app is in online mode")
+    return Promise.resolve()
+  }
+
   // Check if test account
   if (providerEmail === "tester.g@gmail.com") {
     Alert.alert("Please sign in with your server to continue syncing")
@@ -82,8 +108,14 @@ export const startSync = async (providerEmail?: string): Promise<void> => {
       return Promise.reject(new Error("App not activated"))
     }
 
-    const activeServer = await Sync.Server.getActive()
     const hasLocalChangesToPush = await hasUnsyncedChanges({ database })
+
+    // Find the active peer to sync with — prefer hub if available, fall back to cloud
+    const activePeer = await resolveActivePeer()
+    if (!activePeer) {
+      Alert.alert("No sync peer configured. Please pair with a hub or register a cloud server.")
+      return Promise.reject(new Error("No active sync peer"))
+    }
 
     Toast.show(translate("common:syncStarted"), {
       position: Toast.positions.BOTTOM,
@@ -92,109 +124,38 @@ export const startSync = async (providerEmail?: string): Promise<void> => {
       },
     })
 
-    // State management functions
-    const startSyncState = () => syncStore.send({ type: "start_sync" })
-    const startResolve = (fetched: number) => syncStore.send({ type: "start_resolve", fetched })
-    const startPush = (pushed: number) => syncStore.send({ type: "start_push", pushed })
-    const errorSync = (error: string) => syncStore.send({ type: "error_sync", error })
     const finishSync = () => syncStore.send({ type: "finish_sync" })
 
-    // Determine sync type and execute
-    if (Option.isSome(activeServer) && activeServer.value.type === Sync.ServerType.LOCAL) {
-      // Local sync
-      return localSyncDB({
-        hasLocalChangesToPush,
-        setSyncStart: startSyncState,
-        setSyncResolution: startResolve,
-        setPushStart: startPush,
-        updateSyncStatistic: console.log,
-        onSyncError: errorSync,
-        onSyncCompleted: finishSync,
-      }).catch((err) => {
-        finishSync()
-        console.error("Local sync error:", err)
+    return syncDB(activePeer.id, {
+      hasLocalChangesToPush,
+      setSyncStart: () => syncStore.send({ type: "start_sync" }),
+      setSyncResolution: (fetched: number) => syncStore.send({ type: "start_resolve", fetched }),
+      setPushStart: (pushed: number) => syncStore.send({ type: "start_push", pushed }),
+      updateSyncStatistic: console.log,
+      onSyncError: (error: string) => syncStore.send({ type: "error_sync", error }),
+      onSyncCompleted: finishSync,
+    }).catch((err) => {
+      finishSync()
+      console.error("Sync error:", err)
+
+      const isConcurrent = String(err).includes("Concurrent synchronization")
+      if (!isConcurrent) {
+        const isHub = activePeer.peerType === "sync_hub"
         Toast.show(
-          "❌ Error syncing locally. Please make sure you are on the same network and Wi-Fi is enabled.",
+          isHub
+            ? "Error syncing locally. Please make sure you are on the same network and Wi-Fi is enabled."
+            : "Error syncing. Please make sure you have internet or contact your administrator.",
           {
             position: Toast.positions.BOTTOM,
-            containerStyle: {
-              marginBottom: 100,
-            },
+            containerStyle: { marginBottom: 100 },
             duration: Toast.durations.LONG,
           },
         )
-        Sentry.captureException(err)
-        throw err
-      })
-    } else {
-      // Remote sync
-      Sentry.addBreadcrumb({
-        category: "sync",
-        message: "Starting remote sync",
-        level: "info",
-        data: {
-          hasLocalChangesToPush,
-        },
-      })
+      }
 
-      return syncDB(
-        hasLocalChangesToPush,
-        startSyncState,
-        startResolve,
-        startPush,
-        console.log,
-        errorSync,
-        finishSync,
-      ).catch((err) => {
-        let showToast = true
-        try {
-          if (String(err).includes("Concurrent synchronization")) {
-            Sentry.addBreadcrumb({
-              category: "sync",
-              message: "Concurrent synchronization detected",
-              level: "warning",
-            })
-            // no need to show any warnings
-            showToast = false
-          }
-        } catch {
-          // handle any other errors
-          // fail silently
-          Sentry.addBreadcrumb({
-            category: "sync",
-            message: "Error parsing sync error",
-            level: "warning",
-          })
-        }
-        finishSync()
-        console.error("Remote sync error:", err)
-
-        Sentry.addBreadcrumb({
-          category: "sync",
-          message: "Remote sync failed",
-          level: "error",
-          data: {
-            errorMessage: String(err),
-            showToast,
-          },
-        })
-
-        if (showToast) {
-          Toast.show(
-            "❌ Error syncing. Please make sure you have internet or contact your administrator.",
-            {
-              position: Toast.positions.BOTTOM,
-              containerStyle: {
-                marginBottom: 100,
-              },
-              duration: Toast.durations.LONG,
-            },
-          )
-        }
-        Sentry.captureException(err)
-        throw err
-      })
-    }
+      Sentry.captureException(err)
+      throw err
+    })
   } catch (error) {
     console.error("Sync initialization error:", error)
     Sentry.captureException(error)

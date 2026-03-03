@@ -4,7 +4,7 @@ import { field, text, date, readonly, json } from "@nozbe/watermelondb/decorator
 type Metadata = {
   // Add types for any metadata that gets attached to the visit
 }
-const inputTypes = ["number", "text", "select", "date", "boolean"] as const
+const inputTypes = ["number", "text", "select", "date", "boolean", "checkbox"] as const
 
 type DefaultLanguages = {
   en: string

@@ -13,6 +13,7 @@ import { Text } from "@/components/Text"
 import { TextField } from "@/components/TextField"
 import { View } from "@/components/View"
 import database from "@/db"
+import { usePermissionGuard } from "@/hooks/usePermissionGuard"
 import ClinicInventory from "@/models/ClinicInventory"
 import PrescriptionItem from "@/models/PrescriptionItem"
 import { PharmacyNavigatorParamList } from "@/navigators/PharmacyNavigator"
@@ -29,6 +30,7 @@ export const DispensePrescriptionItemScreen: FC<DispensePrescriptionItemScreenPr
 }) => {
   const { prescriptionItemId } = route.params
   const { id: providerId } = useSelector(providerStore, (state) => state.context)
+  const { can } = usePermissionGuard()
   const [prescriptionItem, setPrescriptionItem] = useState<PrescriptionItem.DB.T | null>(null)
   const [clinicInventory, setClinicInventory] = useState<ClinicInventory.DB.T[]>([])
 
@@ -126,6 +128,12 @@ export const DispensePrescriptionItemScreen: FC<DispensePrescriptionItemScreenPr
   const handleDispense = () => {
     if (!prescriptionItem) {
       return
+    }
+    if (!can("prescription:dispense")) {
+      return Toast.show("You do not have permission to dispense medications", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.BOTTOM,
+      })
     }
     if (totalAllocated === 0) {
       return Toast.show("Cannot dispense 0 drugs", {

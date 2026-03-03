@@ -44,9 +44,9 @@ export function getTranslation(translations: Language.TranslationObject, languag
   if (translationKeys.length === 0) {
     return ""
   }
-  if (language in translations) {
+  if (Object.hasOwn(translations, language)) {
     return translations[language]
-  } else if (translations.en) {
+  } else if (Object.hasOwn(translations, "en") || Object.hasOwn(translations, "en-US")) {
     return translations.en
   } else {
     return translations[translationKeys[0]]
@@ -96,25 +96,33 @@ export default function invariant(condition: any, errorMessage?: string): void {
  * @param {string} defaultValue - The default value to return if stringification fails
  * @returns {string} The stringified object or the default value
  */
+/** Separator for joining multiple checkbox selections into a single string */
+export const CHECKBOX_SEPARATOR = ";;"
+
+export const joinCheckboxValues = (values: string[]): string => values.join(CHECKBOX_SEPARATOR)
+
+export const splitCheckboxValues = (raw: string | null | undefined): string[] =>
+  raw ? raw.split(CHECKBOX_SEPARATOR).filter(Boolean) : []
+
 export function safeStringify(input: unknown, defaultValue: string): string {
-  if (input === undefined || input === null) {
+  if (input === undefined || input === null || input === "") {
     return defaultValue
   }
 
   if (typeof input === "string") {
     try {
-      // Check if the string is valid JSON by attempting to parse it
+      // If the string is already valid JSON, parse and re-stringify to normalize it
       const parsed = JSON.parse(input)
       return JSON.stringify(parsed)
-    } catch (error) {
-      // If it's not valid JSON, return the original string
-      return input
+    } catch {
+      // Not valid JSON — stringify the string itself so it becomes valid JSON (e.g. "hello" → '"hello"')
+      return JSON.stringify(input)
     }
   }
 
   try {
     return JSON.stringify(input)
-  } catch (error) {
+  } catch {
     return defaultValue
   }
 }

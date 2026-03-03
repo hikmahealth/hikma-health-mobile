@@ -1,229 +1,361 @@
+import fc from "fast-check"
+
+import Language from "../../app/models/Language"
 import {
   parseMetadata,
   getTranslation,
   normalizeArabic,
   extendedSanitizeLikeString,
+  safeStringify,
+  joinCheckboxValues,
+  splitCheckboxValues,
+  CHECKBOX_SEPARATOR,
+  default as invariant,
 } from "../../app/utils/parsers"
-import Language from "../../app/models/Language"
 
-describe("parsers", () => {
-  describe("parseMetadata", () => {
-    it("should return object as-is when metadata is already an object", () => {
-      const input = { name: "John", age: 30 }
-      const result = parseMetadata<typeof input>(input)
+describe("parseMetadata", () => {
+  it("should return object as-is when metadata is already an object", () => {
+    const input = { name: "John", age: 30 }
+    const result = parseMetadata<typeof input>(input)
+    expect(result.error).toBeNull()
+    expect(result.result).toEqual(input)
+  })
 
-      expect(result.error).toBeNull()
-      expect(result.result).toEqual(input)
-    })
+  it("should parse valid JSON string", () => {
+    const input = '{"name":"John","age":30}'
+    const result = parseMetadata<{ name: string; age: number }>(input)
+    expect(result.error).toBeNull()
+    expect(result.result).toEqual({ name: "John", age: 30 })
+  })
 
-    it("should parse valid JSON string", () => {
-      const input = '{"name":"John","age":30}'
-      const result = parseMetadata<{ name: string; age: number }>(input)
+  it("should return error for invalid JSON string", () => {
+    const result = parseMetadata<any>("invalid json")
+    expect(result.error).toBeInstanceOf(Error)
+    expect(result.result).toBe("invalid json")
+  })
 
-      expect(result.error).toBeNull()
-      expect(result.result).toEqual({ name: "John", age: 30 })
-    })
+  it("round-trips any JSON-serializable object", () => {
+    fc.assert(
+      fc.property(fc.jsonValue(), (value) => {
+        const json = JSON.stringify(value)
+        const result = parseMetadata(json)
+        expect(result.error).toBeNull()
+        expect(result.result).toEqual(value)
+      }),
+    )
+  })
+})
 
-    it("should return error for invalid JSON string", () => {
-      const input = "invalid json"
-      const result = parseMetadata<any>(input)
+describe("getTranslation", () => {
+  it("should return the requested language translation if it exists", () => {
+    const translations: Language.TranslationObject = { en: "Hello", ar: "مرحبا", es: "Hola" }
+    expect(getTranslation(translations, "ar")).toBe("مرحبا")
+    expect(getTranslation(translations, "es")).toBe("Hola")
+  })
 
-      expect(result.error).toBeInstanceOf(Error)
-      expect(result.result).toBe(input)
-    })
+  it("should fallback to English when requested language doesn't exist", () => {
+    const translations: Language.TranslationObject = { en: "Hello", ar: "مرحبا" }
+    expect(getTranslation(translations, "fr")).toBe("Hello")
+  })
 
-    it("should handle empty string", () => {
-      const input = ""
-      const result = parseMetadata<any>(input)
+  it("should return first available translation when English doesn't exist", () => {
+    const translations: Language.TranslationObject = { ar: "مرحبا", es: "Hola" }
+    expect(getTranslation(translations, "fr")).toBe("مرحبا")
+  })
 
-      expect(result.error).toBeInstanceOf(Error)
-      expect(result.result).toBe(input)
-    })
+  it("should return empty string for empty translations object", () => {
+    expect(getTranslation({} as Language.TranslationObject, "en")).toBe("")
+  })
 
-    it("should handle complex nested objects", () => {
-      const input = {
-        user: {
-          name: "John",
-          address: {
-            street: "123 Main St",
-            city: "New York",
-          },
+  it("always returns a string for any non-empty translations object", () => {
+    fc.assert(
+      fc.property(
+        fc.dictionary(fc.constantFrom("en", "ar", "es", "fr", "de"), fc.string({ minLength: 1 }), {
+          minKeys: 1,
+        }),
+        fc.string({ minLength: 1 }),
+        (translations, lang) => {
+          const result = getTranslation(translations as Language.TranslationObject, lang)
+          expect(typeof result).toBe("string")
+          expect(result.length).toBeGreaterThan(0)
         },
-        tags: ["admin", "user"],
-      }
-      const result = parseMetadata<typeof input>(input)
+      ),
+    )
+  })
+})
 
-      expect(result.error).toBeNull()
-      expect(result.result).toEqual(input)
-    })
-
-    it("should parse array JSON string", () => {
-      const input = "[1,2,3,4,5]"
-      const result = parseMetadata<number[]>(input)
-
-      expect(result.error).toBeNull()
-      expect(result.result).toEqual([1, 2, 3, 4, 5])
-    })
+describe("normalizeArabic", () => {
+  it("should normalize different forms of Arabic characters", () => {
+    expect(normalizeArabic("ي")).toBe("ی")
+    expect(normalizeArabic("ى")).toBe("ی")
+    expect(normalizeArabic("أ")).toBe("ا")
+    expect(normalizeArabic("إ")).toBe("ا")
+    expect(normalizeArabic("آ")).toBe("ا")
+    expect(normalizeArabic("ة")).toBe("ه")
+    expect(normalizeArabic("ئ")).toBe("ی")
+    expect(normalizeArabic("ؤ")).toBe("و")
+    expect(normalizeArabic("ء")).toBe("")
   })
 
-  describe("getTranslation", () => {
-    it("should return the requested language translation if it exists", () => {
-      const translations: Language.TranslationObject = {
-        en: "Hello",
-        ar: "مرحبا",
-        es: "Hola",
-      }
-
-      expect(getTranslation(translations, "ar")).toBe("مرحبا")
-      expect(getTranslation(translations, "es")).toBe("Hola")
-    })
-
-    it("should fallback to English when requested language doesn't exist", () => {
-      const translations: Language.TranslationObject = {
-        en: "Hello",
-        ar: "مرحبا",
-      }
-
-      expect(getTranslation(translations, "fr")).toBe("Hello")
-    })
-
-    it("should return first available translation when English doesn't exist", () => {
-      const translations: Language.TranslationObject = {
-        ar: "مرحبا",
-        es: "Hola",
-      }
-
-      expect(getTranslation(translations, "fr")).toBe("مرحبا")
-    })
-
-    it("should return empty string for empty translations object", () => {
-      const translations: Language.TranslationObject = {}
-
-      expect(getTranslation(translations, "en")).toBe("")
-    })
-
-    it("should handle single translation", () => {
-      const translations: Language.TranslationObject = {
-        en: "Hello",
-      }
-
-      expect(getTranslation(translations, "en")).toBe("Hello")
-      expect(getTranslation(translations, "ar")).toBe("Hello")
-    })
-
-    it("should handle non-English single translation", () => {
-      const translations: Language.TranslationObject = {
-        ar: "مرحبا",
-      }
-
-      expect(getTranslation(translations, "en")).toBe("مرحبا")
-      expect(getTranslation(translations, "ar")).toBe("مرحبا")
-    })
+  it("should collapse whitespace and trim", () => {
+    expect(normalizeArabic("مرحبا    بك")).toBe("مرحبا بك")
+    expect(normalizeArabic("  مرحبا  ")).toBe("مرحبا")
   })
 
-  describe("normalizeArabic", () => {
-    it("should normalize different forms of Arabic yaa", () => {
-      expect(normalizeArabic("ي")).toBe("ی")
-      expect(normalizeArabic("ى")).toBe("ی")
-      expect(normalizeArabic("يى")).toBe("یی")
-    })
-
-    it("should normalize different forms of Arabic alif", () => {
-      expect(normalizeArabic("أ")).toBe("ا")
-      expect(normalizeArabic("إ")).toBe("ا")
-      expect(normalizeArabic("آ")).toBe("ا")
-      expect(normalizeArabic("ا")).toBe("ا")
-      expect(normalizeArabic("أإآا")).toBe("اااا")
-    })
-
-    it("should normalize taa marbuta to haa", () => {
-      expect(normalizeArabic("ة")).toBe("ه")
-      expect(normalizeArabic("مدرسة")).toBe("مدرسه")
-    })
-
-    it("should normalize hamza combinations", () => {
-      expect(normalizeArabic("ئ")).toBe("ی")
-      expect(normalizeArabic("ؤ")).toBe("و")
-      expect(normalizeArabic("ء")).toBe("")
-      expect(normalizeArabic("ٔ")).toBe("")
-    })
-
-    it("should normalize multiple spaces to single space", () => {
-      expect(normalizeArabic("مرحبا    بك")).toBe("مرحبا بك")
-      expect(normalizeArabic("  مرحبا  ")).toBe("مرحبا")
-    })
-
-    it("should trim whitespace", () => {
-      expect(normalizeArabic("  مرحبا  ")).toBe("مرحبا")
-      expect(normalizeArabic("\t\nمرحبا\t\n")).toBe("مرحبا")
-    })
-
-    it("should handle complex Arabic text", () => {
-      const input = "أهلاً وسهلاً   بكم في  المؤسسة"
-      const expected = "اهلاً وسهلاً بكم فی الموسسه"
-      expect(normalizeArabic(input)).toBe(expected)
-    })
-
-    it("should handle empty string", () => {
-      expect(normalizeArabic("")).toBe("")
-    })
-
-    it("should handle non-Arabic text", () => {
-      expect(normalizeArabic("Hello World")).toBe("Hello World")
-    })
-
-    it("should handle mixed Arabic and English text", () => {
-      expect(normalizeArabic("مرحبا Hello أهلا")).toBe("مرحبا Hello اهلا")
-    })
+  it("should handle complex Arabic text", () => {
+    expect(normalizeArabic("أهلاً وسهلاً   بكم في  المؤسسة")).toBe("اهلاً وسهلاً بكم فی الموسسه")
   })
 
-  describe("extendedSanitizeLikeString", () => {
-    it("should keep letters and numbers unchanged", () => {
-      expect(extendedSanitizeLikeString("abc123")).toBe("abc123")
-      expect(extendedSanitizeLikeString("ABC123")).toBe("ABC123")
-    })
+  it("is idempotent — normalizing twice gives the same result", () => {
+    fc.assert(
+      fc.property(fc.string(), (s) => {
+        expect(normalizeArabic(normalizeArabic(s))).toBe(normalizeArabic(s))
+      }),
+    )
+  })
 
-    it("should replace special characters with underscores", () => {
-      expect(extendedSanitizeLikeString("hello@world.com")).toBe("hello_world_com")
-      expect(extendedSanitizeLikeString("user-name")).toBe("user_name")
-      expect(extendedSanitizeLikeString("test!@#$%")).toBe("test_____")
-    })
+  it("never produces leading/trailing whitespace or consecutive spaces", () => {
+    fc.assert(
+      fc.property(fc.string(), (s) => {
+        const result = normalizeArabic(s)
+        expect(result).toBe(result.trim())
+        expect(result).not.toMatch(/  /)
+      }),
+    )
+  })
+})
 
-    it("should handle spaces", () => {
-      expect(extendedSanitizeLikeString("hello world")).toBe("hello_world")
-      expect(extendedSanitizeLikeString("  multiple   spaces  ")).toBe("__multiple___spaces__")
-    })
+describe("extendedSanitizeLikeString", () => {
+  it("should keep letters and numbers unchanged", () => {
+    expect(extendedSanitizeLikeString("abc123")).toBe("abc123")
+  })
 
-    it("should handle Unicode letters", () => {
-      expect(extendedSanitizeLikeString("مرحبا")).toBe("مرحبا")
-      expect(extendedSanitizeLikeString("你好")).toBe("你好")
-      expect(extendedSanitizeLikeString("Здравствуйте")).toBe("Здравствуйте")
-    })
+  it("should replace special characters with underscores", () => {
+    expect(extendedSanitizeLikeString("hello@world.com")).toBe("hello_world_com")
+  })
 
-    it("should handle mixed content", () => {
-      expect(extendedSanitizeLikeString("user123@email.com")).toBe("user123_email_com")
-      expect(extendedSanitizeLikeString("phone: +1-234-567")).toBe("phone___1_234_567")
-    })
+  it("should preserve Unicode letters", () => {
+    expect(extendedSanitizeLikeString("مرحبا")).toBe("مرحبا")
+    expect(extendedSanitizeLikeString("你好")).toBe("你好")
+  })
 
-    it("should handle empty string", () => {
-      expect(extendedSanitizeLikeString("")).toBe("")
-    })
+  it("should throw for non-string input", () => {
+    expect(() => extendedSanitizeLikeString(null as any)).toThrow()
+    expect(() => extendedSanitizeLikeString(123 as any)).toThrow()
+  })
 
-    it("should throw error for non-string input", () => {
-      expect(() => extendedSanitizeLikeString(null as any)).toThrow(
-        "Value passed to Q.sanitizeLikeString() is not a string",
-      )
-      expect(() => extendedSanitizeLikeString(123 as any)).toThrow(
-        "Value passed to Q.sanitizeLikeString() is not a string",
-      )
-      expect(() => extendedSanitizeLikeString(undefined as any)).toThrow(
-        "Value passed to Q.sanitizeLikeString() is not a string",
-      )
-    })
+  it("output length always equals input length", () => {
+    fc.assert(
+      fc.property(fc.string(), (s) => {
+        expect(extendedSanitizeLikeString(s).length).toBe(s.length)
+      }),
+    )
+  })
 
-    it("should handle consecutive special characters", () => {
-      expect(extendedSanitizeLikeString("test---test")).toBe("test___test")
-      expect(extendedSanitizeLikeString("a...b...c")).toBe("a___b___c")
-    })
+  it("output only contains letters, digits, or underscores", () => {
+    fc.assert(
+      fc.property(fc.string(), (s) => {
+        const result = extendedSanitizeLikeString(s)
+        // Every character should be a letter, digit, or underscore
+        for (const ch of result) {
+          expect(ch === "_" || /[\p{L}\p{N}]/u.test(ch)).toBe(true)
+        }
+      }),
+    )
+  })
+})
+
+describe("safeStringify", () => {
+  it("should return defaultValue for null and undefined", () => {
+    expect(safeStringify(null, "fallback")).toBe("fallback")
+    expect(safeStringify(undefined, "fallback")).toBe("fallback")
+  })
+
+  it("should stringify objects", () => {
+    expect(safeStringify({ a: 1 }, "{}")).toBe('{"a":1}')
+    expect(safeStringify([1, 2, 3], "[]")).toBe("[1,2,3]")
+  })
+
+  it("should pass through a valid JSON string re-stringified", () => {
+    expect(safeStringify('{"a":1}', "{}")).toBe('{"a":1}')
+  })
+
+  it("should stringify non-JSON strings as JSON strings", () => {
+    expect(safeStringify("hello world", "default")).toBe('"hello world"')
+    expect(safeStringify("FAIL", "default")).toBe('"FAIL"')
+  })
+
+  it("should return defaultValue for empty string, null, and undefined", () => {
+    expect(safeStringify("", "[]")).toBe("[]")
+    expect(safeStringify(null, "{}")).toBe("{}")
+    expect(safeStringify(undefined, "[]")).toBe("[]")
+  })
+
+  it("should handle boolean and number inputs", () => {
+    expect(safeStringify(true, "")).toBe("true")
+    expect(safeStringify(42, "")).toBe("42")
+  })
+
+  it("round-trips any non-null JSON value through stringify", () => {
+    // null/undefined/empty string are handled separately (return defaultValue)
+    // Exclude strings that are themselves valid JSON (e.g. "0", "true") because
+    // safeStringify normalizes those: "0" → parse(0) → stringify → "0" (number),
+    // which is correct behavior but changes the JS type after round-trip.
+    const nonNullNonStringJson = fc.oneof(
+      fc.integer(),
+      fc.double({ noNaN: true, noDefaultInfinity: true }),
+      fc.boolean(),
+      fc.array(fc.jsonValue()),
+      fc.dictionary(fc.string(), fc.jsonValue()),
+    )
+    fc.assert(
+      fc.property(nonNullNonStringJson, (value) => {
+        const result = safeStringify(value, "__SENTINEL__")
+        expect(result).not.toBe("__SENTINEL__")
+        // Compare against JSON.parse(JSON.stringify(value)) to account for
+        // JSON-inherent lossy conversions (e.g. -0 → 0)
+        expect(JSON.parse(result)).toEqual(JSON.parse(JSON.stringify(value)))
+      }),
+    )
+  })
+
+  it("normalizes string inputs that are valid JSON", () => {
+    // safeStringify("0") normalizes via JSON.parse then JSON.stringify,
+    // so "0" → 0 → "0". The result is valid JSON representing the parsed value.
+    expect(safeStringify("0", "default")).toBe("0")
+    expect(safeStringify("true", "default")).toBe("true")
+    expect(safeStringify("[1,2]", "default")).toBe("[1,2]")
+    // Non-JSON strings get wrapped in quotes
+    expect(safeStringify("hello", "default")).toBe('"hello"')
+  })
+
+  it("never throws for any input", () => {
+    fc.assert(
+      fc.property(fc.anything(), fc.string(), (input, defaultVal) => {
+        expect(() => safeStringify(input, defaultVal)).not.toThrow()
+      }),
+    )
+  })
+
+  it("always returns a string", () => {
+    fc.assert(
+      fc.property(fc.anything(), (input) => {
+        const result = safeStringify(input, "default")
+        expect(typeof result).toBe("string")
+      }),
+    )
+  })
+})
+
+describe("joinCheckboxValues / splitCheckboxValues", () => {
+  it("joins values with ;; separator", () => {
+    expect(joinCheckboxValues(["A", "B"])).toBe("A;;B")
+  })
+
+  it("returns empty string for empty array", () => {
+    expect(joinCheckboxValues([])).toBe("")
+  })
+
+  it("splits ;; separated string", () => {
+    expect(splitCheckboxValues("A;;B;;C")).toEqual(["A", "B", "C"])
+  })
+
+  it("returns empty array for falsy input", () => {
+    expect(splitCheckboxValues("")).toEqual([])
+    expect(splitCheckboxValues(null)).toEqual([])
+    expect(splitCheckboxValues(undefined)).toEqual([])
+  })
+
+  it("round-trips: split(join(arr)) === arr for option labels (no semicolons)", () => {
+    // Option labels in practice are human-readable text without semicolons
+    const optionLabel = fc.string({ minLength: 1 }).filter((s) => !s.includes(";"))
+    fc.assert(
+      fc.property(fc.array(optionLabel), (values) => {
+        expect(splitCheckboxValues(joinCheckboxValues(values))).toEqual(values)
+      }),
+    )
+  })
+
+  it("join then split preserves count for option labels", () => {
+    const optionLabel = fc.string({ minLength: 1 }).filter((s) => !s.includes(";"))
+    fc.assert(
+      fc.property(fc.array(optionLabel, { minLength: 1 }), (values) => {
+        const result = splitCheckboxValues(joinCheckboxValues(values))
+        expect(result.length).toBe(values.length)
+      }),
+    )
+  })
+
+  it("split always returns an array", () => {
+    fc.assert(
+      fc.property(fc.oneof(fc.string(), fc.constant(null), fc.constant(undefined)), (input) => {
+        expect(Array.isArray(splitCheckboxValues(input))).toBe(true)
+      }),
+    )
+  })
+})
+
+describe("invariant", () => {
+  it("does not throw when condition is truthy", () => {
+    expect(() => invariant(true)).not.toThrow()
+    expect(() => invariant(1)).not.toThrow()
+    expect(() => invariant("non-empty")).not.toThrow()
+    expect(() => invariant({})).not.toThrow()
+    expect(() => invariant([])).not.toThrow()
+  })
+
+  it("throws when condition is falsy", () => {
+    expect(() => invariant(false)).toThrow("Broken invariant")
+    expect(() => invariant(0)).toThrow("Broken invariant")
+    expect(() => invariant("")).toThrow("Broken invariant")
+    expect(() => invariant(null)).toThrow("Broken invariant")
+    expect(() => invariant(undefined)).toThrow("Broken invariant")
+  })
+
+  it("throws with custom error message", () => {
+    expect(() => invariant(false, "Custom message")).toThrow("Custom message")
+  })
+
+  it("thrown error has framesToPop property", () => {
+    try {
+      invariant(false, "test")
+    } catch (e: any) {
+      expect(e.framesToPop).toBe(1)
+    }
+  })
+
+  it("truthy values never throw", () => {
+    fc.assert(
+      fc.property(
+        fc.oneof(
+          fc.integer({ min: 1 }),
+          fc.string({ minLength: 1 }),
+          fc.constant(true),
+          fc.constant({}),
+          fc.constant([]),
+        ),
+        (value) => {
+          expect(() => invariant(value)).not.toThrow()
+        },
+      ),
+    )
+  })
+
+  it("falsy values always throw", () => {
+    fc.assert(
+      fc.property(
+        fc.oneof(
+          fc.constant(false),
+          fc.constant(0),
+          fc.constant(""),
+          fc.constant(null),
+          fc.constant(undefined),
+          fc.constant(NaN),
+        ),
+        (value) => {
+          expect(() => invariant(value)).toThrow()
+        },
+      ),
+    )
   })
 })

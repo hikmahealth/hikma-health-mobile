@@ -1,4 +1,6 @@
-import { localeDate, calculateAge, parseYYYYMMDD } from "../../app/utils/date"
+import fc from "fast-check"
+
+import { localeDate, calculateAge, parseYYYYMMDD, toDateSafe } from "../../app/utils/date"
 import { addDays, subDays, subYears, subMonths } from "date-fns"
 
 // Mock i18next
@@ -280,6 +282,149 @@ describe("date utilities", () => {
       const defaultUndefined = undefined
       const result4 = parseYYYYMMDD("invalid", defaultUndefined)
       expect(result4).toBe(defaultUndefined)
+    })
+
+    // ── Property-based tests for parseYYYYMMDD ──────────────────────────
+
+    it("always returns default for random non-date strings", () => {
+      fc.assert(
+        fc.property(
+          fc.string().filter((s) => !/^\d{4}-\d{2}-\d{2}/.test(s) && isNaN(Date.parse(s))),
+          (s) => {
+            const result = parseYYYYMMDD(s, "DEFAULT")
+            expect(result).toBe("DEFAULT")
+          },
+        ),
+      )
+    })
+
+    it("valid YYYY-MM-DD strings produce a Date with matching components", () => {
+      fc.assert(
+        fc.property(
+          fc.integer({ min: 1970, max: 2100 }),
+          fc.integer({ min: 1, max: 12 }),
+          fc.integer({ min: 1, max: 28 }), // 28 to avoid month-end edge cases
+          (year, month, day) => {
+            const str = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+            const result = parseYYYYMMDD(str, null)
+            expect(result).toBeInstanceOf(Date)
+            expect((result as Date).getFullYear()).toBe(year)
+            expect((result as Date).getMonth()).toBe(month - 1)
+            expect((result as Date).getDate()).toBe(day)
+          },
+        ),
+      )
+    })
+  })
+
+  // ── toDateSafe ──────────────────────────────────────────────────────────
+
+  describe("toDateSafe", () => {
+    it("returns Date objects unchanged if valid", () => {
+      const d = new Date(2024, 5, 15)
+      expect(toDateSafe(d)).toBe(d)
+    })
+
+    it("returns default for invalid Date objects", () => {
+      const fallback = new Date(2000, 0, 1)
+      const result = toDateSafe(new Date("invalid"), fallback)
+      expect(result).toBe(fallback)
+    })
+
+    it("converts numbers (timestamps) to Dates", () => {
+      const ts = Date.now()
+      const result = toDateSafe(ts)
+      expect(result).toBeInstanceOf(Date)
+      expect(result.getTime()).toBe(ts)
+    })
+
+    it("converts YYYY-MM-DD strings via parseYYYYMMDD", () => {
+      const result = toDateSafe("2024-03-15")
+      expect(result).toBeInstanceOf(Date)
+      expect(result.getFullYear()).toBe(2024)
+      expect(result.getMonth()).toBe(2)
+      expect(result.getDate()).toBe(15)
+    })
+
+    it("converts ISO strings", () => {
+      const result = toDateSafe("2024-06-15T10:30:00.000Z")
+      expect(result).toBeInstanceOf(Date)
+      expect(result.getFullYear()).toBe(2024)
+    })
+
+    it("returns NaN date for completely invalid input with no default", () => {
+      const result = toDateSafe("garbage")
+      expect(isNaN(result.getTime())).toBe(true)
+    })
+
+    it("returns default for non-date types", () => {
+      const fallback = new Date(2020, 0, 1)
+      expect(toDateSafe(null, fallback)).toBe(fallback)
+      expect(toDateSafe(undefined, fallback)).toBe(fallback)
+      expect(toDateSafe({}, fallback)).toBe(fallback)
+      expect(toDateSafe([], fallback)).toBe(fallback)
+      expect(toDateSafe(true, fallback)).toBe(fallback)
+    })
+
+    it("returns Invalid Date (not default) when no default is given for bad input", () => {
+      const result = toDateSafe(Symbol("bad"))
+      expect(result).toBeInstanceOf(Date)
+      expect(isNaN(result.getTime())).toBe(true)
+    })
+
+    // ── Property-based ──────────────────────────────────────────────────
+
+    it("always returns a Date instance", () => {
+      fc.assert(
+        fc.property(fc.anything(), (input) => {
+          const result = toDateSafe(input)
+          expect(result).toBeInstanceOf(Date)
+        }),
+      )
+    })
+
+    it("valid Date inputs are returned as-is", () => {
+      fc.assert(
+        fc.property(
+          fc.date({ min: new Date("1970-01-01"), max: new Date("2100-01-01") }),
+          (d) => {
+            const result = toDateSafe(d)
+            expect(result.getTime()).toBe(d.getTime())
+          },
+        ),
+      )
+    })
+
+    it("integer timestamps produce valid Dates", () => {
+      fc.assert(
+        fc.property(
+          fc.integer({ min: 0, max: 4102444800000 }), // up to 2100
+          (ts) => {
+            const result = toDateSafe(ts)
+            expect(isNaN(result.getTime())).toBe(false)
+            expect(result.getTime()).toBe(ts)
+          },
+        ),
+      )
+    })
+
+    it("default is always used for non-date-like inputs", () => {
+      const fallback = new Date(2000, 0, 1)
+      fc.assert(
+        fc.property(
+          fc.oneof(
+            fc.constant(null),
+            fc.constant(undefined),
+            fc.boolean(),
+            fc.constant({}),
+            fc.array(fc.anything()),
+          ),
+          (input) => {
+            const result = toDateSafe(input, fallback)
+            expect(result).toBe(fallback)
+          },
+        ),
+      )
     })
   })
 })

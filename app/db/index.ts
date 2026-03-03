@@ -4,6 +4,7 @@ import SQLiteAdapter from "@nozbe/watermelondb/adapters/sqlite"
 import { setGenerator } from "@nozbe/watermelondb/utils/common/randomId"
 import * as Sentry from "@sentry/react-native"
 import { v1 as uuidv1 } from "uuid"
+import { uuidv7 } from "uuidv7"
 
 import migrations from "./migrations"
 
@@ -17,11 +18,13 @@ import DispensingRecord from "./model/DispensingRecord"
 import DrugCatalogue from "./model/DrugCatalogue"
 import Event from "./model/Event"
 import EventForm from "./model/EventForm"
+import EventLog from "./model/EventLog"
 import Patient from "./model/Patient"
 import PatientAdditionalAttribute from "./model/PatientAdditionalAttribute"
 import PatientProblems from "./model/PatientProblems"
 import PatientRegistrationForm from "./model/PatientRegistrationForm"
 import PatientVitals from "./model/PatientVitals"
+import Peer from "./model/Peer"
 import Prescription from "./model/Prescription"
 import PrescriptionItem from "./model/PrescriptionItem"
 import User from "./model/User"
@@ -29,7 +32,8 @@ import UserClinicPermissions from "./model/UserClinicPermissions"
 import Visit from "./model/Visit"
 import schema from "./schema"
 
-setGenerator(() => uuidv1())
+// setGenerator(() => uuidv1())
+setGenerator(() => uuidv7())
 
 function createAdapter() {
   const isTest = process.env.NODE_ENV === "test"
@@ -125,6 +129,10 @@ export const database = new Database({
     ClinicInventory,
     PrescriptionItem,
     DispensingRecord,
+
+    // V9
+    EventLog,
+    Peer,
   ],
 })
 

@@ -22,6 +22,7 @@ import { View } from "@/components/View"
 import database from "@/db"
 import { useClinicDepartments } from "@/hooks/useClinicDepartments"
 import { useDBClinicsList } from "@/hooks/useDBClinicsList"
+import { usePermissionGuard } from "@/hooks/usePermissionGuard"
 import { translate } from "@/i18n/translate"
 import Appointment from "@/models/Appointment"
 import { PatientNavigatorParamList } from "@/navigators/PatientNavigator"
@@ -75,6 +76,7 @@ export const AppointmentEditorFormScreen: FC<AppointmentEditorFormScreenProps> =
   }))
   const [isTimePickerOpen, setIsTimePickerOpen] = useState(false)
   const { clinics, isLoading } = useDBClinicsList()
+  const { can } = usePermissionGuard()
 
   const { visitId, patientId, visitDate } = route.params
   // console.log({ visitId, patientId, visitDate })
@@ -113,6 +115,13 @@ export const AppointmentEditorFormScreen: FC<AppointmentEditorFormScreenProps> =
   )
 
   const onSubmit = async (submission: Appointment.EncodedT) => {
+    if (!can("appointment:create")) {
+      Toast.show("You do not have permission to create appointments", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.BOTTOM,
+      })
+      return
+    }
     // Making sure the data is complete and that the defaults are sane
     const data: Appointment.EncodedT = {
       ...submission,

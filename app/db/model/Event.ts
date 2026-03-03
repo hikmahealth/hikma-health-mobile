@@ -33,6 +33,9 @@ export default class EventModel extends Model {
   @field("is_deleted") isDeleted!: boolean
   @date("deleted_at") deletedAt!: Date
 
+  // V9
+  @text("recorded_by_user_id") recordedByUserId!: string
+
   // --- Timestamps (Read-only) ---
   @readonly @date("created_at") createdAt!: Date
   @readonly @date("updated_at") updatedAt!: Date

@@ -14,13 +14,14 @@ import { isValid } from "date-fns"
 import { Option } from "effect"
 import { sortBy } from "es-toolkit/compat"
 import { LucideAlertCircle } from "lucide-react-native"
-import { _ } from "node_modules/@faker-js/faker/dist/airline-CLphikKp"
 import { Controller, useForm } from "react-hook-form"
 import DropDownPicker from "react-native-dropdown-picker"
+import Toast from "react-native-root-toast"
 import { useImmer } from "use-immer"
 
 import { getHHApiUrl } from "app/utils/storage"
 
+import { usePermissionGuard } from "@/hooks/usePermissionGuard"
 import { Button } from "@/components/Button"
 import { DatePickerButton } from "@/components/DatePicker"
 import { DiagnosisEditor, DiagnosisPickerButton } from "@/components/DiagnosisEditor"
@@ -35,16 +36,24 @@ import { View } from "@/components/View"
 import database from "@/db"
 import EventModel from "@/db/model/Event"
 import EventFormModel from "@/db/model/EventForm"
+import { useCreateEvent } from "@/hooks/useCreateEvent"
+import { useUpdateEvent } from "@/hooks/useUpdateEvent"
 import { translate } from "@/i18n/translate"
 import Appointment from "@/models/Appointment"
 import Event from "@/models/Event"
+import EventForm from "@/models/EventForm"
 import ICDEntry from "@/models/ICDEntry"
 import Prescription from "@/models/Prescription"
 import { PatientNavigatorParamList } from "@/navigators/PatientNavigator"
+import { useDataAccess } from "@/providers/DataAccessProvider"
 import { languageStore } from "@/store/language"
 import { providerStore } from "@/store/provider"
 import { colors } from "@/theme/colors"
-import Toast from "react-native-root-toast"
+import {
+  resolveFormTranslations,
+  getOptionId,
+  type ResolvedFormTranslations,
+} from "@/utils/eventFormTranslations"
 
 type ModalState =
   | { activeModal: null }
@@ -116,18 +125,22 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
     departmentId = null,
   } = route.params
 
-  console.log({
-    patientId,
-    formId,
-    visitId,
-    eventId,
-    visitDate,
-    appointmentId,
-    departmentId,
-  })
+  // console.log({
+  //   patientId,
+  //   formId,
+  //   visitId,
+  //   eventId,
+  //   visitDate,
+  //   appointmentId,
+  //   departmentId,
+  // })
 
   const language = useSelector(languageStore, (state) => state.context.language)
   const provider = useSelector(providerStore, (state) => state.context)
+  const { isOnline } = useDataAccess()
+  const createEventMutation = useCreateEvent()
+  const updateEventMutation = useUpdateEvent()
+  const { can, checkEditEvent } = usePermissionGuard()
 
   // get the provider/user who created the form or the event
   const eventProvider = useEventProvider(eventId)
@@ -216,14 +229,17 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
 
   const [loading, setLoading] = useState(false)
 
-  // This determines if the form can be saved - forms are editable by default unless explicitly marked as non-editable
+  // New event creation is always allowed; editing respects isEditable
+  const isEditing = eventId !== null
   const canSaveForm = useMemo(() => {
-    if (loading) {
-      return false
-    }
-    // If eventId is null, this is a new form being created, so it should be editable
-    // Otherwise, respect the form's isEditable property
-    if (form?.isEditable === false) {
+    if (!form || loading) return false
+    if (isEditing && form.isEditable === false) return false
+    return true
+  }, [form, loading, isEditing])
+
+  // Show a toast when trying to edit a non-editable form
+  useEffect(() => {
+    if (isEditing && form && form.isEditable === false) {
       Toast.show("Form is not editable", {
         duration: Toast.durations.SHORT,
         position: Toast.positions.BOTTOM,
@@ -232,12 +248,8 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
         hideOnPress: true,
         delay: 0,
       })
-      return false
     }
-    return (eventId === null || form?.isEditable) ?? false
-  }, [form?.isEditable, loading, eventId])
-
-  console.log("canSaveForm", canSaveForm)
+  }, [isEditing, form?.isEditable])
 
   const onSubmit = async (data: Record<string, any>) => {
     console.log("onSubmit", data)
@@ -245,10 +257,51 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
       return
     }
 
+    // Permission check: editing an existing event vs creating a new one
+    if (isEditing && eventProvider) {
+      const editResult = checkEditEvent(eventProvider.providerId)
+      if (!editResult.ok) {
+        Toast.show(editResult.error.message, {
+          duration: Toast.durations.SHORT,
+          position: Toast.positions.BOTTOM,
+        })
+        return
+      }
+    } else if (!isEditing && !can("event:create")) {
+      Toast.show("You do not have permission to create events", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.BOTTOM,
+      })
+      return
+    }
+
+    // Validate required fields before submission
+    if (form) {
+      const missingFields = EventForm.getMissingRequiredFields({
+        formFields: form.formFields,
+        data,
+        diagnoses,
+        medicines,
+        fileUploads,
+      })
+      if (missingFields.length > 0) {
+        Toast.show(`Please fill in required fields: ${missingFields.join(", ")}`, {
+          duration: Toast.durations.LONG,
+          position: Toast.positions.BOTTOM,
+          shadow: true,
+          animation: true,
+          hideOnPress: true,
+          delay: 0,
+        })
+        return
+      }
+    }
+
     setLoading(true)
 
     const formData =
       form?.formFields
+        .filter((field) => !EventForm.isDisplayOnly(field))
         .map((field) => ({
           fieldId: field.id,
           fieldType: field.fieldType,
@@ -301,19 +354,46 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
     }
 
     try {
-      const res = await Event.DB.create(
-        newEvent,
-        visitId,
-        Option.getOrUndefined(provider.clinic_id) || "",
-        provider.id,
-        provider.name,
-        visitDate,
-        eventId,
-      )
+      let resVisitId: string | null = visitId
 
-      // Update the appointment with the visitId
+      if (isOnline) {
+        // Online path: use DataProvider mutation
+        if (eventId) {
+          await updateEventMutation.mutateAsync({
+            id: eventId,
+            data: { formData: formData as any, metadata: {} },
+          })
+        } else {
+          const res = await createEventMutation.mutateAsync({
+            patientId,
+            visitId,
+            eventType: form?.name || "",
+            formId,
+            formData: formData as any,
+            clinicId: Option.getOrUndefined(provider.clinic_id),
+            providerId: provider.id,
+            providerName: provider.name,
+            checkInTimestamp: visitDate,
+            recordedByUserId: provider.id,
+          })
+          resVisitId = res.visitId
+        }
+      } else {
+        // Offline path: existing WatermelonDB writes
+        const res = await Event.DB.create(
+          newEvent,
+          visitId,
+          Option.getOrUndefined(provider.clinic_id) || "",
+          provider.id,
+          provider.name,
+          visitDate,
+          eventId,
+        )
+        resVisitId = res.visitId
+      }
+
+      // Update the appointment with the visitId (shared by both paths)
       if (appointmentId) {
-        // Function is async and we are not waiting for it, and if it fails we dont care too much and dont want it to block the user from continuing
         if (departmentId) {
           Appointment.DB.updateAppointmentDepartmentStatus(
             appointmentId,
@@ -325,9 +405,7 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
             Sentry.captureException(e)
           })
         }
-        // If an appointment does not have a departmentId, means it is not connected to a department and can just be completed.
-        // if  departmentId is present, do not update the appointment status
-        Appointment.DB.markComplete(appointmentId, provider.id, res.visitId, {
+        Appointment.DB.markComplete(appointmentId, provider.id, resVisitId ?? "", {
           preserveStatus: departmentId ? true : false,
         }).catch((e) => {
           console.error("Error updating appointment with visitId", e)
@@ -335,23 +413,10 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
         })
       }
 
-      // React-Navigation 6 shortcut to passing a parameter to the previous screen
-      // here we pop the screen and pass the visit ID to the previous screen
-      // navigation.dispatch((state) => {
-      //   const prevRoute = state.routes[state.routes.length - 2]
-      //   return CommonActions.navigate({
-      //     name: prevRoute.name,
-      //     params: {
-      //       ...prevRoute.params,
-      //       visitId: res.visitId,
-      //     },
-      //     merge: true,
-      //   })
-      // })
       if (visitId) {
         navigation.goBack()
       } else {
-        navigation.popTo("NewVisit", { patientId, visitDate, visitId: res.visitId })
+        navigation.popTo("NewVisit", { patientId, visitDate, visitId: resVisitId })
       }
     } catch (e) {
       console.error(e)
@@ -370,12 +435,44 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
     }
   }
 
+  // Resolve translations for the form fields based on the user's language
+  const resolved = useMemo<ResolvedFormTranslations | null>(() => {
+    if (!form) return null
+    return resolveFormTranslations(form, language)
+  }, [form, language])
+
+  /** Get the translated or original description for a field, or undefined if empty */
+  const getFieldDescription = useCallback(
+    (field: EventForm.FieldItem): string | undefined => {
+      const desc = resolved?.fieldDescriptions[field.id] || field.description
+      return desc || undefined
+    },
+    [resolved],
+  )
+
+  // Helper to get translated items for select/dropdown fields, preserving original values
+  const getTranslatedItems = useCallback(
+    (field: EventForm.FieldItem) => {
+      const items = Option.isOption(field.options)
+        ? Option.getOrElse(field.options, () => [])
+        : field.options || []
+      if (!resolved?.optionLabels[field.id]) return items
+      return items.map((option: any) => {
+        if (typeof option === "string") return option
+        const key = getOptionId(option)
+        const translatedLabel = resolved.optionLabels[field.id]?.[key]
+        return translatedLabel ? { ...option, label: translatedLabel } : option
+      })
+    },
+    [resolved],
+  )
+
   // set the title of the page
   useEffect(() => {
     navigation.setOptions({
-      title: form?.name ?? "Event Form",
+      title: resolved?.formName ?? form?.name ?? "Event Form",
     })
-  }, [form?.name, navigation])
+  }, [resolved?.formName, form?.name, navigation])
 
   const updateMedication = useCallback(
     (medication: Prescription.MedicationEntry) => {
@@ -410,10 +507,8 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
 
   // Handle file selection and upload
   const handleFileUpload = async (fieldName: string) => {
-    console.log(`Starting file upload for field: ${fieldName}`)
     try {
       // Initialize upload state
-      console.log("Initializing upload state")
       setFileUploads((prev) => ({
         ...prev,
         [fieldName]: {
@@ -426,7 +521,6 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
       }))
 
       // Pick document
-      console.log("Opening document picker")
       const result = await DocumentPicker.getDocumentAsync({
         type: "*/*", // Allow any file type
         copyToCacheDirectory: true,
@@ -526,24 +620,49 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
     )
   }
 
-  // console.log({ form: form.formFields })
   return (
     <BottomSheetModalProvider>
       <Screen style={$root} preset="scroll">
         <View gap={12} pb={24}>
           {form.formFields.map((field, idx) => {
-            console.log(field.fieldType, "as a ", field.inputType, "options: ", field.options)
-            console.log("is Multi", field.multi)
+            // console.log(field.fieldType, "as a ", field.inputType, "options: ", field.options)
+            // console.log("is Multi", field.multi)
             return (
               <View key={`formField-${idx}`}>
-                <If condition={field.inputType === "text" || field.inputType === "number"}>
+                {/* Static text display (read-only) */}
+                <If condition={field.fieldType === "text"}>
+                  <Text
+                    text={resolved?.fieldNames[field.id] ?? field.content ?? field.name}
+                    size={field.size ?? "md"}
+                  />
+                  {getFieldDescription(field) ? (
+                    <Text text={getFieldDescription(field)} size="xs" color={colors.textDim} />
+                  ) : null}
+                </If>
+
+                {/* Visual separator / divider */}
+                <If condition={field.fieldType === "separator"}>
+                  <View py={8}>
+                    <View style={$separator} />
+                  </View>
+                </If>
+
+                <If
+                  condition={
+                    (field.inputType === "text" || field.inputType === "number") &&
+                    field.fieldType !== "text" &&
+                    field.fieldType !== "separator"
+                  }
+                >
                   <Controller
                     render={({ field: { onChange, onBlur, value } }) => (
                       <TextField
-                        label={field.name}
+                        label={resolved?.fieldNames[field.id] ?? field.name}
+                        description={getFieldDescription(field)}
                         onChangeText={onChange}
                         keyboardType={field.inputType === "number" ? "number-pad" : "default"}
                         onBlur={onBlur}
+                        required={field.required}
                         value={value}
                       />
                     )}
@@ -555,9 +674,11 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
                   <Controller
                     render={({ field: { onChange, onBlur, value } }) => (
                       <TextField
-                        label={field.name}
+                        label={resolved?.fieldNames[field.id] ?? field.name}
+                        description={getFieldDescription(field)}
                         onChangeText={onChange}
                         onBlur={onBlur}
+                        required={field.required}
                         value={value}
                         multiline
                       />
@@ -569,7 +690,15 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
 
                 <If condition={field.inputType === "select" && field.fieldType !== "diagnosis"}>
                   <View style={{}}>
-                    <Text text={field.name} preset="formLabel" />
+                    <Text text={resolved?.fieldNames[field.id] ?? field.name} preset="formLabel" />
+                    {getFieldDescription(field) ? (
+                      <Text
+                        text={getFieldDescription(field)}
+                        size="xs"
+                        color={colors.textDim}
+                        withAsterisk={field.required}
+                      />
+                    ) : null}
                     <DropDownPicker
                       open={isOpen(field.id)}
                       // value={multiPickerValue(getValues(field.name) as any, field.multi || false)}
@@ -582,7 +711,7 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
                       searchable
                       closeAfterSelecting
                       style={$dropDownStyle}
-                      modalTitle={field.name}
+                      modalTitle={resolved?.fieldNames[field.id] ?? field.name}
                       multiple={
                         Option.isOption(field.multi)
                           ? Option.getOrElse(field.multi, () => false)
@@ -596,12 +725,7 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
                       searchTextInputStyle={$inputWrapperStyle as unknown as TextStyle}
                       closeOnBackPressed
                       onClose={closeDialogue}
-                      items={sortBy(
-                        Option.isOption(field.options)
-                          ? Option.getOrElse(field.options, () => [])
-                          : field.options || [],
-                        ["label"],
-                      )}
+                      items={sortBy(getTranslatedItems(field), ["label"])}
                       setOpen={openDialogue(field.id)}
                       listMode="MODAL"
                       // setValue={onChange}
@@ -626,17 +750,23 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
                       <View gap={4}>
                         <View mt={4} />
                         <Checkbox
-                          label={field.name}
+                          label={resolved?.fieldNames[field.id] ?? field.name}
                           value={value}
                           onValueChange={(value) => {
                             if (value) {
                               setValue(field.name as never, value as never)
                             } else {
-                              // set the default value to an empty string
                               setValue(field.name as never, "" as never)
                             }
                           }}
                         />
+                        {getFieldDescription(field) ? (
+                          <Text
+                            text={getFieldDescription(field)}
+                            size="xs"
+                            color={colors.textDim}
+                          />
+                        ) : null}
                       </View>
                     )}
                     name={field.name as never}
@@ -649,7 +779,17 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
                   <Controller
                     render={() => (
                       <View gap={4}>
-                        <Text text={field.name} preset="formLabel" />
+                        <Text
+                          text={resolved?.fieldNames[field.id] ?? field.name}
+                          preset="formLabel"
+                        />
+                        {getFieldDescription(field) ? (
+                          <Text
+                            text={getFieldDescription(field)}
+                            size="xs"
+                            color={colors.textDim}
+                          />
+                        ) : null}
                         <View>
                           {fileUploads[field.name]?.isUploading ? (
                             <View
@@ -701,7 +841,18 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
                   <Controller
                     render={({ field: { onChange, value } }) => (
                       <View style={{}}>
-                        <Text text={field.name} preset="formLabel" />
+                        <Text
+                          text={resolved?.fieldNames[field.id] ?? field.name}
+                          preset="formLabel"
+                          withAsterisk={field.required}
+                        />
+                        {getFieldDescription(field) ? (
+                          <Text
+                            text={getFieldDescription(field)}
+                            size="xs"
+                            color={colors.textDim}
+                          />
+                        ) : null}
                         <View>
                           <DatePickerButton
                             date={isValid(new Date(value)) ? new Date(value) : new Date()}
@@ -721,14 +872,20 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
                   <Controller
                     render={({ field: { value } }) => (
                       <View gap={4}>
-                        <Text text={field.name} preset="formLabel" />
+                        <Text
+                          text={resolved?.fieldNames[field.id] ?? field.name}
+                          preset="formLabel"
+                          withAsterisk={field.required}
+                        />
+                        {getFieldDescription(field) ? (
+                          <Text
+                            text={getFieldDescription(field)}
+                            size="xs"
+                            color={colors.textDim}
+                          />
+                        ) : null}
                         <View mt={4} />
-                        {(Option.isOption(field.options)
-                          ? Option.getOrElse(field.options, () => [])
-                          : Array.isArray(field.options)
-                            ? field.options
-                            : []
-                        ).map((option: any) => (
+                        {getTranslatedItems(field).map((option: any) => (
                           <Radio
                             key={option.value}
                             label={option.label}
@@ -767,6 +924,7 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
                     language={language}
                     openDiagnosisPicker={openDiagnosesEditor}
                     key={field.id}
+                    required={field.required}
                     value={diagnoses || []}
                   />
                 </If>
@@ -857,33 +1015,49 @@ function useEventForm(
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
   useEffect(() => {
+    let cancelled = false
+    let formSub: { unsubscribe: () => void } | null = null
+    let formReady = false
+    let eventReady = !eventId // no event to load = already ready
+
+    const checkReady = () => {
+      if (!cancelled && formReady && eventReady) {
+        setIsLoading(false)
+      }
+    }
+
     /** Subscribe to the form */
-    let formSub: any
     database.collections
       .get<EventFormModel>("event_forms")
       .find(formId)
       .then((record) => {
+        if (cancelled) return
         formSub = record.observe().subscribe((form) => {
-          setForm(form)
+          if (!cancelled) {
+            setForm(form)
+            formReady = true
+            checkReady()
+          }
         })
       })
       .catch((error) => {
         console.error(error)
-        setForm(null)
-      })
-      .finally(() => {
-        setIsLoading(false)
+        if (!cancelled) {
+          setForm(null)
+          formReady = true
+          checkReady()
+        }
       })
 
-    /** Subscribe to the event if it exists. If there is no event, create a new one */
+    /** Subscribe to the event if it exists */
     const eventSub = eventId
       ? database.collections
           .get<EventModel>("events")
           .findAndObserve(eventId)
           .subscribe((event) => {
+            if (cancelled) return
             updateFormState((d) => {
               const draft = d || ({} as any)
-              // if (draft) {
               draft.formId = event.formId
               draft.visitId = event.visitId
               draft.patientId = event.patientId
@@ -892,13 +1066,14 @@ function useEventForm(
               draft.updatedAt = event.updatedAt
               draft.id = event.id
               return draft
-              // }
-              // return event
             })
+            eventReady = true
+            checkReady()
           })
       : null
 
     return () => {
+      cancelled = true
       formSub?.unsubscribe()
       eventSub?.unsubscribe()
       setIsLoading(true)
@@ -980,4 +1155,10 @@ const $modalContentContainerStyle: ViewStyle = {
 
 const $fileButtonStyle: ViewStyle = {
   flex: 1,
+}
+
+const $separator: ViewStyle = {
+  borderBottomWidth: 1,
+  borderBottomColor: colors.palette.neutral400,
+  marginTop: 4,
 }

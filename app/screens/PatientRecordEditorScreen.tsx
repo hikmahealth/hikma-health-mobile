@@ -7,6 +7,7 @@ import { Option } from "effect"
 import { upperFirst } from "es-toolkit/compat"
 import { LucideArrowRight } from "lucide-react-native"
 import DropDownPicker from "react-native-dropdown-picker"
+import Toast from "react-native-root-toast"
 
 import { Button } from "@/components/Button"
 import { DateOfBirthInput } from "@/components/DateOfBirthInput"
@@ -15,21 +16,30 @@ import { If } from "@/components/If"
 import { Screen } from "@/components/Screen"
 import { Text } from "@/components/Text"
 import { TextField } from "@/components/TextField"
+import { Checkbox } from "@/components/Toggle/Checkbox"
 import { Radio } from "@/components/Toggle/Radio"
 import { View } from "@/components/View"
 import { useClinics } from "@/hooks/useClinicsList"
+import { useCreatePatient } from "@/hooks/useCreatePatient"
 import { useDebounce } from "@/hooks/useDebounce"
 import { getBaseFieldByColumn, usePatientRecordEditor } from "@/hooks/usePatientRecordEditor"
+import { usePermissionGuard } from "@/hooks/usePermissionGuard"
 import { useSimilarPatientsSearch } from "@/hooks/useSimilarPatientsSearch"
+import { useUpdatePatient } from "@/hooks/useUpdatePatient"
 import { translate } from "@/i18n/translate"
 import Patient from "@/models/Patient"
 import { PatientStackScreenProps } from "@/navigators/PatientNavigator"
+import { useDataAccess } from "@/providers/DataAccessProvider"
+import {
+  patientRecordToCreateInput,
+  patientRecordToUpdateInput,
+} from "@/providers/transformers/patientRecordToInput"
 import { languageStore } from "@/store/language"
 import { providerStore } from "@/store/provider"
 import { colors } from "@/theme/colors"
 import { parseYYYYMMDD } from "@/utils/date"
-import { getTranslation } from "@/utils/parsers"
-import UserClinicPermissions from "@/models/UserClinicPermissions"
+import { toggleStringInArray } from "@/utils/misc"
+import { getTranslation, splitCheckboxValues, joinCheckboxValues } from "@/utils/parsers"
 // import { useNavigation } from "@react-navigation/native"
 
 interface PatientRecordEditorScreenProps extends PatientStackScreenProps<"PatientRecordEditor"> {}
@@ -46,6 +56,10 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = ({
     name: providerName,
   } = useSelector(providerStore, (state) => state.context)
   const editPatientId = route?.params?.editPatientId
+  const { isOnline } = useDataAccess()
+  const { can } = usePermissionGuard()
+  const createPatientMutation = useCreatePatient()
+  const updatePatientMutation = useUpdatePatient()
 
   const [existingGovtId, setExistingGovtId] = useState<boolean>(false)
 
@@ -145,6 +159,17 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = ({
     if (existingGovtId) return
     // TODO: Confirm that all the required fields are filled in
 
+    const operation = editPatientId ? "patient:edit" : "patient:register"
+    if (!can(operation)) {
+      Toast.show(
+        editPatientId
+          ? "You do not have permission to edit patient records"
+          : "You do not have permission to register new patients",
+        { position: Toast.positions.BOTTOM },
+      )
+      return
+    }
+
     const provider = {
       id: providerId,
       name: providerName,
@@ -153,70 +178,84 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = ({
       id: Option.getOrElse(clinicId, () => "Unknown"),
       name: Option.getOrElse(clinicName, () => "Unknown"),
     }
-    const primaryClinicId =
-      Patient.getPatientFieldByName(patientRecord, "primary_clinic_id", "") || clinic.id
-    const viewHistoryClinicIds = await UserClinicPermissions.DB.getClinicIdsWithPermission(
-      provider.id,
-      "canEditRecords",
-    )
 
-    if (!viewHistoryClinicIds.includes(primaryClinicId)) {
-      Alert.alert("Unauthorized", "You do not have permission to edit this patient's record.", [
-        { text: "OK", onPress: () => navigation.goBack() },
+    const onSuccess = (patientId: string | undefined) => {
+      const redirectPatientId = patientId ?? editPatientId
+      if (redirectPatientId === undefined) {
+        return navigation.goBack()
+      }
+      Alert.alert(translate("common:success"), translate("newPatient:successfulSave"), [
+        {
+          text: translate("newPatient:done"),
+          onPress: () => navigation.goBack(),
+        },
+        {
+          text: translate("newPatient:continueToVisits"),
+          onPress: () => {
+            return navigation.replace("NewVisit", {
+              patientId: redirectPatientId,
+              visitDate: new Date().getTime(),
+              visitId: null,
+            })
+          },
+        },
       ])
-      return
     }
 
-    let req
-    if (editPatientId && editPatientId.length > 5) {
-      // patient exists
-      req = Patient.DB.updateById(editPatientId, patientRecord, provider, clinic)
-    } else {
-      req = Patient.DB.register(patientRecord, provider, clinic)
+    const onError = (error: unknown) => {
+      console.error(error)
+      if (typeof captureException === "function") {
+        captureException(error as Error, {
+          tags: {
+            section: "patient_record_editor",
+            action: editPatientId ? "update_patient" : "register_patient",
+          },
+          extra: {
+            providerId,
+            clinicId: Option.getOrElse(clinicId, () => "Unknown"),
+            editPatientId,
+            patientRecord: JSON.stringify(patientRecord.values),
+          },
+        })
+      }
+      Alert.alert(translate("common:error"), translate("newPatient:errorSaving"))
     }
-    req
-      .then((patientId) => {
-        const redirectPatientId = patientId ?? editPatientId
-        if (redirectPatientId === undefined) {
-          // if there is no patient Id, there is no need to navigate elsewhere.
-          return navigation.goBack()
+
+    if (isOnline) {
+      // Online path: use DataProvider mutation hooks
+      try {
+        if (editPatientId && editPatientId.length > 5) {
+          const input = patientRecordToUpdateInput(patientRecord)
+          console.log(
+            "[PatientEditor] Online update — id:",
+            editPatientId,
+            "input:",
+            JSON.stringify(input, null, 2),
+          )
+          await updatePatientMutation.mutateAsync({ id: editPatientId, data: input })
+        } else {
+          const input = patientRecordToCreateInput(
+            patientRecord,
+            Option.getOrElse(clinicId, () => "Unknown"),
+          )
+          console.log("[PatientEditor] Online create — input:", JSON.stringify(input, null, 2))
+          await createPatientMutation.mutateAsync(input)
         }
-        Alert.alert(translate("common:success"), translate("newPatient:successfulSave"), [
-          {
-            text: translate("newPatient:done"),
-            onPress: () => navigation.goBack(),
-          },
-          {
-            text: translate("newPatient:continueToVisits"),
-            onPress: () => {
-              return navigation.replace("NewVisit", {
-                patientId: redirectPatientId,
-                visitDate: new Date().getTime(),
-                visitId: null,
-              })
-            },
-          },
-        ])
-      })
-      .catch((error) => {
-        console.error(error)
-        // Report error to Sentry
-        if (typeof captureException === "function") {
-          captureException(error, {
-            tags: {
-              section: "patient_record_editor",
-              action: editPatientId ? "update_patient" : "register_patient",
-            },
-            extra: {
-              providerId,
-              clinicId: Option.getOrElse(clinicId, () => "Unknown"),
-              editPatientId,
-              patientRecord: JSON.stringify(patientRecord.values),
-            },
-          })
-        }
-        Alert.alert(translate("common:error"), translate("newPatient:errorSaving"))
-      })
+        onSuccess(createPatientMutation.data?.id ?? editPatientId)
+      } catch (error) {
+        console.error("[PatientEditor] Online mutation error:", error)
+        onError(error)
+      }
+    } else {
+      // Offline path: existing WatermelonDB writes
+      let req
+      if (editPatientId && editPatientId.length > 5) {
+        req = Patient.DB.updateById(editPatientId, patientRecord, provider, clinic)
+      } else {
+        req = Patient.DB.register(patientRecord, provider, clinic)
+      }
+      req.then(onSuccess).catch(onError)
+    }
   }
 
   const $rtl = isRTL ? $rtlStyle : {}
@@ -331,6 +370,33 @@ export const PatientRecordEditorScreen: FC<PatientRecordEditorScreenProps> = ({
                           }}
                         />
                       ))}
+                    </View>
+                  </View>
+                )}
+
+                {type === "checkbox" && (
+                  <View>
+                    <View style={$rtl}>
+                      <Text text={label} preset="formLabel" />
+                    </View>
+                    <View style={$rtl} gap={6} pt={6}>
+                      {field.options.map((fieldOption) => {
+                        const optionLabel = getTranslation(fieldOption, language)
+                        const selected = splitCheckboxValues(typeof value === "string" ? value : "")
+                        return (
+                          <Checkbox
+                            key={fieldOption.en}
+                            label={upperFirst(optionLabel)}
+                            value={selected.includes(optionLabel)}
+                            onValueChange={() => {
+                              updateField(
+                                field.id,
+                                joinCheckboxValues(toggleStringInArray(optionLabel, selected)),
+                              )
+                            }}
+                          />
+                        )
+                      })}
                     </View>
                   </View>
                 )}

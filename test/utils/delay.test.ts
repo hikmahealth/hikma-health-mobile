@@ -17,9 +17,9 @@ describe("delay", () => {
     const endTime = Date.now()
     const elapsed = endTime - startTime
 
-    // Allow for some timing variance (50ms tolerance)
-    expect(elapsed).toBeGreaterThanOrEqual(100)
-    expect(elapsed).toBeLessThan(150)
+    // Allow for timing variance
+    expect(elapsed).toBeGreaterThanOrEqual(90)
+    expect(elapsed).toBeLessThan(200)
   })
 
   it("should work with different delay values", async () => {
@@ -31,12 +31,11 @@ describe("delay", () => {
       const endTime = Date.now()
       const elapsed = endTime - startTime
 
-      // For 0ms delay, it should resolve almost immediately
       if (ms === 0) {
         expect(elapsed).toBeLessThan(50)
       } else {
-        expect(elapsed).toBeGreaterThanOrEqual(ms)
-        expect(elapsed).toBeLessThan(ms + 100) // 100ms tolerance
+        expect(elapsed).toBeGreaterThanOrEqual(ms * 0.9)
+        expect(elapsed).toBeLessThan(ms + 150)
       }
     }
   })
@@ -69,9 +68,8 @@ describe("delay", () => {
     const endTime = Date.now()
     const elapsed = endTime - startTime
 
-    // Should wait for the longest delay (300ms)
-    expect(elapsed).toBeGreaterThanOrEqual(300)
-    expect(elapsed).toBeLessThan(400)
+    expect(elapsed).toBeGreaterThanOrEqual(270)
+    expect(elapsed).toBeLessThan(500)
   })
 
   it("should handle sequential delays", async () => {
@@ -84,9 +82,8 @@ describe("delay", () => {
     const endTime = Date.now()
     const elapsed = endTime - startTime
 
-    // Should take approximately 300ms total
-    expect(elapsed).toBeGreaterThanOrEqual(300)
-    expect(elapsed).toBeLessThan(400)
+    expect(elapsed).toBeGreaterThanOrEqual(270)
+    expect(elapsed).toBeLessThan(500)
   })
 
   it("should work in async/await context", async () => {

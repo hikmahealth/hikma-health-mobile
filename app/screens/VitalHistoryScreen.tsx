@@ -6,6 +6,8 @@ import { Screen } from "@/components/Screen"
 import { Text } from "@/components/Text"
 import { View } from "@/components/View"
 import { useDBVitals } from "@/hooks/useDBVitals"
+import { useDataAccess } from "@/providers/DataAccessProvider"
+import { useProviderVitals } from "@/hooks/useProviderVitals"
 import { translate } from "@/i18n/translate"
 import PatientVitals from "@/models/PatientVitals"
 import { PatientStackScreenProps } from "@/navigators/PatientNavigator"
@@ -16,7 +18,10 @@ interface VitalHistoryScreenProps extends PatientStackScreenProps<"VitalHistory"
 
 export const VitalHistoryScreen: FC<VitalHistoryScreenProps> = ({ navigation, route }) => {
   const { patientId } = route.params
-  const patientVitals = useDBVitals(patientId)
+  const { isOnline } = useDataAccess()
+  const offlineVitals = useDBVitals(patientId)
+  const onlineVitalsQuery = useProviderVitals(isOnline ? patientId : null)
+  const patientVitals = isOnline ? (onlineVitalsQuery.data ?? []) : offlineVitals
   const openEventForm = () => {
     navigation.navigate("VitalForm", { patientId })
   }
@@ -29,9 +34,13 @@ export const VitalHistoryScreen: FC<VitalHistoryScreenProps> = ({ navigation, ro
         </View>*/}
 
         <View style={$vitalTimelineContainer}>
-          {patientVitals.map((vital) => (
-            <VitalEntry key={vital.id} vital={vital} />
-          ))}
+          {patientVitals.length === 0 ? (
+            <View pt={40} alignItems="center">
+              <Text text={translate("vitalHistory:noRecordedVitals")} color={colors.textDim} />
+            </View>
+          ) : (
+            patientVitals.map((vital) => <VitalEntry key={vital.id} vital={vital} />)
+          )}
         </View>
       </Screen>
       <Pressable onPress={openEventForm} style={$newVisitFAB}>
@@ -46,7 +55,7 @@ export const VitalHistoryScreen: FC<VitalHistoryScreenProps> = ({ navigation, ro
  * Vital historical entry
  *
  */
-function VitalEntry({ vital }: { vital: PatientVitals.DB.T }) {
+function VitalEntry({ vital }: { vital: PatientVitals.DB.T | PatientVitals.T }) {
   const formattedDate = new Date(vital.timestamp).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",

@@ -19,6 +19,10 @@ const es: ENTranslations = {
     requiredCameraPermissions: "Se requiere permiso de la cámara para escanear el código QR.",
     qrCodeRegistered: "Registro de la aplicación completado",
     invalidQRCode: "Código QR Inválido",
+    hubConnected: "Conectado al Hub",
+    hubPairing: "Emparejando con el Hub...",
+    hubPairingFailed: "Error al emparejar con el hub",
+    hubAuthFailed: "Error de autenticación del hub",
   },
   patientFile: {
     patientView: "Vista del paciente",
@@ -35,6 +39,11 @@ const es: ENTranslations = {
     patientNotFound: "Registro no encontrado",
     vitalHistory: "Historia vital",
     vitalHistoryDescription: "Historia vital del paciente",
+    actions: {
+      prescriptionDescription: "Historial de recetas y medicamentos del paciente",
+      vitalsDescription: "Historial de lecturas de signos vitales",
+      diagnosisDescription: "Historial de problemas incluyendo condiciones y diagnósticos.",
+    },
   },
   newVisitScreen: {
     medicalHistory: "Historia médica",
@@ -95,10 +104,18 @@ const es: ENTranslations = {
   },
   drawer: {
     patientsList: "Lista de Pacientes",
-    summaryStats: "Rusumen de Datos",
-    benchmarking: "Comparacion",
-    sync: "Sincroniza",
-    signOut: "desconectar or cerrar Sesión",
+    patients: "Pacientes",
+    appointments: "Citas",
+    pharmacy: "Farmacia",
+    settings: "Ajustes",
+    privacyPolicy: "Política de Privacidad",
+    summaryStats: "Resumen de Datos",
+    benchmarking: "Comparación",
+    sync: "Sincronizar",
+    signOut: "Cerrar Sesión",
+    restartTitle: "Reiniciar",
+    restartDescription:
+      "Reiniciar la aplicación la volverá a abrir y podría ayudar a resolver cualquier problema que esté experimentando.",
   },
   eventList: {
     visitEvents: "Eventos de Visita",
@@ -114,6 +131,8 @@ const es: ENTranslations = {
   settingsScreen: {
     settings: "Ajustes",
     userAccount: "Cuenta de Usuario",
+    nonprofitDisclaimer:
+      "Hikma Health es una organización sin fines de lucro 501(c)(3) independiente y no está afiliada con Hikma Pharmaceuticals PLC ni con ninguna de sus filiales.",
     showNotifications: "Mostrar Notificaciones",
     lockWhenIdle: "Bloquear Pantalla cuando está inactiva",
     lockScreen: "Bloquear Pantalla",
@@ -128,6 +147,12 @@ const es: ENTranslations = {
     privacyPolicy: "Política de Privacidad",
     checkOTAForUpdates: "Buscar actualizaciones rápidas",
     syncSettings: "Configuración de Sincronización",
+    onlineOnlyMode: "Modo Solo En Línea",
+    onlineOnlyModeDescription:
+      "Cuando está activado, no se almacenan datos localmente. Todos los datos se leen y escriben directamente en el servidor.",
+    switchingMode: "Cambiando…",
+    unsyncedChangesWarning: "Sincronice los cambios locales antes de cambiar al modo en línea",
+    noInternetWarning: "Se requiere conexión a internet para cambiar al modo en línea",
   },
   errorScreen: {
     title: "Se produjo un error en la aplicación.",
@@ -162,10 +187,23 @@ const es: ENTranslations = {
       "¿Está seguro de que desea establecer este servidor como predeterminado?",
     syncError: "Error de Sincronización",
   },
+  diagnosisHistory: {
+    title: "Diagnósticos",
+    noRecordedDiagnoses: "No hay diagnósticos registrados para este paciente.",
+    newEntry: "Nuevo Diagnóstico",
+  },
+  diagnosisSearch: {
+    title: "Buscar Diagnóstico",
+    searchPlaceholder: "Buscar códigos ICD-11...",
+  },
+  diagnosisEditor: {
+    title: "Editar Diagnóstico",
+  },
   vitalHistory: {
     title: "Historial de Signos Vitales",
     description: "Ver y gestionar tu historial de signos vitales",
     newEntry: "Nueva Entrada",
+    noRecordedVitals: "No hay signos vitales registrados para este paciente.",
   },
   vitalForm: {
     title: "Formulario de Signos Vitales",
@@ -280,6 +318,7 @@ const es: ENTranslations = {
     complaint: "Queja/Preocupación médica",
     treatment: "Tratamiento",
     diagnosis: "Diagnóstico",
+    diagnoses: "Diagnósticos",
     medicineDispensed: "Medicamento suscrito",
     prescriptions: "Recetas de medicamentos",
     allergies: "Alergias",

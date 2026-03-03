@@ -29,6 +29,14 @@ const palette = {
   accent200: "#FBC878",
   accent100: "#FFBB50",
 
+  green700: "#dcfce7",
+  green600: "#bbf7d0",
+  green500: "#86efac",
+  green400: "#4ade80",
+  green300: "#22c55e",
+  green200: "#16a34a",
+  green100: "#15803d",
+
   success100: "#D1F2D1",
   success200: "#A7E9A7",
   success300: "#74E074",

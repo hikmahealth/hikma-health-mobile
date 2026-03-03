@@ -119,6 +119,10 @@ export interface TextFieldProps extends Omit<TextInputProps, "ref"> {
    * Note: It is a good idea to memoize this.
    */
   LeftAccessory?: ComponentType<TextFieldAccessoryProps>
+  /**
+   * Whether the field is required. When true, displays an asterisk on the label.
+   */
+  required?: boolean
 }
 
 /**
@@ -150,6 +154,7 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
     style: $inputStyleOverride,
     containerStyle: $containerStyleOverride,
     inputWrapperStyle: $inputWrapperStyleOverride,
+    required,
     ...TextInputProps
   } = props
   const input = useRef<TextInput>(null)
@@ -219,6 +224,7 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
           text={label}
           tx={labelTx}
           txOptions={labelTxOptions}
+          withAsterisk={required}
           {...LabelTextProps}
           style={themed($labelStyles)}
         />

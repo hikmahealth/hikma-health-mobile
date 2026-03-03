@@ -2,7 +2,7 @@
   "name": "Hikma Health",
   "slug": "hikma-health-mobile",
   "scheme": "hikma-health-mobile",
-  "version": "1.3.3",
+  "version": "1.5.0",
   "orientation": "default",
   "userInterfaceStyle": "light",
   "icon": "./assets/images/app-icon-all.png",
@@ -12,9 +12,7 @@
   },
   "newArchEnabled": true,
   "jsEngine": "hermes",
-  "assetBundlePatterns": [
-    "**/*"
-  ],
+  "assetBundlePatterns": ["**/*"],
   "android": {
     "icon": "./assets/images/app-icon-android-legacy.png",
     "package": "com.hikmahealth",
@@ -25,8 +23,8 @@
     },
     "allowBackup": false,
     "edgeToEdgeEnabled": true,
-    "versionCode": 44,
-    "versionName": "0.4.4"
+    "versionCode": 45,
+    "versionName": "0.4.5"
   },
   "ios": {
     "icon": "./assets/images/app-icon-ios.png",
@@ -38,21 +36,15 @@
       "NSPrivacyAccessedAPITypes": [
         {
           "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
-          "NSPrivacyAccessedAPITypeReasons": [
-            "CA92.1"
-          ]
+          "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
         },
         {
           "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
-          "NSPrivacyAccessedAPITypeReasons": [
-            "CA92.1"
-          ]
+          "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
         },
         {
           "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
-          "NSPrivacyAccessedAPITypeReasons": [
-            "CA92.1"
-          ]
+          "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
         }
       ]
     },
@@ -70,23 +62,24 @@
       "expo-build-properties",
       {
         "ios": {
+          "infoPlist": {
+            "NSAppTransportSecurity": {
+              "NSAllowsLocalNetworking": true
+            }
+          },
           "extraPods": [
             {
               "name": "simdjson",
-              "configurations": [
-                "Debug",
-                "Release"
-              ],
+              "configurations": ["Debug", "Release"],
               "path": "../node_modules/@nozbe/simdjson",
               "modular_headers": true
             }
           ]
         },
         "android": {
+          "usesCleartextTraffic": true,
           "packagingOptions": {
-            "pickFirst": [
-              "**/libc++_shared.so"
-            ]
+            "pickFirst": ["**/libc++_shared.so"]
           }
         }
       }
@@ -100,6 +93,7 @@
     "expo-secure-store",
     "expo-localization",
     "expo-font",
+    "expo-sharing",
     [
       "expo-splash-screen",
       {

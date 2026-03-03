@@ -1,0 +1,71 @@
+# flow: Add Patient Vitals
+# Test navigating to a patient, opening vitals, filling form, and saving
+
+appId: ${MAESTRO_APP_ID}
+onFlowStart:
+  - runFlow: ../shared/_OnFlowStart.yaml
+  - runFlow: ../shared/sign-in.yaml
+---
+# Verify we're on the patients list screen
+- assertVisible: "Patients"
+- assertVisible:
+    id: "patientList"
+
+# Tap on the first patient
+- tapOn:
+    id: "patientListItem.*"
+    index: 0
+- waitForAnimationToEnd
+
+# Navigate to Vitals
+- tapOn:
+    id: "patient-vitals-btn"
+- waitForAnimationToEnd
+
+# Tap new vitals button
+- tapOn: "New Vitals"
+  optional: true
+- tapOn: "Add Vitals"
+  optional: true
+- waitForAnimationToEnd
+
+# Fill in vital signs
+# Systolic blood pressure
+- tapOn: "Systolic"
+  optional: true
+- tapOn:
+    text: "Systolic.*"
+    optional: true
+- inputText: "120"
+- hideKeyboard
+
+# Diastolic blood pressure
+- tapOn: "Diastolic"
+  optional: true
+- tapOn:
+    text: "Diastolic.*"
+    optional: true
+- inputText: "80"
+- hideKeyboard
+
+# Pulse rate
+- tapOn:
+    text: "Enter pulse rate"
+    optional: true
+- inputText: "72"
+- hideKeyboard
+
+# Temperature
+- tapOn:
+    text: "Enter temperature"
+    optional: true
+- inputText: "37"
+- hideKeyboard
+
+# Save the vitals
+- tapOn: "Save"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Verify vitals were saved (we should be back on vitals history)
+- assertVisible: "Vitals"

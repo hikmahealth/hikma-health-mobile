@@ -9,19 +9,29 @@ import UserModel from "@/db/model/User"
 import UserClinicPermissionModel from "@/db/model/UserClinicPermissions"
 import { providerStore } from "@/store/provider"
 
-import User from "./User"
 import AppConfig from "./AppConfig"
+import User from "./User"
+import { ok, err, type Result, type DataError } from "../../types/data"
 
 namespace UserClinicPermissions {
   export type T = {
     id: string
     userId: string
     clinicId: string
-    canRegisterPatients: boolean
-    canViewHistory: boolean
-    canEditRecords: boolean
-    canDeleteRecords: boolean
-    isClinicAdmin: boolean
+    // General umbrell permission capabilities
+    canRegisterPatients: boolean // Whether or not a user can register a patient
+    canViewHistory: boolean //Given a registered patient, can a provider view their history, including their patient files/charts
+    canEditRecords: boolean // Whether or not they are allowed to edit any records of the patient at all
+    canDeleteRecords: boolean // Whether or not they can delete patient records
+    isClinicAdmin: boolean // Whether or not they are the clinic Admin. If they are a clinic Admin, they have all permissions for their given clinic. not for other clinics.
+    // V9
+    // More fine-grained capabilities
+    canEditOtherProviderEvent: boolean // If a visit, event, appointment or prescription is made by a user that is not this user, can they edit it?
+    canDownloadPatientReports: boolean // Whether or not the user can download the patient chart information
+    canPrescribeMedications: boolean // Whether or not a user can prescribe patient medictications in the Medication screens and models
+    canDispenseMedications: boolean // Given a medication prescription, can a user dispense the given medications?
+    canDeletePatientVisits: boolean // Whether or not a user can delete any information of a patients visit history - this is not including the patient.
+    canDeletePatientRecords: boolean // Whether or not a user can delete a patient and their chart
     createdBy: Option.Option<string>
     lastModifiedBy: Option.Option<string>
     createdAt: Date
@@ -40,6 +50,12 @@ namespace UserClinicPermissions {
     | "canEditRecords"
     | "canDeleteRecords"
     | "isClinicAdmin"
+    | "canEditOtherProviderEvent"
+    | "canDownloadPatientReports"
+    | "canPrescribeMedications"
+    | "canDispenseMedications"
+    | "canDeletePatientVisits"
+    | "canDeletePatientRecords"
   >
 
   /**
@@ -61,6 +77,18 @@ namespace UserClinicPermissions {
         return "can_delete_records"
       case "isClinicAdmin":
         return "is_clinic_admin"
+      case "canEditOtherProviderEvent":
+        return "can_edit_other_provider_event"
+      case "canDownloadPatientReports":
+        return "can_download_patient_reports"
+      case "canPrescribeMedications":
+        return "can_prescribe_medications"
+      case "canDispenseMedications":
+        return "can_dispense_medications"
+      case "canDeletePatientVisits":
+        return "can_delete_patient_visits"
+      case "canDeletePatientRecords":
+        return "can_delete_patient_records"
       default:
         Sentry.captureEvent({
           message: `Unknown permission: ${permission}`,
@@ -82,6 +110,12 @@ namespace UserClinicPermissions {
     canEditRecords: false,
     canDeleteRecords: false,
     isClinicAdmin: false,
+    canEditOtherProviderEvent: false,
+    canDownloadPatientReports: false,
+    canPrescribeMedications: false,
+    canDispenseMedications: false,
+    canDeletePatientVisits: false,
+    canDeletePatientRecords: false,
     createdBy: Option.none(),
     lastModifiedBy: Option.none(),
     createdAt: new Date(),
@@ -98,6 +132,12 @@ namespace UserClinicPermissions {
     canEditRecords: false,
     canDeleteRecords: false,
     isClinicAdmin: false,
+    canEditOtherProviderEvent: false,
+    canDownloadPatientReports: false,
+    canPrescribeMedications: false,
+    canDispenseMedications: false,
+    canDeletePatientVisits: false,
+    canDeletePatientRecords: false,
     createdBy: Option.none(),
     lastModifiedBy: Option.none(),
   }
@@ -110,6 +150,12 @@ namespace UserClinicPermissions {
       canEditRecords: true,
       canDeleteRecords: true,
       isClinicAdmin: true,
+      canEditOtherProviderEvent: true,
+      canDownloadPatientReports: true,
+      canPrescribeMedications: true,
+      canDispenseMedications: true,
+      canDeletePatientVisits: true,
+      canDeletePatientRecords: true,
       createdBy: Option.none(),
       lastModifiedBy: Option.none(),
     }
@@ -124,6 +170,12 @@ namespace UserClinicPermissions {
     canEditRecords: true,
     canDeleteRecords: false,
     isClinicAdmin: false,
+    canEditOtherProviderEvent: false,
+    canDownloadPatientReports: false,
+    canPrescribeMedications: false,
+    canDispenseMedications: false,
+    canDeletePatientVisits: false,
+    canDeletePatientRecords: false,
     createdBy: Option.none(),
     lastModifiedBy: Option.none(),
   }
@@ -138,6 +190,12 @@ namespace UserClinicPermissions {
     canEditRecords: false,
     canDeleteRecords: false,
     isClinicAdmin: false,
+    canEditOtherProviderEvent: false,
+    canDownloadPatientReports: false,
+    canPrescribeMedications: false,
+    canDispenseMedications: false,
+    canDeletePatientVisits: false,
+    canDeletePatientRecords: false,
     createdBy: Option.none(),
     lastModifiedBy: Option.none(),
   }
@@ -153,7 +211,13 @@ namespace UserClinicPermissions {
       permissions.canViewHistory ||
       permissions.canEditRecords ||
       permissions.canDeleteRecords ||
-      permissions.isClinicAdmin
+      permissions.isClinicAdmin ||
+      permissions.canEditOtherProviderEvent ||
+      permissions.canDownloadPatientReports ||
+      permissions.canPrescribeMedications ||
+      permissions.canDispenseMedications ||
+      permissions.canDeletePatientVisits ||
+      permissions.canDeletePatientRecords
     )
   }
 
@@ -191,7 +255,184 @@ namespace UserClinicPermissions {
     if (permissions.canDeleteRecords) {
       list.push("Delete Records")
     }
+    if (permissions.canEditOtherProviderEvent) {
+      list.push("Edit Other Provider Events")
+    }
+    if (permissions.canDownloadPatientReports) {
+      list.push("Download Patient Reports")
+    }
+    if (permissions.canPrescribeMedications) {
+      list.push("Prescribe Medications")
+    }
+    if (permissions.canDispenseMedications) {
+      list.push("Dispense Medications")
+    }
+    if (permissions.canDeletePatientVisits) {
+      list.push("Delete Patient Visits")
+    }
+    if (permissions.canDeletePatientRecords) {
+      list.push("Delete Patient Records")
+    }
     return list
+  }
+
+  // -------------------------------------------------------------------------
+  // Check — Pure permission checking (no DB calls, no side effects)
+  // -------------------------------------------------------------------------
+
+  export namespace Check {
+    /** Minimal user context needed for permission checking (extracted from providerStore) */
+    export type PermissionContext = {
+      readonly userId: string
+      readonly role: string | null
+      readonly clinicId: string | null
+      readonly isPermissionsDisabled: boolean
+    }
+
+    /** Permission requirement with single/all/any semantics */
+    export type PermissionCheck =
+      | { kind: "single"; permission: UserPermissionsT }
+      | { kind: "all"; permissions: ReadonlyArray<UserPermissionsT> }
+      | { kind: "any"; permissions: ReadonlyArray<UserPermissionsT> }
+
+    type PermissionDeniedError = Extract<DataError, { _tag: "PermissionDenied" }>
+
+    /** Require a single permission */
+    export const requirePermission = (p: UserPermissionsT): PermissionCheck => ({
+      kind: "single",
+      permission: p,
+    })
+
+    /** Require all listed permissions */
+    export const requireAll = (ps: ReadonlyArray<UserPermissionsT>): PermissionCheck => ({
+      kind: "all",
+      permissions: ps,
+    })
+
+    /** Require at least one of the listed permissions */
+    export const requireAny = (ps: ReadonlyArray<UserPermissionsT>): PermissionCheck => ({
+      kind: "any",
+      permissions: ps,
+    })
+
+    function denied(permission: string): Result<never, PermissionDeniedError> {
+      return err({
+        _tag: "PermissionDenied",
+        permission,
+        message: `You do not have the required permission: ${permission}`,
+      })
+    }
+
+    function describeCheck(check: PermissionCheck): string {
+      switch (check.kind) {
+        case "single":
+          return check.permission
+        case "all":
+          return check.permissions.join(" AND ")
+        case "any":
+          return check.permissions.join(" OR ")
+      }
+    }
+
+    /**
+     * Pure permission check. No DB calls, no side effects.
+     *
+     * Decision cascade:
+     * 1. If global permissions are disabled -> allow
+     * 2. If user role is "super_admin" -> allow
+     * 3. If permissions object is null -> deny
+     * 4. Check the specific permission(s) via isPermissionPresent
+     */
+    export const checkPermission = (
+      ctx: PermissionContext,
+      check: PermissionCheck,
+      permissions: UserClinicPermissions.T | null,
+    ): Result<true, PermissionDeniedError> => {
+      console.log("✅ : ", ctx.isPermissionsDisabled, ctx.role)
+      if (ctx.isPermissionsDisabled) return ok(true)
+      if (ctx.role === "super_admin") return ok(true)
+
+      if (permissions === null) {
+        return err({
+          _tag: "PermissionDenied",
+          permission: describeCheck(check),
+          message: "No permissions found for user at this clinic.",
+        })
+      }
+
+      switch (check.kind) {
+        case "single":
+          return isPermissionPresent(permissions, check.permission)
+            ? ok(true)
+            : denied(check.permission)
+
+        case "all":
+          for (const p of check.permissions) {
+            if (!isPermissionPresent(permissions, p)) {
+              return denied(p)
+            }
+          }
+          return ok(true)
+
+        case "any": {
+          const hasAny = check.permissions.some((p) => isPermissionPresent(permissions, p))
+          return hasAny ? ok(true) : denied(check.permissions.join(", "))
+        }
+      }
+    }
+
+    /**
+     * Check if a user can edit a specific event.
+     * Requires canEditRecords, and additionally canEditOtherProviderEvent
+     * if the event was created by a different user.
+     */
+    export const checkEditEventPermission = (
+      ctx: PermissionContext,
+      permissions: UserClinicPermissions.T | null,
+      eventCreatedByUserId: string,
+    ): Result<true, PermissionDeniedError> => {
+      const baseCheck = checkPermission(ctx, requirePermission("canEditRecords"), permissions)
+      if (!baseCheck.ok) return baseCheck
+
+      if (eventCreatedByUserId !== ctx.userId) {
+        return checkPermission(ctx, requirePermission("canEditOtherProviderEvent"), permissions)
+      }
+
+      return ok(true)
+    }
+
+    /**
+     * Canonical mapping of operations to their required permissions.
+     * Used by mutation hooks and screens to determine which permission an action needs.
+     */
+    export const OPERATION_PERMISSIONS = {
+      "patient:register": requirePermission("canRegisterPatients"),
+      "patient:edit": requirePermission("canEditRecords"),
+      "patient:delete": requirePermission("canDeletePatientRecords"),
+      "patient:downloadReport": requirePermission("canDownloadPatientReports"),
+
+      "visit:create": requirePermission("canEditRecords"),
+      "visit:delete": requirePermission("canDeletePatientVisits"),
+
+      "event:create": requirePermission("canEditRecords"),
+      "event:edit": requirePermission("canEditRecords"),
+      "event:delete": requirePermission("canDeleteRecords"),
+
+      "prescription:create": requirePermission("canPrescribeMedications"),
+      "prescription:updateStatus": requirePermission("canPrescribeMedications"),
+      "prescription:dispense": requirePermission("canDispenseMedications"),
+
+      "vitals:create": requirePermission("canEditRecords"),
+
+      "diagnosis:create": requirePermission("canEditRecords"),
+      "diagnosis:edit": requirePermission("canEditRecords"),
+
+      "appointment:create": requirePermission("canEditRecords"),
+      "appointment:update": requirePermission("canEditRecords"),
+      "appointment:markComplete": requirePermission("canEditRecords"),
+    } as const
+
+    export type OperationName = keyof typeof OPERATION_PERMISSIONS
   }
 
   export namespace DB {
@@ -350,8 +591,8 @@ namespace UserClinicPermissions {
         .subscribe((dbPermissions) => {
           const permissions =
             dbPermissions.length > 0 ? Option.some(fromDB(dbPermissions[0])) : Option.none()
-          callback(permissions, isLoading)
           isLoading = false
+          callback(permissions, isLoading)
         })
 
       return {
@@ -373,6 +614,12 @@ namespace UserClinicPermissions {
       canEditRecords: dbPermissions.canEditRecords,
       canDeleteRecords: dbPermissions.canDeleteRecords,
       isClinicAdmin: dbPermissions.isClinicAdmin,
+      canEditOtherProviderEvent: dbPermissions.canEditOtherProviderEvent,
+      canDownloadPatientReports: dbPermissions.canDownloadPatientReports,
+      canPrescribeMedications: dbPermissions.canPrescribeMedications,
+      canDispenseMedications: dbPermissions.canDispenseMedications,
+      canDeletePatientVisits: dbPermissions.canDeletePatientVisits,
+      canDeletePatientRecords: dbPermissions.canDeletePatientRecords,
       createdBy: Option.fromNullable(dbPermissions.createdBy),
       lastModifiedBy: Option.fromNullable(dbPermissions.lastModifiedBy),
       createdAt: dbPermissions.createdAt,

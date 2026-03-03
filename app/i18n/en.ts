@@ -17,6 +17,10 @@ const en = {
     requiredCameraPermissions: "Camera permission is required to scan the QR code.",
     qrCodeRegistered: "APP registration completed",
     invalidQRCode: "Invalid QR Code",
+    hubConnected: "Connected to Hub",
+    hubPairing: "Pairing with Hub...",
+    hubPairingFailed: "Failed to pair with hub",
+    hubAuthFailed: "Hub authentication failed",
   },
   patientFile: {
     patientView: "Patient View",
@@ -33,6 +37,11 @@ const en = {
     patientNotFound: "Patient not found",
     vitalHistory: "Vital History",
     vitalHistoryDescription: "Patient's vital history",
+    actions: {
+      prescriptionDescription: "Patient prescription history and medications",
+      vitalsDescription: "Vital reading history",
+      diagnosisDescription: "Problem history including conditions and diagnoses.",
+    },
   },
   newVisitScreen: {
     medicalHistory: "Medical History",
@@ -93,10 +102,18 @@ const en = {
   },
   drawer: {
     patientsList: "Patients List",
+    patients: "Patients",
+    appointments: "Appointments",
+    pharmacy: "Pharmacy",
+    settings: "Settings",
+    privacyPolicy: "Privacy Policy",
     summaryStats: "Summary Stats",
     benchmarking: "Benchmarking",
     sync: "Sync",
     signOut: "Sign Out",
+    restartTitle: "Restart",
+    restartDescription:
+      "Restarting the app will re-open the app and could help resolve any issues you may be experiencing.",
   },
   eventList: {
     visitEvents: "Visit Events",
@@ -112,6 +129,8 @@ const en = {
   settingsScreen: {
     settings: "Settings",
     userAccount: "User Account",
+    nonprofitDisclaimer:
+      "Hikma Health is an independent 501(c)(3) nonprofit and is not affiliated with Hikma Pharmaceuticals PLC or any of its affiliates.",
     showNotifications: "Show Notifications",
     lockWhenIdle: "Lock Screen when idle",
     lockScreen: "Lock Screen",
@@ -126,6 +145,12 @@ const en = {
     privacyPolicy: "Privacy Policy",
     checkOTAForUpdates: "Check for Quick Updates",
     syncSettings: "Sync Settings",
+    onlineOnlyMode: "Online Only Mode",
+    onlineOnlyModeDescription:
+      "When enabled, no data is stored locally. All data is read and written directly to the server.",
+    switchingMode: "Switching…",
+    unsyncedChangesWarning: "Sync local changes before switching to online mode",
+    noInternetWarning: "Internet connection required to switch to online mode",
   },
   errorScreen: {
     title: "An error occured in the application.",
@@ -159,10 +184,23 @@ const en = {
     confirmSetDefaultDescription: "Are you sure you want to set this server as the default?",
     syncError: "Sync Error",
   },
+  diagnosisHistory: {
+    title: "Diagnoses",
+    noRecordedDiagnoses: "No recorded diagnoses for this patient.",
+    newEntry: "New Diagnosis",
+  },
+  diagnosisSearch: {
+    title: "Search Diagnosis",
+    searchPlaceholder: "Search ICD-11 codes...",
+  },
+  diagnosisEditor: {
+    title: "Edit Diagnosis",
+  },
   vitalHistory: {
     title: "Vital History",
     description: "View and manage your vital history",
     newEntry: "New Entry",
+    noRecordedVitals: "No recorded vitals for this patient.",
   },
   vitalForm: {
     title: "Vital Form",
@@ -276,6 +314,7 @@ const en = {
     complaint: "Complaint",
     treatment: "Treatment",
     diagnosis: "Diagnosis",
+    diagnoses: "Diagnoses",
     medicineDispensed: "Medicine Dispensed",
     prescriptions: "Prescriptions",
     allergies: "Allergies",

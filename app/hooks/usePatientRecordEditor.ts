@@ -266,7 +266,7 @@ export function usePatientRecordEditor(
           setPatientRecord(record)
         })
         .catch((error) => {
-          console.warn("Error fetching a patient with the id: ", patientId)
+          console.warn("Error fetching a patient with the id: ", patientId, ". [Error]: ", error)
           setPatientRecord(record)
         })
         .finally(() => {
@@ -286,7 +286,7 @@ export function usePatientRecordEditor(
       .observe()
       .subscribe((res) => {
         if (res.length === 0) {
-          console.error("There are no patient registration forms. This could be an error")
+          console.info("There are no patient registration forms. This could be an error")
           console.warn("Overriding absent form with default form")
           return setRegistrationForm(initialFormState as unknown as RegistrationFormModel)
         }

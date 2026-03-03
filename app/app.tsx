@@ -24,7 +24,6 @@ import { useEffect, useState } from "react"
 import { useFonts } from "expo-font"
 import * as Linking from "expo-linking"
 import * as SecureStorage from "expo-secure-store"
-import { useNetInfo } from "@react-native-community/netinfo"
 import { useSelector } from "@xstate/react"
 import { Option } from "effect"
 import { KeyboardProvider } from "react-native-keyboard-controller"
@@ -32,12 +31,15 @@ import { RootSiblingParent } from "react-native-root-siblings"
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context"
 
 import { initI18n } from "./i18n"
-import User from "./models/User"
 import UserClinicPermissions from "./models/UserClinicPermissions"
 import { AppNavigator } from "./navigators/AppNavigator"
 import { useNavigationPersistence } from "./navigators/navigationUtilities"
+import { hydrateAppState } from "./store/appState"
 import { languageStore } from "./store/language"
 import { providerStore } from "./store/provider"
+import { QueryProvider } from "./providers/QueryProvider"
+import { DataAccessProvider } from "./providers/DataAccessProvider"
+import { useOperationModeInit } from "./hooks/useOperationModeInit"
 import { ThemeProvider, useAppTheme } from "./theme/context"
 import { customFontsToLoad } from "./theme/typography"
 import { loadDateFnsLocale } from "./utils/formatDate"
@@ -77,13 +79,18 @@ export function App() {
     onNavigationStateChange,
     isRestored: isNavigationStateRestored,
   } = useNavigationPersistence(storage, NAVIGATION_PERSISTENCE_KEY)
-  const netInfo = useNetInfo()
 
   const language = useSelector(languageStore, (state) => state.context.language)
 
   const [areFontsLoaded, fontLoadError] = useFonts(customFontsToLoad)
   const [isI18nInitialized, setIsI18nInitialized] = useState(false)
   const [isProviderStoreInitialized, setIsProviderStoreInitialized] = useState(false)
+
+  useOperationModeInit()
+
+  useEffect(() => {
+    hydrateAppState()
+  }, [])
 
   useEffect(() => {
     initI18n(Option.some(language || "en-US"))
@@ -92,51 +99,42 @@ export function App() {
   }, [])
 
   useEffect(() => {
+    // Restore the provider store from SecureStore on cold start.
+    // Cloud re-authentication is handled later by AppNavigator (gated by peer type),
+    // so this effect only needs to hydrate the store from cached data.
     const loadProviderStore = async () => {
       try {
-        // Try to load from both storage methods for backward compatibility
         const storedProvider = await SecureStorage.getItemAsync("providerStore")
         const email = await SecureStorage.getItemAsync("provider_email")
         const password = await SecureStorage.getItemAsync("provider_password")
 
-        // Fallback to old storage method if needed
+        console.warn("First one 🚩🚩🚩: ", { storedProvider, email, password })
+
+        // Fallback to old storage method for backward compatibility
         let credentials = { email: "", password: "" }
         const storedCredentials = await SecureStorage.getItemAsync("providerCredentials")
         if (storedCredentials) {
           credentials = JSON.parse(storedCredentials)
         }
 
-        // Use the credentials from either source
         const finalEmail = email || credentials.email
         const finalPassword = password || credentials.password
 
+        console.warn("🚩🚩🚩: ", { storedProvider, finalEmail, finalPassword })
+
         if (storedProvider && finalEmail && finalPassword) {
           const payload = JSON.parse(storedProvider)
-
-          // Check for network connectivity
-          if (netInfo.isConnected && netInfo.isInternetReachable && finalEmail && finalPassword) {
-            // Attempt to re-authenticate with the backend using User module
-            try {
-              await User.signIn(finalEmail, finalPassword)
-            } catch (error) {
-              console.error("Failed to re-authenticate:", error)
-              providerStore.send({ type: "reset" })
-            }
-          } else {
-            // No network or missing credentials, use stored data
-            providerStore.send({
-              type: "set_provider",
-              id: payload.id,
-              name: payload.name,
-              email: payload.email,
-              role: Option.fromNullable(payload.role),
-              instance_url: Option.fromNullable(payload.instance_url),
-              clinic_id: Option.fromNullable(payload.clinic_id),
-              clinic_name: Option.fromNullable(payload.clinic_name),
-              // TODO: Implement permissions retrieval logic
-              permissions: Option.none<UserClinicPermissions.T>(),
-            })
-          }
+          providerStore.send({
+            type: "set_provider",
+            id: payload.id,
+            name: payload.name,
+            email: payload.email,
+            role: Option.fromNullable(payload.role),
+            instance_url: Option.fromNullable(payload.instance_url),
+            clinic_id: Option.fromNullable(payload.clinic_id),
+            clinic_name: Option.fromNullable(payload.clinic_name),
+            permissions: Option.none<UserClinicPermissions.T>(),
+          })
         } else {
           providerStore.send({ type: "reset" })
         }
@@ -171,18 +169,22 @@ export function App() {
 
   // otherwise, we're ready to render the app
   return (
-    <RootSiblingParent>
-      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-        <KeyboardProvider>
-          <ThemeProvider>
-            <AppNavigator
-              linking={linking}
-              initialState={initialNavigationState}
-              onStateChange={onNavigationStateChange}
-            />
-          </ThemeProvider>
-        </KeyboardProvider>
-      </SafeAreaProvider>
-    </RootSiblingParent>
+    <QueryProvider>
+      <DataAccessProvider>
+        <RootSiblingParent>
+          <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+            <KeyboardProvider>
+              <ThemeProvider>
+                <AppNavigator
+                  linking={linking}
+                  initialState={initialNavigationState}
+                  onStateChange={onNavigationStateChange}
+                />
+              </ThemeProvider>
+            </KeyboardProvider>
+          </SafeAreaProvider>
+        </RootSiblingParent>
+      </DataAccessProvider>
+    </QueryProvider>
   )
 }

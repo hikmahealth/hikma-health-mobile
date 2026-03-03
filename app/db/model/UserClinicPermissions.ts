@@ -39,6 +39,14 @@ export default class UserClinicPermission extends Model {
   @field("can_delete_records") canDeleteRecords!: boolean
   @field("is_clinic_admin") isClinicAdmin!: boolean
 
+  // V9 Permission Flags
+  @field("can_edit_other_provider_event") canEditOtherProviderEvent!: boolean
+  @field("can_download_patient_reports") canDownloadPatientReports!: boolean
+  @field("can_prescribe_medications") canPrescribeMedications!: boolean
+  @field("can_dispense_medications") canDispenseMedications!: boolean
+  @field("can_delete_patient_visits") canDeletePatientVisits!: boolean
+  @field("can_delete_patient_records") canDeletePatientRecords!: boolean
+
   // --- Relations ---
   // The user who has these permissions
   @relation("users", "user_id") user!: User

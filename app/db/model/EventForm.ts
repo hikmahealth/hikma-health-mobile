@@ -16,6 +16,10 @@ export default class EventFormModel extends Model {
   @field("is_deleted") isDeleted!: boolean
   @date("deleted_at") deletedAt?: Date
 
+  // V9
+  @json("clinic_ids", sanitizeClinicIds) clinicIds!: string[]
+  @json("translations", sanitizeTranslations) translations!: EventForm.FieldTranslation[]
+
   // --- Timestamps (Read-only) ---
   @readonly @date("created_at") createdAt!: Date
   @readonly @date("updated_at") updatedAt!: Date
@@ -25,6 +29,20 @@ export default class EventFormModel extends Model {
  * Sanitize EventForm form_fields
  */
 function sanitizeFormFields(data: any) {
+  return Array.isArray(data) ? data : []
+}
+
+/**
+ * Sanitize clinic_ids JSON field - returns an empty array if invalid
+ */
+function sanitizeClinicIds(data: any): string[] {
+  return Array.isArray(data) ? data : []
+}
+
+/**
+ * Sanitize translations JSON field - returns an empty array if invalid
+ */
+function sanitizeTranslations(data: any): EventForm.FieldTranslation[] {
   return Array.isArray(data) ? data : []
 }
 

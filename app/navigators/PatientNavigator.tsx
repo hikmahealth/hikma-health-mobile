@@ -22,6 +22,9 @@ import { PatientViewScreen } from "@/screens/PatientViewScreen"
 import { PatientVisitsListScreen } from "@/screens/PatientVisitsListScreen"
 import { PrescriptionEditorFormScreen } from "@/screens/PrescriptionEditorFormScreen"
 import { VisitEventsListScreen } from "@/screens/VisitEventsListScreen"
+import { DiagnosisHistoryScreen } from "@/screens/DiagnosisHistoryScreen"
+import { DiagnosisSearchScreen } from "@/screens/DiagnosisSearchScreen"
+import { PatientDiagnosisEditorScreen } from "@/screens/PatientDiagnosisEditorScreen"
 import { VitalFormScreen } from "@/screens/VitalFormScreen"
 import { VitalHistoryScreen } from "@/screens/VitalHistoryScreen"
 import { languageStore } from "@/store/language"
@@ -67,6 +70,9 @@ export type PatientNavigatorParamList = {
   PatientRecordEditor: { editPatientId?: string }
   VitalHistory: { patientId: string }
   VitalForm: { patientId: string }
+  DiagnosisHistory: { patientId: string }
+  DiagnosisSearch: { patientId: string }
+  PatientDiagnosisEditor: { problemId: string }
 
   // Prescriptions
   PrescriptionEditorForm: PharmacyNavigatorParamList["PrescriptionEditorForm"]
@@ -165,6 +171,22 @@ export const PatientNavigator = () => {
         name="VitalForm"
         options={{ title: translate("vitalForm:title") }}
         component={VitalFormScreen}
+      />
+
+      <Stack.Screen
+        name="DiagnosisHistory"
+        options={{ title: translate("diagnosisHistory:title") }}
+        component={DiagnosisHistoryScreen}
+      />
+      <Stack.Screen
+        name="DiagnosisSearch"
+        options={{ title: translate("diagnosisSearch:title") }}
+        component={DiagnosisSearchScreen}
+      />
+      <Stack.Screen
+        name="PatientDiagnosisEditor"
+        options={{ title: translate("diagnosisEditor:title") }}
+        component={PatientDiagnosisEditorScreen}
       />
 
       <Stack.Screen

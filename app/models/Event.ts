@@ -35,6 +35,7 @@ namespace Event {
     metadata: Record<string, any>
     isDeleted: boolean
     deletedAt: Option.Option<Date>
+    recordedByUserId: string
     createdAt: Date
     updatedAt: Date
   }
@@ -52,6 +53,7 @@ namespace Event {
     metadata: {},
     isDeleted: false,
     deletedAt: Option.none(),
+    recordedByUserId: "",
     createdAt: new Date(),
     updatedAt: new Date(),
   }
@@ -143,6 +145,9 @@ namespace Event {
               newEvent.formId = event.formId
               newEvent.formData = event.formData
               newEvent.metadata = event.metadata
+              if (!event.recordedByUserId || event.recordedByUserId === "") {
+                newEvent.recordedByUserId = providerId
+              }
             })
           } else {
             throw new Error("Event not found")
@@ -200,6 +205,7 @@ namespace Event {
             providerName,
           }
           newEvent.isDeleted = event.isDeleted
+          newEvent.recordedByUserId = providerId
         })
 
         // batch create both of them
