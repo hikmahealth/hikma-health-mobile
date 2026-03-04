@@ -32,7 +32,7 @@ const arbSetPeer: fc.Arbitrary<SetPeer> = fc.record({
 
 const arbAction: fc.Arbitrary<Action> = fc.oneof(arbSetMode, arbSetPeer)
 
-const validKinds: readonly ProviderKind[] = ["offline", "rpc_cloud", "rpc_hub"] as const
+const validKinds: readonly ProviderKind[] = ["offline", "rpc_cloud", "rpc_hub", "unknown"] as const
 
 // ── Invariant checker ────────────────────────────────────────────────
 
@@ -66,7 +66,12 @@ const checkInvariants = (
     expect(result).toBe("offline")
   }
 
-  // INV-6: mobile_app peer never yields an RPC kind
+  // INV-6: mobile_app peer yields "unknown" when online (unrecognized peer type)
+  if (peerType === "mobile_app" && mode === "online") {
+    expect(result).toBe("unknown")
+  }
+
+  // INV-7: unrecognized peer types never yield an RPC kind
   if (peerType === "mobile_app") {
     expect(result === "rpc_hub" || result === "rpc_cloud").toBe(false)
   }

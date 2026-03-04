@@ -70,6 +70,8 @@ export const countRecordsInChanges = (changes: SyncDatabaseChangeSet): number =>
 /**
  * Converts a date value to a Unix timestamp (milliseconds).
  * Returns the fallback when the value is falsy, non-finite, or unparseable.
+ *
+ * Every fallback path reports to Sentry so silent data corruption is surfaced.
  */
 export const convertToTimestamp = (
   value: unknown,
@@ -77,21 +79,52 @@ export const convertToTimestamp = (
   fieldName: string,
   recordId?: string,
 ): number => {
-  if (!value && value !== 0) return fallback.getTime()
-  if (typeof value === "boolean" || (typeof value === "object" && !(value instanceof Date)))
+  const id = recordId ?? "unknown"
+
+  if (!value && value !== 0) {
+    Sentry.captureMessage(`Date fallback: missing ${fieldName} for record ${id}`, {
+      level: "warning",
+      tags: { component: "convertToTimestamp", fieldName },
+      extra: { recordId: id, value },
+    })
     return fallback.getTime()
-  if (typeof value === "number" && !isFinite(value)) return fallback.getTime()
+  }
+
+  if (typeof value === "boolean" || (typeof value === "object" && !(value instanceof Date))) {
+    Sentry.captureMessage(`Date fallback: invalid type for ${fieldName} on record ${id}`, {
+      level: "warning",
+      tags: { component: "convertToTimestamp", fieldName },
+      extra: { recordId: id, value, valueType: typeof value },
+    })
+    return fallback.getTime()
+  }
+
+  if (typeof value === "number" && !isFinite(value)) {
+    Sentry.captureMessage(`Date fallback: non-finite ${fieldName} for record ${id}`, {
+      level: "warning",
+      tags: { component: "convertToTimestamp", fieldName },
+      extra: { recordId: id, value },
+    })
+    return fallback.getTime()
+  }
 
   try {
     const ts = new Date(value as string | number | Date).getTime()
     if (isNaN(ts)) {
-      console.warn(
-        `Invalid ${fieldName} for record ${recordId ?? "unknown"}: ${value}. Using fallback.`,
-      )
+      Sentry.captureMessage(`Date fallback: unparseable ${fieldName} for record ${id}: ${value}`, {
+        level: "warning",
+        tags: { component: "convertToTimestamp", fieldName },
+        extra: { recordId: id, value },
+      })
       return fallback.getTime()
     }
     return ts
-  } catch {
+  } catch (error) {
+    Sentry.captureMessage(`Date fallback: exception parsing ${fieldName} for record ${id}`, {
+      level: "warning",
+      tags: { component: "convertToTimestamp", fieldName },
+      extra: { recordId: id, value, error: String(error) },
+    })
     return fallback.getTime()
   }
 }

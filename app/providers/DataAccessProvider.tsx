@@ -78,8 +78,7 @@ const buildProvider = (kind: ProviderKind, credentials: Credentials | null): Dat
       })
 
     case "rpc_cloud": {
-      if (!credentials) return offlineProvider
-      const { authHeader, baseUrl } = credentials
+      const { authHeader, baseUrl } = credentials ?? { authHeader: "", baseUrl: "" }
       console.log(
         "[DataAccess] Creating cloud RPC provider — baseUrl:",
         baseUrl || "(empty)",
@@ -89,6 +88,12 @@ const buildProvider = (kind: ProviderKind, credentials: Credentials | null): Dat
       const getAuth = () => authHeader
       return createRpcProvider(async () => createCloudTransport(baseUrl, getAuth))
     }
+
+    case "unknown":
+      console.warn("[DataAccess] Unknown peer type — operations will fail")
+      return createRpcProvider(async () => {
+        throw new Error("Unknown peer type. Cannot establish connection.")
+      })
 
     case "offline":
     default:

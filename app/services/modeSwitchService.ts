@@ -7,6 +7,23 @@
  *   - sync_hub: timestamp-based getLocalChangesSince (peer.lastSyncedAt)
  *
  * Persists the user preference to MMKV.
+ *
+ * ## Asymmetric error recovery (by design)
+ *
+ * offline → online:
+ *   GUARDED. Blocked if there are unsynced local changes, because online
+ *   mode bypasses WatermelonDB entirely — all reads/writes go through RPC.
+ *   Switching with pending local changes would leave them orphaned: the
+ *   user would see fresh server data while their unsynced edits sit
+ *   invisibly in the local DB, never pushed.
+ *
+ * online → offline:
+ *   ALWAYS SUCCEEDS. Online mode never writes to WatermelonDB, so there is
+ *   no local state to lose. The worst case is the user loses real-time
+ *   query access and falls back to whatever was last synced locally.
+ *
+ * This asymmetry is intentional — mode switches must be deliberate user
+ * actions, and the system only blocks when data loss is possible.
  */
 
 import { hasUnsyncedChanges } from "@nozbe/watermelondb/sync"
@@ -88,7 +105,11 @@ export async function switchToOnlineMode(): Promise<SwitchResult> {
 }
 
 /**
- * Switch to offline mode. Always succeeds.
+ * Switch to offline mode.
+ *
+ * Always succeeds because online mode never persists data to WatermelonDB,
+ * so there are no local changes at risk. See module-level docs for the
+ * rationale behind this asymmetry with switchToOnlineMode().
  */
 export async function switchToOfflineMode(): Promise<SwitchResult> {
   const { mode } = operationModeStore.getSnapshot().context

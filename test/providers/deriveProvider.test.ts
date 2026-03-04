@@ -22,7 +22,7 @@ const arbActivePeer: fc.Arbitrary<ActivePeerInfo> = fc.oneof(
   fc.constant(null),
   fc.record({ peerType: arbPeerType }),
 )
-const validKinds: readonly ProviderKind[] = ["offline", "rpc_cloud", "rpc_hub"] as const
+const validKinds: readonly ProviderKind[] = ["offline", "rpc_cloud", "rpc_hub", "unknown"] as const
 
 // ── Exhaustive unit tests (all 8 combinations) ──────────────────────
 
@@ -35,7 +35,7 @@ describe("deriveProviderKind — exhaustive", () => {
     ["online", null, "offline"],
     ["online", { peerType: "cloud_server" as PeerType }, "rpc_cloud"],
     ["online", { peerType: "sync_hub" as PeerType }, "rpc_hub"],
-    ["online", { peerType: "mobile_app" as PeerType }, "offline"],
+    ["online", { peerType: "mobile_app" as PeerType }, "unknown"],
   ] as const)(
     "(%s, %j) → %s",
     (mode, peer, expected) => {

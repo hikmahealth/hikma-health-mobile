@@ -13,8 +13,9 @@ import type { OperationMode } from "@/store/operationMode"
  * - "offline"   → createOfflineProvider(database)
  * - "rpc_cloud" → createRpcProvider(cloudTransport)
  * - "rpc_hub"   → createRpcProvider(hubTransport)
+ * - "unknown"   → unrecognized peer type; operations fail with clear errors
  */
-export type ProviderKind = "offline" | "rpc_cloud" | "rpc_hub"
+export type ProviderKind = "offline" | "rpc_cloud" | "rpc_hub" | "unknown"
 
 /**
  * Minimal peer shape needed for provider derivation.
@@ -30,8 +31,8 @@ export type ActivePeerInfo = { readonly peerType: PeerType } | null
  *   offline → always "offline"
  *   online + cloud_server peer → "rpc_cloud"
  *   online + sync_hub peer    → "rpc_hub"
- *   online + no peer          → "offline" (fallback)
- *   online + mobile_app peer  → "offline" (invalid, defensive fallback)
+ *   online + no peer          → "offline" (transient: peer resolves async)
+ *   online + unrecognized peer → "unknown" (operations fail with clear errors)
  */
 export const deriveProviderKind = (
   mode: OperationMode,
@@ -47,6 +48,6 @@ export const deriveProviderKind = (
     case "sync_hub":
       return "rpc_hub"
     default:
-      return "offline"
+      return "unknown"
   }
 }
