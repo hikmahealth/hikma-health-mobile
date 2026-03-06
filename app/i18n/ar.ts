@@ -19,6 +19,10 @@ const ar: Translations = {
     requiredCameraPermissions: "مطلوب إذن الكاميرا لمسح رمز الاستجابة السريعة.",
     qrCodeRegistered: "اكتمل تسجيل التطبيق",
     invalidQRCode: "رمز استجابة سريعة غير صالح",
+    hubConnected: "متصل بالمحور",
+    hubPairing: "جارٍ الاقتران بالمحور...",
+    hubPairingFailed: "فشل الاقتران بالمحور",
+    hubAuthFailed: "فشل مصادقة المحور",
   },
   patientFile: {
     patientView: "صفحة المريض",
@@ -35,6 +39,11 @@ const ar: Translations = {
     patientNotFound: "لم يتم العثور على السجل",
     vitalHistory: "تاريخ المريض",
     vitalHistoryDescription: "تاريخ المريض",
+    actions: {
+      prescriptionDescription: "تاريخ الوصفات الطبية والأدوية للمريض",
+      vitalsDescription: "تاريخ القراءات الحيوية",
+      diagnosisDescription: "تاريخ المشاكل الصحية بما في ذلك الحالات والتشخيصات.",
+    },
   },
   newVisitScreen: {
     medicalHistory: "التاريخ الطبي",
@@ -95,10 +104,18 @@ const ar: Translations = {
   },
   drawer: {
     patientsList: "قائمه المرضى",
+    patients: "المرضى",
+    appointments: "المواعيد",
+    pharmacy: "الصيدلية",
+    settings: "الإعدادات",
+    privacyPolicy: "سياسة الخصوصية",
     summaryStats: "احصائيات ملخصه",
     benchmarking: "المرجعيه",
     sync: "مزامنه",
     signOut: "تسجيل الخروج",
+    restartTitle: "إعادة التشغيل",
+    restartDescription:
+      "ستؤدي إعادة تشغيل التطبيق إلى إعادة فتحه ويمكن أن تساعد في حل أي مشاكل قد تواجهها.",
   },
   eventList: {
     visitEvents: "احداث الزياره ",
@@ -114,6 +131,8 @@ const ar: Translations = {
   settingsScreen: {
     settings: "الإعدادات",
     userAccount: "حساب المستخدم",
+    nonprofitDisclaimer:
+      "حكمة هيلث هي منظمة غير ربحية مستقلة بموجب المادة 501(c)(3) وليست تابعة لشركة حكمة للأدوية أو أي من الشركات التابعة لها.",
     showNotifications: "إظهار الإشعارات",
     lockWhenIdle: "قفل الشاشة عند الخمول",
     lockScreen: "قفل الشاشة",
@@ -128,6 +147,12 @@ const ar: Translations = {
     privacyPolicy: "سياسة الخصوصية",
     checkOTAForUpdates: "التحقق من التحديثات السريعة",
     syncSettings: "مزامنة الإعدادات",
+    onlineOnlyMode: "وضع الاتصال فقط",
+    onlineOnlyModeDescription:
+      "عند التفعيل، لا يتم تخزين أي بيانات محليًا. تتم قراءة جميع البيانات وكتابتها مباشرة إلى الخادم.",
+    switchingMode: "جاري التبديل…",
+    unsyncedChangesWarning: "قم بمزامنة التغييرات المحلية قبل التبديل إلى الوضع المتصل",
+    noInternetWarning: "يلزم الاتصال بالإنترنت للتبديل إلى الوضع المتصل",
   },
   errorScreen: {
     title: "حدث خطأ في التطبيق.",
@@ -155,10 +180,23 @@ const ar: Translations = {
     patientMedicalRecord: "السجل الطبي للمريض",
     PatientInformation: "معلومات المريض",
   },
+  diagnosisHistory: {
+    title: "التشخيصات",
+    noRecordedDiagnoses: "لا توجد تشخيصات مسجلة لهذا المريض.",
+    newEntry: "تشخيص جديد",
+  },
+  diagnosisSearch: {
+    title: "بحث التشخيص",
+    searchPlaceholder: "بحث رموز ICD-11...",
+  },
+  diagnosisEditor: {
+    title: "تعديل التشخيص",
+  },
   vitalHistory: {
     title: "التاريخ الحيوي",
     description: "عرض وإدارة التاريخ الحيوي الخاص بك",
     newEntry: "إدخال جديد",
+    noRecordedVitals: "لا توجد قراءات حيوية مسجلة لهذا المريض.",
   },
   vitalForm: {
     title: "نموذج المعلومات الحيوية",
@@ -272,6 +310,7 @@ const ar: Translations = {
     complaint: "شكوى",
     treatment: "علاج او معاملة",
     diagnosis: "التشخيص",
+    diagnoses: "التشخيصات",
     medicineDispensed: "الأدوية الموصوفه ",
     prescriptions: "وصفات طبيه ",
     allergies: "الحساسية",

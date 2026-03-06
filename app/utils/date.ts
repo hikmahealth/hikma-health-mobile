@@ -27,12 +27,21 @@ export function localeDate(
   dateFormat = "MMM dd, yyyy",
   options: Options = {},
 ): string {
-  if (!date) return ""
+  if (date === null || date === undefined) return ""
 
-  const dateObj = date instanceof Date ? date : new Date(date)
+  let dateObj: Date
+  if (date instanceof Date) {
+    dateObj = date
+  } else if (typeof date === "number") {
+    dateObj = new Date(date)
+  } else if (typeof date === "string" && /^-?\d+$/.test(date.trim())) {
+    dateObj = new Date(Number(date))
+  } else {
+    dateObj = new Date(date)
+  }
 
   if (isNaN(dateObj.getTime())) {
-    console.warn(`Invalid date provided to localeDate: ${date}`)
+    console.warn(`Invalid date provided to localeDate: ${date}, ${dateObj}`)
     return ""
   }
 
@@ -115,4 +124,34 @@ export function parseYYYYMMDD<T>(dateStr: string | undefined, defaultReturn: T):
   if (!isNaN(dateObj.getTime())) return dateObj
 
   return defaultReturn
+}
+
+/**
+ * Given an argument of an unknown type (hopefully a valid date object or unix epoch time), safely attempt to convert into a valid Date object.
+ * If the operation is not possible, return either the default parameter passed as the second parameter, or return Invalid date
+ *
+ * @param input The potential date to be returned as a date object
+ * @param defaultDate Optional default date object - must also be a valid date
+ */
+export function toDateSafe(input: unknown, defaultDate?: Date): Date {
+  if (input instanceof Date) {
+    return isNaN(input.getTime()) ? (defaultDate ?? new Date(NaN)) : input
+  }
+
+  if (typeof input === "number") {
+    const date = new Date(input)
+    return isNaN(date.getTime()) ? (defaultDate ?? new Date(NaN)) : date
+  }
+
+  if (typeof input === "string") {
+    // First, attempt to parse as YYYY-MM-DD format (avoids timezone issues)
+    const parsed = parseYYYYMMDD(input, null)
+    if (parsed !== null) return parsed
+
+    // Fallback to standard Date parsing
+    const date = new Date(input)
+    return isNaN(date.getTime()) ? (defaultDate ?? new Date(NaN)) : date
+  }
+
+  return defaultDate ?? new Date(NaN)
 }

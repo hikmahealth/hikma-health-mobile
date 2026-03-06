@@ -50,6 +50,14 @@ const palette = {
   angry400: "#CB6E5B",
   angry500: "#C03403",
 
+  green100: "#dcfce7",
+  green200: "#bbf7d0",
+  green300: "#86efac",
+  green400: "#4ade80",
+  green500: "#22c55e",
+  green600: "#16a34a",
+  green700: "#15803d",
+
   success100: "#D1F2D1",
   success200: "#A7E9A7",
   success300: "#74E074",

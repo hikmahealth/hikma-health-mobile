@@ -31,6 +31,8 @@ export const providerStore = createStore({
     provider_changed: (payload: User.Provider) => {
       const toStore = {
         ...payload,
+        id: payload.id,
+        name: payload.name,
         role: Option.getOrNull(payload.role),
         instance_url: Option.getOrNull(payload.instance_url),
         clinic_id: Option.getOrNull(payload.clinic_id),
@@ -46,6 +48,7 @@ export const providerStore = createStore({
   },
   on: {
     reset: (context, _, enque) => {
+      console.warn("🔥 Calling Reset")
       const payload = {
         id: "",
         name: "",

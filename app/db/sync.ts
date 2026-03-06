@@ -1,3 +1,6 @@
+// @depreated File - DO NOT USE.
+// Transitioning into peerSync for aunified sync story
+//
 // @ts-check
 import * as EncryptedStorage from "expo-secure-store"
 import {
@@ -16,6 +19,7 @@ import { getHHApiUrl } from "@/utils/storage"
 
 import database from "."
 import { Platform } from "react-native"
+import { toDateSafe } from "@/utils/date"
 
 global.Buffer = require("buffer").Buffer
 
@@ -202,38 +206,30 @@ export async function shouldUseTurboSync(): Promise<{ useTurbo: boolean; reason:
 }
 
 /**
- * PHASE 4: Validates that backend response is safe for turbo sync.
+ * Validates that a raw JSON string is safe for turbo sync.
  * Turbo sync will FAIL if there are any deleted records in the response.
+ * This is the pure validation logic, separated for testability.
  *
  * @param rawJson - The raw JSON response from the server
  * @returns {valid: boolean, reason: string} - Whether response is valid for turbo
  */
-function validateTurboResponse(rawJson: string): { valid: boolean; reason: string } {
-  // Bypass the check of the JSON, since thats the whole point of turbo sync
-  return {
-    valid: true,
-    reason: "Turbo sync bypassed",
-  }
+export function validateTurboResponsePayload(rawJson: string): {
+  valid: boolean
+  reason: string
+} {
   try {
-    // Parse the JSON to check for deleted records
-    // NOTE: We are parsing all the JSON in memory?? Wont we run out of memory??
     const parsed = JSON.parse(rawJson)
 
-    // Check if response has the expected structure
     if (!parsed.changes || typeof parsed.changes !== "object") {
       return { valid: false, reason: "Response missing 'changes' object" }
     }
 
     const changes = parsed.changes
 
-    // Check each table for deleted records
     for (const tableName of Object.keys(changes)) {
       const tableChanges = changes[tableName]
 
       if (tableChanges && Array.isArray(tableChanges.deleted) && tableChanges.deleted.length > 0) {
-        console.error(
-          `[Turbo Validation] ❌ Table '${tableName}' has ${tableChanges.deleted.length} deleted records - turbo sync not allowed`,
-        )
         return {
           valid: false,
           reason: `Table '${tableName}' has deleted records (turbo sync requires empty deleted arrays)`,
@@ -241,12 +237,20 @@ function validateTurboResponse(rawJson: string): { valid: boolean; reason: strin
       }
     }
 
-    console.log("[Turbo Validation] ✅ Response valid for turbo sync - no deleted records found")
     return { valid: true, reason: "No deleted records in response" }
   } catch (error) {
-    console.error("[Turbo Validation] Error parsing response:", error)
     return { valid: false, reason: `Failed to parse response: ${error}` }
   }
+}
+
+function validateTurboResponse(rawJson: string): { valid: boolean; reason: string } {
+  // Bypass the check of the JSON, since thats the whole point of turbo sync
+  return {
+    valid: true,
+    reason: "Turbo sync bypassed",
+  }
+  // When re-enabling validation, use:
+  // return validateTurboResponsePayload(rawJson)
 }
 
 /**
@@ -767,17 +771,29 @@ export async function syncDB(
  * @param recordId - ID of the record (for logging)
  * @returns Unix timestamp in milliseconds
  */
-function convertToTimestamp(
+export function convertToTimestamp(
   value: unknown,
   fallback: Date,
   fieldName: string,
   recordId?: string,
 ): number {
   // Use fallback if value is falsy
-  const dateValue = value || fallback
+  if (!value && value !== 0) {
+    return fallback.getTime()
+  }
+
+  // Reject types that Date constructor accepts but are semantically wrong
+  if (typeof value === "boolean" || (typeof value === "object" && !(value instanceof Date))) {
+    return fallback.getTime()
+  }
+
+  // Reject non-finite numbers (NaN, Infinity, -Infinity)
+  if (typeof value === "number" && !isFinite(value)) {
+    return fallback.getTime()
+  }
 
   try {
-    const timestamp = new Date(dateValue).getTime()
+    const timestamp = new Date(value as string | number | Date).getTime()
 
     // Validate the timestamp is valid
     if (isNaN(timestamp)) {
@@ -794,18 +810,6 @@ function convertToTimestamp(
   }
 }
 
-/**
- * Converts a JSON-compatible value to a JSON string if it's not already a string
- * @param value - The value to stringify
- * @returns JSON string or the original value if already a string
- */
-function ensureJsonString(value: unknown): string | unknown {
-  if (value && typeof value !== "string") {
-    return JSON.stringify(value)
-  }
-  return value
-}
-
 // FIXME: Needs documentation & tests
 // TODO: need to notify users that any new json fields should be added here
 export function updateDates(changes: SyncDatabaseChangeSet) {
@@ -815,34 +819,68 @@ export function updateDates(changes: SyncDatabaseChangeSet) {
     for (const action of changeType) {
       if (changes[type][action]) {
         changes[type][action].forEach((record) => {
+          // deleted arrays contain string IDs, not record objects — skip them
+          if (typeof record === "string") return
+
           const recordId = record.id || "unknown"
 
-          record.created_at = new Date(record.created_at || defaultDate).getTime()
-          record.updated_at = new Date(record.updated_at || defaultDate).getTime()
+          // --- Timestamps ---
+          // Common timestamps present on most tables
+          record.created_at = convertToTimestamp(
+            record.created_at,
+            defaultDate,
+            "created_at",
+            recordId,
+          )
+          record.updated_at = convertToTimestamp(
+            record.updated_at,
+            defaultDate,
+            "updated_at",
+            recordId,
+          )
           if (record.deleted_at) {
-            record.deleted_at = new Date(record.deleted_at || defaultDate).getTime()
+            record.deleted_at = convertToTimestamp(
+              record.deleted_at,
+              defaultDate,
+              "deleted_at",
+              recordId,
+            )
           }
 
-          // Make sure all "timestamps" are number times
           if (record.timestamp) {
-            record.timestamp = new Date(record.timestamp || defaultDate).getTime()
+            record.timestamp = convertToTimestamp(
+              record.timestamp,
+              defaultDate,
+              "timestamp",
+              recordId,
+            )
           }
-          // handle prescription and appointment timestamps
+
+          // Prescription and appointment timestamps
           if (record.prescribed_at) {
-            record.prescribed_at = new Date(record.prescribed_at || defaultDate).getTime()
+            record.prescribed_at = convertToTimestamp(
+              record.prescribed_at,
+              defaultDate,
+              "prescribed_at",
+              recordId,
+            )
           }
           if (record.filled_at) {
-            record.filled_at = new Date(record.filled_at || defaultDate).getTime()
+            record.filled_at = convertToTimestamp(
+              record.filled_at,
+              defaultDate,
+              "filled_at",
+              recordId,
+            )
           }
-
           if (record.expiration_date) {
-            record.expiration_date = new Date(record.expiration_date || defaultDate).getTime()
+            record.expiration_date = convertToTimestamp(
+              record.expiration_date,
+              defaultDate,
+              "expiration_date",
+              recordId,
+            )
           }
-
-          // if (record.batch_expiry_date) {
-          //   record.batch_expiry_date = new Date(record.batch_expiry_date || defaultDate).getTime()
-          // }
-
           if (record.batch_expiry_date) {
             record.batch_expiry_date = convertToTimestamp(
               record.batch_expiry_date,
@@ -852,54 +890,69 @@ export function updateDates(changes: SyncDatabaseChangeSet) {
             )
           }
 
-          // cast all jsonb "departments" into strings for local
-          // if (record.departments && typeof record.departments !== "string") {
-          //   record.departments = JSON.stringify(record.departments)
-          // }
+          // Visit check-in timestamp
+          if (record.check_in_timestamp) {
+            record.check_in_timestamp = convertToTimestamp(
+              record.check_in_timestamp,
+              defaultDate,
+              "check_in_timestamp",
+              recordId,
+            )
+          }
+
+          record.image_timestamp = 0
+
+          // --- JSON fields ---
+          // All JSONB columns from the server must be stringified for WatermelonDB storage
           if (record.departments) {
             record.departments = safeStringify(record.departments, "[]")
           }
-
-          // set up metadata
-          // if (record.metadata && typeof record.metadata !== "string") {
-          //   record.metadata = JSON.stringify(record.metadata)
-          // }
-
           if (record.metadata) {
             record.metadata = safeStringify(record.metadata, "{}")
           }
+          if (record.form_fields) {
+            record.form_fields = safeStringify(record.form_fields, "[]")
+          }
+          if (record.translations) {
+            record.translations = safeStringify(record.translations, "[]")
+          }
+          if (record.clinic_ids) {
+            record.clinic_ids = safeStringify(record.clinic_ids, "[]")
+          }
+          if (record.form_data) {
+            record.form_data = safeStringify(record.form_data, "[]")
+          }
+          if (record.fields) {
+            record.fields = safeStringify(record.fields, "[]")
+          }
 
-          if (record.form_fields && typeof record.form_fields !== "string") {
-            // console.log("")
-            // console.log({ form: record.form_fields })
-            // console.log("")
-            record.form_fields = JSON.stringify(record.form_fields)
-          }
-          if (record.form_data && typeof record.form_data !== "string") {
-            record.form_data = JSON.stringify(record.form_data)
-          }
-          if (record.fields && typeof record.fields !== "string") {
-            record.fields = JSON.stringify(record.fields)
-          }
-
-          // if there is a date_of_birth field, format it to "YYYY-MM-DD"
+          // --- Special fields ---
+          // date_of_birth is stored as "YYYY-MM-DD" string, not a timestamp
           if (record.date_of_birth !== undefined && record.date_of_birth !== null) {
             try {
               const dob = record.date_of_birth
 
+              // Empty or whitespace-only strings are not valid dates
+              if (typeof dob === "string" && dob.trim() === "") {
+                record.date_of_birth = null
+              }
               // Case 1: Already a string in YYYY-MM-DD format - keep as-is
-              if (typeof dob === "string" && /^\d{4}-\d{2}-\d{2}$/.test(dob)) {
-                // Already in correct format, no transformation needed
-                record.date_of_birth = dob
+              // Reject clearly invalid dates like "0000-00-00"
+              else if (typeof dob === "string" && /^\d{4}-\d{2}-\d{2}$/.test(dob)) {
+                const [y, m, d] = dob.split("-").map(Number)
+                if (y === 0 && m === 0 && d === 0) {
+                  record.date_of_birth = null
+                } else {
+                  record.date_of_birth = dob
+                }
               }
               // Case 2: String or Date object that needs conversion
               else {
-                const date = new Date(dob)
+                const date = toDateSafe(dob, new Date())
 
-                // Validate the date is actually valid
                 if (isNaN(date.getTime())) {
-                  console.warn(`Invalid date_of_birth for record ${record.id}: ${dob}`)
-                  record.date_of_birth = null // or set to defaultDate if you prefer
+                  console.warn(`Invalid date_of_birth for record ${recordId}: ${dob}`)
+                  record.date_of_birth = null
                 } else {
                   // Use UTC methods to avoid timezone shifting
                   const year = date.getUTCFullYear()
@@ -909,18 +962,10 @@ export function updateDates(changes: SyncDatabaseChangeSet) {
                 }
               }
             } catch (error) {
-              console.error(`Error formatting date_of_birth for record ${record.id}:`, error)
+              console.error(`Error formatting date_of_birth for record ${recordId}:`, error)
               record.date_of_birth = null
             }
           }
-
-          /** visits have a checkin timestamp */
-          if (record.check_in_timestamp) {
-            record.check_in_timestamp = new Date(record.check_in_timestamp || defaultDate).getTime()
-          }
-          // if (record.image_timestamp && record.image_timestamp === null) {
-          record.image_timestamp = 0
-          // }
         })
       }
     }
@@ -935,7 +980,9 @@ export function updateDates(changes: SyncDatabaseChangeSet) {
 export const countRecordsInChanges = (changes: SyncDatabaseChangeSet): number => {
   let result = 0
   for (const tableName in changes) {
-    const { created, updated, deleted } = changes[tableName]
+    const table = changes[tableName]
+    if (!table || typeof table !== "object") continue
+    const { created = [], updated = [], deleted = [] } = table
     result = result + created.length + updated.length + deleted.length
   }
   return result

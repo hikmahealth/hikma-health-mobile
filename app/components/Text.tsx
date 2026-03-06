@@ -56,6 +56,11 @@ export interface TextProps extends RNTextProps {
    */
   align?: "auto" | "left" | "right" | "center"
   /**
+   * Whether to append an asterisk (*) to the text.
+   * Useful for marking required form fields or indicating a disclaimer.
+   */
+  withAsterisk?: boolean
+  /**
    * Children components.
    */
   children?: ReactNode
@@ -79,6 +84,7 @@ export const Text = forwardRef(function Text(props: TextProps, ref: ForwardedRef
     textDecorationLine,
     color,
     align,
+    withAsterisk,
     style: $styleOverride,
     ...rest
   } = props
@@ -86,6 +92,7 @@ export const Text = forwardRef(function Text(props: TextProps, ref: ForwardedRef
 
   const i18nText = tx && translate(tx, txOptions)
   const content = i18nText || text || children
+  const displayContent = withAsterisk && typeof content === "string" ? `${content} *` : content
 
   const preset: Presets = props.preset ?? "default"
   const $styles: StyleProp<TextStyle> = [
@@ -101,7 +108,7 @@ export const Text = forwardRef(function Text(props: TextProps, ref: ForwardedRef
 
   return (
     <RNText {...rest} style={$styles} ref={ref}>
-      {content}
+      {displayContent}
     </RNText>
   )
 })

@@ -38,30 +38,25 @@ namespace Visit {
   }
 
   export type DBVisit = VisitModel
-
   export namespace DB {
     export type T = VisitModel
 
     /**
      * Subscribe to all the events of a visit
      * @param {string} visitId
-     * @param {(events: Option.Option<Event.DB.T[]>, isLoading: boolean) => void} callback Function called when events data updates
+     * @param {(events: Event.DB.T[]) => void} callback Function called when events data updates
      * @returns {{unsubscribe: () => void}} Object containing unsubscribe function
      */
     export function subscribeToEvents(
       visitId: string,
-      callback: (events: Option.Option<Event.DB.T[]>, isLoading: boolean) => void,
+      callback: (events: Event.DB.T[]) => void,
     ): { unsubscribe: () => void } {
-      let isLoading = true
-
       const subscription = database
         .get<Event.DB.T>("events")
         .query(Q.where("visit_id", visitId))
         .observe()
-        .subscribe((dbEvents) => {
-          const events = dbEvents
-          callback(Option.fromNullable(events), isLoading)
-          isLoading = false
+        .subscribe((events) => {
+          callback(events)
         })
 
       return {

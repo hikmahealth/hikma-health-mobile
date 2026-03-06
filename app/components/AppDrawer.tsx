@@ -52,7 +52,7 @@ export interface AppDrawerProps {
 
 interface DrawerItem {
   name: string
-  label: string
+  labelTx: Parameters<typeof translate>[0]
   icon: React.ComponentType<any>
   routeName: string
 }
@@ -60,31 +60,31 @@ interface DrawerItem {
 const drawerItems: DrawerItem[] = [
   {
     name: "Patients",
-    label: "Patients",
+    labelTx: "drawer:patients",
     icon: LucideUsers,
     routeName: "Patients",
   },
   {
     name: "Appointment",
-    label: "Appointments",
+    labelTx: "drawer:appointments",
     icon: LucideCalendar,
     routeName: "Appointment",
   },
   {
     name: "Pharmacy",
-    label: "Pharmacy",
+    labelTx: "drawer:pharmacy",
     icon: LucidePillBottle,
     routeName: "Pharmacy",
   },
   {
     name: "Settings",
-    label: "Settings",
+    labelTx: "drawer:settings",
     icon: LucideSettings,
     routeName: "Settings",
   },
   {
     name: "PrivacyPolicy",
-    label: "Privacy Policy",
+    labelTx: "drawer:privacyPolicy",
     icon: LucideShield,
     routeName: "PrivacyPolicy",
   },
@@ -111,15 +111,15 @@ export const AppDrawer = (props: AppDrawerProps) => {
 
   const handleAppRestart = async () => {
     Alert.alert(
-      "Restart",
-      "Restarting the app will re-open the app and could help resolve any issues you may be experiencing.",
+      translate("drawer:restartTitle"),
+      translate("drawer:restartDescription"),
       [
         {
-          text: "Cancel",
+          text: translate("common:cancel"),
           style: "cancel",
         },
         {
-          text: "Restart",
+          text: translate("drawer:restartTitle"),
           onPress: async () => {
             let canGoBack = globalNavigation.canGoBack()
             while (canGoBack) {
@@ -178,7 +178,7 @@ export const AppDrawer = (props: AppDrawerProps) => {
                   <View style={themed($leftSection)}>
                     <IconComponent size={20} color={themed($iconColor(isActive)).color} />
                     <Text style={themed($itemText(isActive))} preset="default" size="sm">
-                      {item.label}
+                      {translate(item.labelTx)}
                     </Text>
                   </View>
                   <LucideChevronRight size={16} color={themed($chevronColor(isActive)).color} />

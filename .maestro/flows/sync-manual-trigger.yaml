@@ -1,0 +1,64 @@
+# flow: Sync Manual Trigger
+# Test navigating to sync settings and triggering a manual sync
+
+appId: ${MAESTRO_APP_ID}
+onFlowStart:
+  - runFlow: ../shared/_OnFlowStart.yaml
+  - runFlow: ../shared/sign-in.yaml
+---
+# Verify we're on the patients list screen
+- assertVisible: "Patients"
+- assertVisible:
+    id: "patientList"
+
+# Remember that patient data is present before sync
+- assertVisible:
+    id: "patientListItem.*"
+
+# Open the drawer menu
+- tapOn:
+    id: "drawerButton"
+- waitForAnimationToEnd
+
+# Navigate to Settings
+- tapOn: "Settings"
+- waitForAnimationToEnd
+
+# Navigate to Sync Settings
+- tapOn: "Sync Settings"
+- waitForAnimationToEnd
+
+# Trigger manual sync
+- tapOn: "Manual Sync"
+- waitForAnimationToEnd:
+    timeout: 15000
+
+# Wait for sync to complete (button text changes back from "Syncing...")
+- extendedWaitUntil:
+    visible: "Manual Sync"
+    timeout: 15000
+
+# Go back to patients list via drawer
+- tapOn:
+    id: "drawerButton"
+    optional: true
+- back
+  optional: true
+- back
+  optional: true
+- waitForAnimationToEnd
+
+# Navigate to patients via drawer if needed
+- tapOn:
+    id: "drawerButton"
+    optional: true
+- waitForAnimationToEnd
+- tapOn: "Patients"
+  optional: true
+- waitForAnimationToEnd
+
+# Verify patient list still renders with data intact
+- assertVisible:
+    id: "patientList"
+- assertVisible:
+    id: "patientListItem.*"

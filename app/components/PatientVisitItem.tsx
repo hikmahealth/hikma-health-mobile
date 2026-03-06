@@ -45,48 +45,59 @@ const enhanceVisitItem = withObservables(["visit"], ({ visit }) => ({
   clinic: visit.clinic,
 }))
 
-export const PatientVisitItem: FC<PatientVisitItemProps> = enhanceVisitItem(
-  ({ visit, clinic, onPress, onDelete }: PatientVisitItemProps) => {
-    return (
-      <Pressable
-        style={{ marginBottom: 32 }}
-        testID="visitItem"
-        onPress={() => onPress(visit)}
-        onLongPress={() => onDelete(visit.id)}
-      >
-        <View style={{}}>
-          <View direction="row" gap={10} justifyContent="space-between" alignItems="center">
-            <Text style={{ fontSize: 18 }} text={format(visit.checkInTimestamp, "dd MMM yyyy")} />
+/** Inner rendering logic shared by both enhanced and plain variants */
+function PatientVisitItemInner({ visit, clinic, onPress, onDelete }: PatientVisitItemProps) {
+  return (
+    <Pressable
+      style={{ marginBottom: 32 }}
+      testID="visitItem"
+      onPress={() => onPress(visit)}
+      onLongPress={() => onDelete(visit.id)}
+    >
+      <View style={{}}>
+        <View direction="row" gap={10} justifyContent="space-between" alignItems="center">
+          <Text style={{ fontSize: 18 }} text={format(visit.checkInTimestamp, "dd MMM yyyy")} />
 
-            <Pressable onPress={() => onDelete(visit.id)}>
-              <LucideTrash2 size={18} color={colors.palette.angry400} />
-            </Pressable>
-          </View>
-          <View
-            style={{
-              marginVertical: 5,
-              borderBottomColor: "#ccc",
-              borderBottomWidth: 1,
-            }}
-          />
-          <If condition={!!clinic}>
-            <Text>
-              {translate("common:clinic")}: {clinic.name}
-            </Text>
-          </If>
-          <If condition={visit.checkInTimestamp && isValid(visit.checkInTimestamp)}>
-            <Text>
-              {translate("common:checkedIn")}: {format(visit.checkInTimestamp, "HH:mm a")}
-            </Text>
-          </If>
-          <Text>
-            {translate("common:provider")}: {visit.providerName}
-          </Text>
+          <Pressable onPress={() => onDelete(visit.id)}>
+            <LucideTrash2 size={18} color={colors.palette.angry400} />
+          </Pressable>
         </View>
-      </Pressable>
-    )
-  },
+        <View
+          style={{
+            marginVertical: 5,
+            borderBottomColor: "#ccc",
+            borderBottomWidth: 1,
+          }}
+        />
+        <If condition={!!clinic}>
+          <Text>
+            {translate("common:clinic")}: {clinic.name}
+          </Text>
+        </If>
+        <If condition={visit.checkInTimestamp && isValid(visit.checkInTimestamp)}>
+          <Text>
+            {translate("common:checkedIn")}: {format(visit.checkInTimestamp, "HH:mm a")}
+          </Text>
+        </If>
+        <Text>
+          {translate("common:provider")}: {visit.providerName}
+        </Text>
+      </View>
+    </Pressable>
+  )
+}
+
+export const PatientVisitItem: FC<PatientVisitItemProps> = enhanceVisitItem(
+  (props: PatientVisitItemProps) => <PatientVisitItemInner {...props} />,
 )
+
+/**
+ * Plain variant of PatientVisitItem that works with Visit.T (no WatermelonDB observables).
+ * In online mode, `clinic` will be undefined — the If guard handles this gracefully.
+ */
+export function PatientVisitItemPlain(props: PatientVisitItemProps) {
+  return <PatientVisitItemInner {...props} />
+}
 
 const $container: ViewStyle = {
   justifyContent: "center",

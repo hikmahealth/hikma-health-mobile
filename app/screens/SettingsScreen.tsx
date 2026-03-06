@@ -1,7 +1,9 @@
 import { FC, useEffect, useState } from "react"
-import { Alert, Linking, Pressable, ViewStyle, Image } from "react-native"
+import { ActivityIndicator, Alert, Linking, Pressable, ViewStyle, Image } from "react-native"
 import * as Notifications from "expo-notifications"
 import * as SecureStore from "expo-secure-store"
+import { useNetInfo } from "@react-native-community/netinfo"
+import { CommonActions } from "@react-navigation/native"
 import { useSelector } from "@xstate/react"
 import { Option } from "effect"
 import { ChevronRight } from "lucide-react-native"
@@ -17,7 +19,10 @@ import { useLockWhenIdleSettings } from "@/hooks/useLockWhenIdleSettings"
 import { useOTAVersion } from "@/hooks/useOTAVersion"
 import { translate } from "@/i18n/translate"
 import type { AppStackScreenProps } from "@/navigators/AppNavigator"
+import { navigationRef } from "@/navigators/navigationUtilities"
+import { switchToOnlineMode, switchToOfflineMode } from "@/services/modeSwitchService"
 import { appStateStore } from "@/store/appState"
+import { operationModeStore } from "@/store/operationMode"
 import { providerStore } from "@/store/provider"
 import { colors } from "@/theme/colors"
 import { generateDummyPatients, insertBenchmarkingData } from "@/utils/benchmarking"
@@ -29,6 +34,12 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ navigation }) => {
   const { appVersion } = useOTAVersion()
   const provider = useSelector(providerStore, (state) => state.context)
   const appState = useSelector(appStateStore, (state) => state.context)
+  const { mode, serverConfig, isTransitioning } = useSelector(
+    operationModeStore,
+    (state) => state.context,
+  )
+  const { isConnected, isInternetReachable } = useNetInfo()
+  const showModeToggle = serverConfig === "user_choice"
 
   const launchIcon = require("@/assets/images/launch_icon.png")
 
@@ -80,6 +91,27 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ navigation }) => {
     } catch (error) {
       console.log(error)
       alert("Error setting the notifications. Please try again later.")
+    }
+  }
+
+  const toggleOperationMode = async (wantsOnline: boolean) => {
+    if (isTransitioning) return
+
+    if (wantsOnline) {
+      if (!isConnected || !isInternetReachable) {
+        Toast.show(translate("settingsScreen:noInternetWarning"), {
+          duration: Toast.durations.LONG,
+        })
+        return
+      }
+      const result = await switchToOnlineMode()
+      if (!result.ok && result.reason === "unsynced_changes") {
+        Toast.show(translate("settingsScreen:unsyncedChangesWarning"), {
+          duration: Toast.durations.LONG,
+        })
+      }
+    } else {
+      await switchToOfflineMode()
     }
   }
 
@@ -148,7 +180,17 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ navigation }) => {
           onPress: async () => {
             await SecureStore.deleteItemAsync("provider_password")
             await SecureStore.deleteItemAsync("provider_email")
-            providerStore.trigger.reset() // navigation will automatically respond to this event and go to home screen directly
+            // Reset navigation state before clearing provider to avoid
+            // native-stack desync ("screen removed natively but not from JS state")
+            if (navigationRef.isReady()) {
+              navigationRef.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: "Patients" }],
+                }),
+              )
+            }
+            providerStore.trigger.reset()
           },
         },
       ],
@@ -181,11 +223,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ navigation }) => {
             <Text text={`Hikma Health`} size="lg" />
             <Text text={`(v${appVersion})`} size="xs" />
           </View>
-          <Text
-            size="xs"
-            text="Hikma Health is an independent 501(c)(3) nonprofit and is not affiliated with Hikma
-            Pharmaceuticals PLC or any of its affiliates."
-          />
+          <Text size="xs" tx="settingsScreen:nonprofitDisclaimer" />
 
           {Option.match(HIKMA_URL, {
             onSome: () => (
@@ -266,6 +304,38 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ navigation }) => {
             />
           </View>
         </View>
+
+        <If condition={false}>
+          {showModeToggle && (
+            <View style={$withBottomBorder} py={12}>
+              <View direction="row" justifyContent="space-between" alignItems="center">
+                <Text tx="settingsScreen:onlineOnlyMode" size="sm" />
+                {isTransitioning ? (
+                  <ActivityIndicator size="small" />
+                ) : (
+                  <Switch
+                    value={mode === "online"}
+                    onValueChange={toggleOperationMode}
+                    containerStyle={[
+                      mode === "online"
+                        ? {
+                            borderWidth: 4,
+                            borderColor: colors.palette.accent500,
+                            borderRadius: 20,
+                          }
+                        : {},
+                    ]}
+                  />
+                )}
+              </View>
+              <Text
+                size="xxs"
+                color={colors.palette.neutral500}
+                tx="settingsScreen:onlineOnlyModeDescription"
+              />
+            </View>
+          )}
+        </If>
 
         <Pressable onPress={() => navigation.navigate("SyncSettings")}>
           <View direction="row" justifyContent="space-between" style={$withBottomBorder} py={12}>

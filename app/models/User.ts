@@ -7,6 +7,7 @@ import UserClinicPermissions from "./UserClinicPermissions"
 import database from "@/db"
 import UserModel from "@/db/model/User"
 import { Q } from "@nozbe/watermelondb"
+import { LoginResponse } from "@/rpc/types"
 
 namespace User {
   export const Roles = {
@@ -89,11 +90,30 @@ namespace User {
       console.log("Result:", result)
 
       if (response.status === 200 && result.message === undefined) {
-        // Store credentials securely
+        // Store credentials securely (for offline sync + fallback)
         await SecureStorage.setItemAsync("provider_password", password)
         await SecureStorage.setItemAsync("provider_email", email)
 
+        // Obtain Bearer token for online mode tRPC calls
+        try {
+          const tokenResponse = await fetch(`${HIKMA_API.value}/api/auth/sign-in`, {
+            method: "POST",
+            headers: { "Accept": "application/json", "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          })
+          const tokenResult = await tokenResponse.json()
+          if (tokenResponse.ok && tokenResult.token) {
+            await SecureStorage.setItemAsync("provider_token", tokenResult.token)
+            console.log("[User.signIn] Bearer token stored")
+          } else {
+            console.warn("[User.signIn] No token in response — online tRPC writes may not work")
+          }
+        } catch (e) {
+          console.warn("[User.signIn] Failed to obtain Bearer token:", e)
+        }
+
         // update the provider store
+        console.log("🚩🚩 Set from Cloud Login")
         providerStore.send({
           type: "set_provider",
           id: result.id,
@@ -122,6 +142,37 @@ namespace User {
       console.error(e)
       throw e
     }
+  }
+
+  /**
+   * Set user from a hub login response (no HTTP calls — hub already authenticated).
+   * Stores credentials and token, updates providerStore.
+   */
+  export const setFromHubLogin = async (
+    response: LoginResponse,
+    email: string,
+    password: string,
+  ): Promise<Provider> => {
+    // Store credentials for session restore
+    await SecureStorage.setItemAsync("provider_email", email)
+    await SecureStorage.setItemAsync("provider_password", password)
+    await SecureStorage.setItemAsync("provider_token", response.token)
+
+    const provider: Provider = {
+      id: response.user_id,
+      name: response.provider_name ?? "",
+      email: response.email ?? email,
+      role: Option.fromNullable(response.role as Role),
+      instance_url: Option.none(),
+      clinic_id: Option.fromNullable(response.clinic_id),
+      clinic_name: Option.none(),
+    }
+
+    console.log("🚩🚩 Set from Hub Login")
+    console.log({ provider })
+
+    providerStore.send({ type: "set_provider", ...provider })
+    return provider
   }
 
   export namespace DB {

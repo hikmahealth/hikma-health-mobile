@@ -73,6 +73,12 @@ const eventSchema = tableSchema({
     { name: "deleted_at", type: "number", isOptional: true },
     { name: "created_at", type: "number" },
     { name: "updated_at", type: "number" },
+
+    // V9
+    {
+      name: "recorded_by_user_id",
+      type: "string",
+    },
   ],
 })
 
@@ -91,6 +97,10 @@ const eventFormSchema = tableSchema({
     { name: "deleted_at", type: "number", isOptional: true },
     { name: "created_at", type: "number" },
     { name: "updated_at", type: "number" },
+
+    // V9
+    { name: "clinic_ids", type: "string" }, // JSON string as array of clinic_ids that are allowed to see the form. if its empy, all clinics are allowed - done for backwards compatibility., non-empty means only the specified are allowed to view the forms
+    { name: "translations", type: "string", isOptional: true }, // JSON array of FieldTranslation objects for multilingual form support
   ],
 })
 
@@ -272,6 +282,14 @@ const userClinicPermissionsSchema = tableSchema({
     { name: "last_modified_by", type: "string", isOptional: true },
     { name: "created_at", type: "number" },
     { name: "updated_at", type: "number" },
+
+    // V9
+    { name: "can_edit_other_provider_event", type: "boolean" },
+    { name: "can_download_patient_reports", type: "boolean" },
+    { name: "can_prescribe_medications", type: "boolean" },
+    { name: "can_dispense_medications", type: "boolean" },
+    { name: "can_delete_patient_visits", type: "boolean" },
+    { name: "can_delete_patient_records", type: "boolean" },
   ],
 })
 
@@ -448,8 +466,47 @@ const dispensingRecords = tableSchema({
   ],
 })
 
+// V9
+const eventLogsSchema = tableSchema({
+  name: "event_logs",
+  columns: [
+    { name: "transaction_id", type: "string" },
+    { name: "action_type", type: "string" }, // ActionType
+    { name: "table_name", type: "string" },
+    { name: "row_id", type: "string" },
+    { name: "changes", type: "string" }, // JSON stringified diff
+    { name: "device_id", type: "string" },
+    { name: "app_id", type: "string" },
+    { name: "user_id", type: "string" },
+    { name: "ip_address", type: "string", isOptional: true },
+    { name: "hash", type: "string" },
+    { name: "metadata", type: "string", isOptional: true },
+    { name: "synced", type: "boolean" },
+    { name: "created_at", type: "number" },
+  ],
+})
+
+export const peersSchema = tableSchema({
+  name: "peers",
+  columns: [
+    { name: "peer_id", type: "string", isIndexed: true },
+    { name: "name", type: "string" },
+    { name: "ip_address", type: "string", isOptional: true },
+    { name: "port", type: "number", isOptional: true },
+    { name: "public_key", type: "string" },
+    { name: "last_synced_at", type: "number", isOptional: true },
+    { name: "peer_type", type: "string" }, // hub | cloud_server | mobile_app
+    { name: "is_leader", type: "boolean" },
+    { name: "status", type: "string" }, // active | revoked | untrusted
+    { name: "protocol_version", type: "string" },
+    { name: "metadata", type: "string", isOptional: true },
+    { name: "created_at", type: "number" },
+    { name: "updated_at", type: "number" },
+  ],
+})
+
 export default appSchema({
-  version: 8, // 🔥 IMPORTANT!! 🔥 when migrating dont forget to change this number
+  version: 9, // 🔥 IMPORTANT!! 🔥 when migrating dont forget to change this number
   tables: [
     patientSchema,
     clinicSchema,
@@ -482,5 +539,9 @@ export default appSchema({
     clinicInventorySchema,
     prescriptionItemsSchema,
     dispensingRecords,
+
+    // new tables in v9
+    eventLogsSchema,
+    peersSchema,
   ],
 })

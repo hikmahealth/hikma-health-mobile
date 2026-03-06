@@ -33,6 +33,10 @@ type PatientsList = {
 }
 
 /**
+ * @deprecated Use `useDataProviderPatients` instead. This hook only works in offline mode
+ * and returns PatientModel[] instead of Patient.T[]. The unified hook handles both
+ * online and offline modes transparently.
+ *
  * Patients list hook gets the most recent patients from the local database in descending order of "updatedAt" field
  * This hook supports infinite scrolling by providing a callback function to fetch the next page of patients
  *

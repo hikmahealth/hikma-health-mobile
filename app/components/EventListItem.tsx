@@ -23,17 +23,33 @@ export interface EventListItemProps {
   language: string
 }
 
+/** Props for the plain (non-WatermelonDB) variant */
+export interface EventListItemPlainProps {
+  style?: StyleProp<ViewStyle>
+  event: { eventType: string; formData: Event.FormDataItem[]; createdAt: Date; id: string }
+  openEventOptions: (event: any) => void
+  language: string
+}
+
 const enhanceEvent = withObservables(["event"], ({ event }) => ({
   event, // shortcut syntax for `event: event.observe()`
 }))
 
 /**
- * Displays a single event
+ * Inner component rendering logic shared between enhanced and plain variants
  */
-export const EventListItem = enhanceEvent(function EventListItem(props: EventListItemProps) {
-  const { style, event, language, openEventOptions } = props
-
-  const display = getEventDisplay(event, language)
+function EventListItemInner({
+  style,
+  event,
+  language,
+  openEventOptions,
+}: {
+  style?: StyleProp<ViewStyle>
+  event: { eventType: string; formData: Event.FormDataItem[]; createdAt: Date; id: string }
+  openEventOptions: (event: any) => void
+  language: string
+}) {
+  const display = getEventDisplay(event as any, language)
   const time = new Date(event.createdAt).toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
@@ -62,7 +78,22 @@ export const EventListItem = enhanceEvent(function EventListItem(props: EventLis
       </Pressable>
     </View>
   )
+}
+
+/**
+ * Displays a single event (WatermelonDB-enhanced, observes the event model)
+ */
+export const EventListItem = enhanceEvent(function EventListItem(props: EventListItemProps) {
+  return <EventListItemInner {...props} />
 })
+
+/**
+ * Plain variant of EventListItem that works with Event.T (no WatermelonDB observables).
+ * Use this in online mode where data comes from the server, not WatermelonDB.
+ */
+export function EventListItemPlain(props: EventListItemPlainProps) {
+  return <EventListItemInner {...props} />
+}
 
 const $eventTitleContainer: ViewStyle = {
   flex: 1,
@@ -179,6 +210,16 @@ const $medicineItemSeparator: ViewStyle = {
  * @param {string} language - The language code
  * @returns {JSX.Element} - The JSX element to display
  */
+/** Escape HTML special characters to prevent XSS in generated reports */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;")
+}
+
 export const getHtmlEventDisplay = (event: EventModel, language: string): string => {
   const { eventType, formData } = event
 
@@ -186,29 +227,28 @@ export const getHtmlEventDisplay = (event: EventModel, language: string): string
 
   formData.forEach((field, idx) => {
     const { fieldId, fieldType, inputType, name, value } = field
-    // console.log({ fieldId, fieldType, inputType, name, value })
-    // const displayValue = inputType === "select" ? translate(value, language) : value
 
     display += `<div style="margin: 5px 0px;">`
-    display += `<span style="text-decoration: underline;">${name}:</span>`
+    display += `<span style="text-decoration: underline;">${escapeHtml(String(name))}:</span>`
 
     if (fieldType === "diagnosis") {
       if (Array.isArray(value)) {
         value?.forEach((val) => {
-          display += `<div>${ICDEntry.ICD10RecordLabel(val, language)}</div>`
+          display += `<div>${escapeHtml(ICDEntry.ICD10RecordLabel(val, language))}</div>`
         })
       }
     } else if (inputType === "input-group" && fieldType === "medicine") {
       if (Array.isArray(value)) {
         value.forEach((med) => {
-          display += `<div>${String(med.dose || "")} ${med.doseUnits || ""}</div>`
-          display += `<div>${upperFirst(med?.route || "")} ${upperFirst(med?.form || "")}: ${String(
-            med?.frequency || "",
+          if (!med) return
+          display += `<div>${escapeHtml(String(med.dose || ""))} ${escapeHtml(String(med.doseUnits || ""))}</div>`
+          display += `<div>${escapeHtml(upperFirst(med?.route || ""))} ${escapeHtml(upperFirst(med?.form || ""))}: ${escapeHtml(
+            String(med?.frequency || ""),
           )}</div>`
         })
       }
     } else if (fieldType !== "diagnosis" && inputType !== "input-group") {
-      display += `<div>${value}</div>`
+      display += `<div>${escapeHtml(String(value))}</div>`
     }
 
     display += `</div>`

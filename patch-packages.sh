@@ -5,4 +5,4 @@ echo "Applying patch to react-native-date-picker..."
 cd node_modules/react-native-date-picker
 
 # Apply the patch
-git apply ../../patches/react-native-date-picker+5.0.13.patch
+# git apply ../../patches/react-native-date-picker+5.0.13.patch

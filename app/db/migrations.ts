@@ -4,6 +4,75 @@ const decimal = "string"
 
 export default schemaMigrations({
   migrations: [
+    // V9
+    {
+      toVersion: 9,
+      steps: [
+        createTable({
+          name: "event_logs",
+          columns: [
+            { name: "transaction_id", type: "string" },
+            { name: "action_type", type: "string" }, // ActionType
+            { name: "table_name", type: "string" },
+            { name: "row_id", type: "string" },
+            { name: "changes", type: "string" }, // JSON stringified diff
+            { name: "device_id", type: "string" },
+            { name: "app_id", type: "string" },
+            { name: "user_id", type: "string" },
+            { name: "ip_address", type: "string", isOptional: true },
+            { name: "hash", type: "string" },
+            { name: "metadata", type: "string", isOptional: true },
+            { name: "synced", type: "boolean" },
+            { name: "created_at", type: "number" },
+          ],
+        }),
+        createTable({
+          name: "peers",
+          columns: [
+            { name: "peer_id", type: "string" },
+            { name: "name", type: "string" },
+            { name: "ip_address", type: "string", isOptional: true },
+            { name: "port", type: "number", isOptional: true },
+            { name: "public_key", type: "string" },
+            { name: "last_synced_at", type: "number", isOptional: true },
+            { name: "peer_type", type: "string" }, // hub | cloud_server | mobile_app
+            { name: "is_leader", type: "boolean" },
+            { name: "status", type: "string" }, // active | revoked | untrusted
+            { name: "protocol_version", type: "string" },
+            { name: "metadata", type: "string", isOptional: true },
+            { name: "created_at", type: "number" },
+            { name: "updated_at", type: "number" },
+          ],
+        }),
+        addColumns({
+          table: "events",
+          columns: [
+            {
+              name: "recorded_by_user_id",
+              type: "string",
+            },
+          ],
+        }),
+        addColumns({
+          table: "user_clinic_permissions",
+          columns: [
+            { name: "can_edit_other_provider_event", type: "boolean" },
+            { name: "can_download_patient_reports", type: "boolean" },
+            { name: "can_prescribe_medications", type: "boolean" },
+            { name: "can_dispense_medications", type: "boolean" },
+            { name: "can_delete_patient_visits", type: "boolean" },
+            { name: "can_delete_patient_records", type: "boolean" },
+          ],
+        }),
+        addColumns({
+          table: "event_forms",
+          columns: [
+            { name: "clinic_ids", type: "string" },
+            { name: "translations", type: "string", isOptional: true },
+          ],
+        }),
+      ],
+    },
     // V8
     {
       toVersion: 8,

@@ -208,19 +208,21 @@ type DiagnosisPickerButtonProps = {
   value: ICDEntry.T[]
   language: string
   openDiagnosisPicker: () => void
+  required: boolean
 }
 
 export function DiagnosisPickerButton({
   value,
   openDiagnosisPicker,
   language,
+  required = false,
 }: DiagnosisPickerButtonProps) {
   const diagnosesList = value.map((diagnosis) => ICD10RecordLabel(diagnosis, language)).join(", ")
 
   // TODO: reverse the string orientation for arabic
   return (
     <Pressable onPress={openDiagnosisPicker}>
-      <Text preset="formLabel" text="Diagnosis Picker" />
+      <Text preset="formLabel" withAsterisk={required} text="Diagnosis Picker" />
       <View style={$pickerButton}>
         <Text style={$diagnosisText} text={diagnosesList} />
       </View>

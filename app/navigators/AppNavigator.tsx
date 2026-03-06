@@ -15,6 +15,7 @@ import { useSelector } from "@xstate/react"
 
 import { AppDrawer } from "@/components/AppDrawer"
 import Config from "@/config"
+import Peer from "@/models/Peer"
 import User from "@/models/User"
 import { ErrorBoundary } from "@/screens/ErrorScreen/ErrorBoundary"
 import { LoginScreen } from "@/screens/LoginScreen"
@@ -30,7 +31,6 @@ import { AppointmentNavigator } from "./AppointmentNavigator"
 import { PharmacyNavigator } from "./PharmacyNavigator"
 import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
 import { PatientNavigator } from "./PatientNavigator"
-import { getHHApiUrl } from "@/utils/storage"
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -84,112 +84,33 @@ const Stack = createNativeStackNavigator<AppStackParamList>()
 
 const Drawer = createDrawerNavigator()
 
-const AppStack = () => {
+const AuthStack = () => {
   const {
     theme: { colors },
-    setThemeContextOverride,
   } = useAppTheme()
 
-  useEffect(() => {
-    setThemeContextOverride("light")
-  }, [])
+  return (
+    <Stack.Navigator
+      initialRouteName="Login"
+      screenOptions={{
+        headerShown: false,
+        navigationBarColor: colors.background,
+        contentStyle: {
+          backgroundColor: colors.background,
+        },
+      }}
+    >
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+    </Stack.Navigator>
+  )
+}
 
-  const { isInternetReachable } = useNetInfo()
-
-  const provider = useSelector(providerStore, (state) => state.context)
+const MainDrawer = () => {
+  const {
+    theme: { colors },
+  } = useAppTheme()
   const { isRTL } = useSelector(languageStore, (state) => state.context)
-
-  // Check if the provider is signed in
-  const isSignedIn = useSelector(providerStore, (state) => {
-    const { id, name, email } = state.context
-    return !!id && !!name && !!email
-  })
-
-  useEffect(() => {
-    if (isSignedIn) {
-      // If there is internet, send email and password to server to re-authenticate
-      // ONly run the below if there is access to internet
-      if (isInternetReachable) {
-        getHHApiUrl().then(async (api) => {
-          console.log("Re-Signing in")
-          if (!api) {
-            // HANDLE API NOT FOUND
-            return
-          }
-
-          const email = await SecureStore.getItemAsync("provider_email")
-          const password = await SecureStore.getItemAsync("provider_password")
-
-          console.log("Email:", email)
-          console.log("Password:", password)
-
-          if (!email || !password) {
-            // HANDLE EMAIL OR PASSWORD NOT FOUND
-            return
-          }
-
-          await User.signIn(email, password)
-            .then((res) => {
-              // a provider is present
-              if (res.id) {
-                // HANDLE SUCCESSFUL SIGN IN
-              } else {
-                // HANDLE FAILED SIGN IN
-              }
-            })
-            .catch((err) => {
-              // HANDLE SIGN IN ERROR
-              Sentry.captureException(err, {
-                level: "warning",
-                extra: {
-                  message:
-                    "Failed sign in on re-authentication. App store has user, but failed to re-authenticate them",
-                },
-              })
-
-              // TODO: possibly sign the user out.
-            })
-            .finally(() => {
-              // HANDLE FINALLY
-            })
-        })
-      }
-      startSync(provider.email)
-        // .then(() => {
-        // Second sync ensures we get any server computed values. We need this for correct stock count values.
-        // return startSync(provider.email)
-        // })
-        .catch((err) => {
-          console.log("Failed to start sync:", err)
-          Sentry.captureException(err, {
-            level: "error",
-            extra: {
-              message: "Failed to start sync",
-            },
-          })
-        })
-    }
-  }, [isSignedIn, provider.email, isInternetReachable])
-
-  // FIXME: perform better check
-  if (!isSignedIn) {
-    return (
-      <Stack.Navigator
-        initialRouteName="Login"
-        screenOptions={{
-          headerShown: false,
-          navigationBarColor: colors.background,
-          contentStyle: {
-            backgroundColor: colors.background,
-          },
-        }}
-      >
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
-      </Stack.Navigator>
-    )
-  }
-
   const drawerPosition = isRTL ? "right" : "left"
 
   return (
@@ -215,6 +136,72 @@ const AppStack = () => {
       <Drawer.Screen name="Pharmacy" component={PharmacyNavigator} />
     </Drawer.Navigator>
   )
+}
+
+const AppStack = () => {
+  const { setThemeContextOverride } = useAppTheme()
+
+  useEffect(() => {
+    setThemeContextOverride("light")
+  }, [])
+
+  const { isInternetReachable } = useNetInfo()
+
+  const provider = useSelector(providerStore, (state) => state.context)
+
+  // Check if the provider is signed in
+  const isSignedIn = useSelector(providerStore, (state) => {
+    const { id, name, email } = state.context
+    return !!id && !!name && !!email
+  })
+
+  console.warn({ isSignedIn, provider })
+
+  useEffect(() => {
+    if (!isSignedIn) return
+
+    const run = async () => {
+      // Determine which peer type is active — cloud re-auth only applies to cloud peers
+      const cloudPeers = await Peer.DB.getActiveByType("cloud_server")
+      const hasCloudPeer = cloudPeers.length > 0
+
+      // Only attempt cloud re-authentication when a cloud server peer is active
+      // and the device has internet connectivity
+      const reachableCloudServer = hasCloudPeer ? await Peer.isAnyCloudReachable() : null
+      if (reachableCloudServer?.reachable) {
+        const email = await SecureStore.getItemAsync("provider_email")
+        const password = await SecureStore.getItemAsync("provider_password")
+
+        if (email && password) {
+          try {
+            await User.signIn(email, password)
+          } catch (err) {
+            console.error("[Login] Error logging in with email and password")
+            Sentry.captureException(err, {
+              level: "warning",
+              extra: {
+                message:
+                  "Failed sign in on re-authentication. App store has user, but failed to re-authenticate them",
+              },
+            })
+          }
+        }
+      }
+
+      // Sync with whichever peer is active (cloud or hub) — peerSync handles dispatch
+      await startSync(provider.email)
+    }
+
+    run().catch((err) => {
+      console.error("[Login] Failed to start sync:", err)
+      Sentry.captureException(err, {
+        level: "error",
+        extra: { message: "Failed to start sync" },
+      })
+    })
+  }, [isSignedIn, provider.email, isInternetReachable])
+
+  return isSignedIn ? <MainDrawer /> : <AuthStack />
 }
 
 export interface NavigationProps

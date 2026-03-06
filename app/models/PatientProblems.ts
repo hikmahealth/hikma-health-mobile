@@ -216,11 +216,14 @@ namespace PatientProblems {
           if (updates.verificationStatus !== undefined) {
             prob.verificationStatus = updates.verificationStatus
           }
-          if (updates.severityScore !== undefined && Option.isSome(updates.severityScore)) {
-            prob.severityScore = updates.severityScore.value
+          if (updates.severityScore !== undefined) {
+            prob.severityScore = Option.getOrUndefined(updates.severityScore)
           }
-          if (updates.endDate !== undefined && Option.isSome(updates.endDate)) {
-            prob.endDate = updates.endDate.value
+          if (updates.onsetDate !== undefined) {
+            prob.onsetDate = Option.getOrUndefined(updates.onsetDate)
+          }
+          if (updates.endDate !== undefined) {
+            prob.endDate = Option.getOrUndefined(updates.endDate)
           }
           if (updates.metadata !== undefined) {
             prob.metadata = updates.metadata
@@ -326,8 +329,8 @@ namespace PatientProblems {
         .observe()
         .subscribe((dbProblems) => {
           const problems = dbProblems.map(fromDB)
-          callback(Option.fromNullable(problems), isLoading)
           isLoading = false
+          callback(Option.fromNullable(problems), isLoading)
         })
 
       return {
@@ -342,8 +345,8 @@ namespace PatientProblems {
      */
     export const fromDB = (dbProblem: DB.T): PatientProblems.T => ({
       id: dbProblem.id,
-      patientId: dbProblem.patient.id,
-      visitId: Option.fromNullable(dbProblem.visit?.id),
+      patientId: dbProblem.patientId,
+      visitId: Option.fromNullable(dbProblem.visitId),
       problemCodeSystem: dbProblem.problemCodeSystem as ProblemCodeSystem,
       problemCode: dbProblem.problemCode,
       problemLabel: dbProblem.problemLabel,
@@ -352,7 +355,7 @@ namespace PatientProblems {
       severityScore: Option.fromNullable(dbProblem.severityScore),
       onsetDate: Option.fromNullable(dbProblem.onsetDate),
       endDate: Option.fromNullable(dbProblem.endDate),
-      recordedByUserId: Option.fromNullable(dbProblem.recordedByUser?.id),
+      recordedByUserId: Option.fromNullable(dbProblem.recordedByUserId),
       metadata: dbProblem.metadata || {},
       isDeleted: dbProblem.isDeleted,
       createdAt: dbProblem.createdAt,

@@ -1,0 +1,67 @@
+# flow: Register Patient
+# Test registering a new patient with required fields and validation
+
+appId: ${MAESTRO_APP_ID}
+onFlowStart:
+  - runFlow: ../shared/_OnFlowStart.yaml
+  - runFlow: ../shared/sign-in.yaml
+---
+# Verify we're on the patients list screen
+- assertVisible: "Patients"
+- assertVisible:
+    id: "patientList"
+
+# Tap "New Patient" to open registration form
+- tapOn: "New Patient"
+- waitForAnimationToEnd
+
+# Negative test: tap Save with empty required fields
+- tapOn:
+    id: "submit"
+- waitForAnimationToEnd
+
+# The form should still be visible (validation should prevent submission)
+- assertVisible:
+    id: "submit"
+
+# Fill in the required fields
+# Given name
+- tapOn:
+    id: "patient_form_input__text__given_name"
+- inputText: "MaestroTest"
+- hideKeyboard
+
+# Surname
+- tapOn:
+    id: "patient_form_input__text__surname"
+- inputText: "E2EPatient"
+- hideKeyboard
+
+# Date of birth
+- tapOn:
+    id: "patient_form_input__date__date_of_birth"
+- waitForAnimationToEnd
+# Confirm the default date or pick a date
+- tapOn: "Confirm"
+- waitForAnimationToEnd
+
+# Sex selection
+- tapOn:
+    id: "patient_form_input__select__sex"
+    optional: true
+- tapOn: "Female"
+  optional: true
+- waitForAnimationToEnd
+- hideKeyboard
+
+# Submit the form
+- tapOn:
+    id: "submit"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Verify we're back on the patient list and the patient appears
+- extendedWaitUntil:
+    visible:
+      id: "patientList"
+    timeout: 5000

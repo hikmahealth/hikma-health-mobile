@@ -285,8 +285,8 @@ namespace PatientVitals {
         .observe()
         .subscribe((dbVitals) => {
           const vitals = dbVitals.map(fromDB)
-          callback(Option.fromNullable(vitals), isLoading)
           isLoading = false
+          callback(Option.fromNullable(vitals), isLoading)
         })
 
       return {

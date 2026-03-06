@@ -1,0 +1,50 @@
+# flow: Settings and Sign Out
+# Test navigating to settings, verifying UI elements, and signing out
+
+appId: ${MAESTRO_APP_ID}
+onFlowStart:
+  - runFlow: ../shared/_OnFlowStart.yaml
+  - runFlow: ../shared/sign-in.yaml
+---
+# Verify we're on the patients list screen
+- assertVisible: "Patients"
+
+# Open the drawer menu
+- tapOn:
+    id: "drawerButton"
+- waitForAnimationToEnd
+
+# Verify drawer is open
+- assertVisible: "HIKMA HEALTH"
+
+# Navigate to Settings
+- tapOn: "Settings"
+- waitForAnimationToEnd
+
+# Verify we're on the settings screen
+- assertVisible: "User Account"
+
+# Verify key settings elements are visible
+- assertVisible: "Sync Settings"
+
+# Scroll down to find the Sign Out button
+- scrollUntilVisible:
+    element:
+      text: "Sign Out"
+    direction: DOWN
+
+# Tap the Sign Out button
+- tapOn:
+    id: "signOutBtn"
+- waitForAnimationToEnd
+
+# Confirm sign out
+- assertVisible: "Are you sure.*"
+- tapOn: "Confirm Sign Out"
+- waitForAnimationToEnd
+
+# Verify we're back at the login screen
+- assertVisible: "HIKMA HEALTH"
+- assertVisible: "Email Address"
+- assertVisible: "Password"
+- assertVisible: "Sign in"

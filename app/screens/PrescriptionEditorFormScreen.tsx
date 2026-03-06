@@ -32,6 +32,7 @@ import { View } from "@/components/View"
 import database from "@/db"
 import { useDBClinicsList } from "@/hooks/useDBClinicsList"
 import { usePatientRecord } from "@/hooks/usePatientRecord"
+import { usePermissionGuard } from "@/hooks/usePermissionGuard"
 import ClinicInventory from "@/models/ClinicInventory"
 import DrugCatalogue from "@/models/DrugCatalogue"
 import Patient from "@/models/Patient"
@@ -58,6 +59,7 @@ export const PrescriptionEditorFormScreen: FC<PrescriptionEditorFormScreenProps>
     name: providerName,
   } = useSelector(providerStore, (state) => state.context)
   const { theme } = useAppTheme()
+  const { can } = usePermissionGuard()
 
   const providerClinicId = Option.getOrUndefined(clinic_id)
 
@@ -189,6 +191,13 @@ export const PrescriptionEditorFormScreen: FC<PrescriptionEditorFormScreenProps>
   }
 
   const onSubmit = async (submission: Prescription.T) => {
+    if (!can("prescription:create")) {
+      Toast.show("You do not have permission to create prescriptions", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.BOTTOM,
+      })
+      return
+    }
     // Making sure the data is complete and that the defaults are sane
     const data: Prescription.T = {
       ...submission,

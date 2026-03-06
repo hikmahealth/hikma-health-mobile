@@ -1,7 +1,6 @@
 import { memo, useMemo, useCallback } from "react"
 import { StyleProp, Pressable, ViewStyle, Image, ImageStyle } from "react-native"
 import { withObservables } from "@nozbe/watermelondb/react"
-import { format, isValid } from "date-fns"
 import { upperFirst } from "es-toolkit/compat"
 
 import { Text } from "@/components/Text"
@@ -10,7 +9,7 @@ import { TxKeyPath } from "@/i18n"
 import { translate } from "@/i18n/translate"
 import Patient from "@/models/Patient"
 import { colors } from "@/theme/colors"
-import { localeDate, parseYYYYMMDD } from "@/utils/date"
+import { localeDate } from "@/utils/date"
 
 export interface PatientListItemProps {
   /**
@@ -18,9 +17,9 @@ export interface PatientListItemProps {
    */
   style?: StyleProp<ViewStyle>
   /**
-   * The patient to display
+   * The patient to display (plain domain object)
    */
-  patient: Patient.DBPatient
+  patient: Patient.T
 
   /**
    * Callback for when the patient is selected
@@ -58,7 +57,7 @@ const AvatarMemo = memo(
     )
 
     const avatarText = useMemo(
-      () => Patient.displayNameAvatar(patient as Patient.T),
+      () => Patient.displayNameAvatar(patient),
       [patient.givenName, patient.surname],
     )
 
@@ -92,11 +91,8 @@ export const Avatar = AvatarMemo
  */
 const PatientListItemInner = memo(
   function PatientListItemComponent(props: PatientListItemProps) {
-    const { style, patient: dbPatient, onPatientSelected, onPatientLongPress, isRTL } = props
+    const { style, patient, onPatientSelected, onPatientLongPress, isRTL } = props
     const $styles = useMemo(() => [$container, style], [style])
-
-    // Convert DB patient to domain model once
-    const patient = useMemo(() => Patient.DB.fromDB(dbPatient), [dbPatient])
 
     // Memoize expensive computations
     const displayName = useMemo(() => Patient.displayName(patient), [patient])
@@ -164,9 +160,23 @@ const PatientListItemInner = memo(
 )
 
 /**
- * PatientListItem displays a patient in a list
+ * PatientListItem displays a patient in a list.
+ * Accepts Patient.T (plain domain object). Data source (WatermelonDB or RPC)
+ * is handled by the hook layer, not the component.
  */
-export const PatientListItem = enhance(PatientListItemInner)
+export const PatientListItem = PatientListItemInner
+
+/**
+ * @deprecated Use PatientListItem instead. The withObservables wrapper is no longer
+ * needed — reactivity is now handled at the hook level via useDataProviderPatients.
+ */
+export const PatientListItemObservable = enhance(PatientListItemInner)
+
+/**
+ * @deprecated Use PatientListItem instead. This alias is no longer needed since
+ * PatientListItem now accepts Patient.T directly.
+ */
+export const PatientListItemPlain = PatientListItemInner
 
 // Styles moved to constants to prevent recreation
 const $imageStyle: ImageStyle = {

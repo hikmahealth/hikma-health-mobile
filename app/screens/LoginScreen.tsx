@@ -23,13 +23,17 @@ import { Text } from "@/components/Text"
 import { TextField } from "@/components/TextField"
 import { View } from "@/components/View"
 import { useLanguage } from "@/hooks/useLanguage"
+import { usePeerRegistration } from "@/hooks/usePeerRegistration"
 import { translate } from "@/i18n/translate"
+import Peer from "@/models/Peer"
 import User from "@/models/User"
 import type { AppStackScreenProps } from "@/navigators/AppNavigator"
+import type { HubSession } from "@/rpc/handshake"
+import { createEncryptedTransport } from "@/rpc/transport"
 import { providerStore } from "@/store/provider"
 import { colors } from "@/theme/colors"
 import { useAppTheme } from "@/theme/context"
-import { getHHApiUrl, setHHApiUrl } from "@/utils/storage"
+import { getHHApiUrl } from "@/utils/storage"
 
 const HIKMA_API_TESTING = process.env.EXPO_PUBLIC_HIKMA_API_TESTING
 
@@ -58,6 +62,8 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null)
   const [scannerVisible, setScannerVisible] = useState(false)
   const [scanned, setScanned] = useState(false)
+
+  const { connectionType, hubSession, isRegistering, registerFromQR } = usePeerRegistration()
 
   const openPrivacyPolicy = () => {
     navigation.navigate("PrivacyPolicy")
@@ -114,14 +120,44 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
   }
 
   const signIn = async () => {
+    if (creds.email.length < 4 || creds.password.length < 4) {
+      return Alert.alert("Invalid email or password")
+    }
+
+    console.log({ connectionType, hubSession })
+
+    // Hub login flow
+    if (connectionType === "sync_hub" && hubSession) {
+      setIsLoading(true)
+      try {
+        const transport = createEncryptedTransport(hubSession)
+        const result = await transport.login(creds.email, creds.password)
+        console.warn("[Login] Hub login: ", { result, creds })
+        if (!result.ok) {
+          setIsLoading(false)
+          Alert.alert(translate("login:hubAuthFailed"))
+          return
+        }
+        // Update session with token and persist
+        const updatedSession: HubSession = { ...hubSession, token: result.data.token }
+        await Peer.Session.save(updatedSession)
+
+        // Set user from hub login response
+        await User.setFromHubLogin(result.data, creds.email, creds.password)
+        setIsLoading(false)
+      } catch (e) {
+        console.error("[Login] Hub login error:", e)
+        setIsLoading(false)
+        Alert.alert(translate("login:hubAuthFailed"))
+      }
+      return
+    }
+
+    // Cloud login flow (existing)
     const HIKMA_API = await getHHApiUrl()
     if (Option.isNone(HIKMA_API)) {
       Alert.alert(translate("login:invalidQRMessage"))
       return
-    }
-
-    if (creds.email.length < 4 || creds.password.length < 4) {
-      return Alert.alert("Invalid email or password")
     }
 
     setIsLoading(true)
@@ -132,7 +168,7 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
       await User.signIn(creds.email, creds.password)
       setIsLoading(false)
     } catch (e) {
-      console.error(e)
+      console.error("[Login] Login error: ", e)
       setIsLoading(false)
 
       // Show appropriate error message based on the error type
@@ -164,25 +200,19 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
     setScanned(true)
     setScannerVisible(false)
 
-    let canOpen = false
-    try {
-      await fetch(data, { method: "HEAD" })
-      canOpen = true
-    } catch (error) {
-      console.error("Error checking URL:", error)
-      canOpen = false
-    }
+    const result = await registerFromQR(data)
+    console.log({ data })
 
-    if (canOpen) {
-      // await SecureStore.setItemAsync("HIKMA_API", data)
-      setHHApiUrl(data)
-      Toast.show("✅ " + translate("login:qrCodeRegistered"), {
+    if (result.ok) {
+      const messageKey =
+        result.type === "sync_hub" ? "login:hubConnected" : "login:qrCodeRegistered"
+      Toast.show(translate(messageKey), {
         duration: Toast.durations.LONG,
         position: Toast.positions.BOTTOM,
       })
     } else {
-      console.log("Invalid QR code data:", data)
-      Toast.show("❌ " + translate("login:invalidQRCode"), {
+      console.log("Peer registration failed:", result.error)
+      Toast.show(translate("login:invalidQRCode"), {
         duration: Toast.durations.LONG,
         position: Toast.positions.BOTTOM,
       })
@@ -284,6 +314,20 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
               <Text color={colors.palette.primary500} tx="login:qrCodeRegister" />
             </View>
           </Pressable>
+
+          {connectionType && (
+            <View pt={8}>
+              <Text
+                size="xs"
+                color={
+                  connectionType === "sync_hub"
+                    ? colors.palette.secondary500
+                    : colors.palette.primary500
+                }
+                tx={connectionType === "sync_hub" ? "login:hubConnected" : "login:qrCodeRegistered"}
+              />
+            </View>
+          )}
         </View>
 
         {/* Spacer Component */}

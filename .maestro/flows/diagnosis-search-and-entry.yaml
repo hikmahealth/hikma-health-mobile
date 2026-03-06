@@ -1,0 +1,64 @@
+# flow: Diagnosis Search and Entry
+# Test navigating to diagnoses, searching for a diagnosis, and adding it
+
+appId: ${MAESTRO_APP_ID}
+onFlowStart:
+  - runFlow: ../shared/_OnFlowStart.yaml
+  - runFlow: ../shared/sign-in.yaml
+---
+# Verify we're on the patients list screen
+- assertVisible: "Patients"
+- assertVisible:
+    id: "patientList"
+
+# Tap on the first patient
+- tapOn:
+    id: "patientListItem.*"
+    index: 0
+- waitForAnimationToEnd
+
+# Navigate to Diagnoses
+- tapOn:
+    id: "patient-diagnoses-btn"
+- waitForAnimationToEnd
+
+# Tap add diagnosis button
+- tapOn: "Add Diagnosis"
+  optional: true
+- tapOn: "New Diagnosis"
+  optional: true
+- waitForAnimationToEnd
+
+# Search for a diagnosis
+- tapOn:
+    text: "Search.*"
+    optional: true
+- tapOn:
+    text: ".*diagnosis.*"
+    optional: true
+- inputText: "Diabetes"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Verify search results appear
+- assertVisible: ".*Diabetes.*"
+
+# Select the first result
+- tapOn:
+    text: ".*Diabetes.*"
+    index: 0
+- waitForAnimationToEnd
+
+# Save the diagnosis
+- tapOn: "Save"
+  optional: true
+- tapOn: "Confirm"
+  optional: true
+- tapOn:
+    id: "submit"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Verify we're back on the diagnoses screen
+- assertVisible: "Diagnoses"

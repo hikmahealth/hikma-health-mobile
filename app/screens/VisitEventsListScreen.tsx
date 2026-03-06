@@ -13,6 +13,7 @@ import { catchError, of as of$ } from "rxjs"
 import { EventListItem } from "@/components/EventListItem"
 import { Fab } from "@/components/Fab"
 import { If } from "@/components/If"
+import { Screen } from "@/components/Screen"
 import { Text } from "@/components/Text"
 import { View } from "@/components/View"
 import AppointmentModel from "@/db/model/Appointment"
@@ -22,15 +23,17 @@ import PrescriptionModel from "@/db/model/Prescription"
 import { useDBVisitAppointments } from "@/hooks/useDBVisitAppointments"
 import { useDBVisitEvents } from "@/hooks/useDBVisitEvents"
 import { usePatientVisitPrescriptions } from "@/hooks/usePatientVisitPrescriptions"
+import { usePermissionGuard } from "@/hooks/usePermissionGuard"
+import { useProviderVisitEvents } from "@/hooks/useProviderVisitEvents"
 import { translate } from "@/i18n/translate"
 import Language from "@/models/Language"
 import Prescription from "@/models/Prescription"
 import User from "@/models/User"
 import { PatientStackScreenProps } from "@/navigators/PatientNavigator"
+import { useDataAccess } from "@/providers/DataAccessProvider"
 import { languageStore } from "@/store/language"
 import { providerStore } from "@/store/provider"
 import { colors } from "@/theme/colors"
-import { Screen } from "@/components/Screen"
 
 interface VisitEventsListScreenProps extends PatientStackScreenProps<"VisitEventsList"> {}
 
@@ -55,6 +58,7 @@ export const openPrescriptionPage = (
   visitId: string,
   visitDate: number,
   provider: User.Provider,
+  canCheck?: (op: string) => boolean,
 ) => {
   Alert.alert(
     "Manage Prescription",
@@ -70,6 +74,13 @@ export const openPrescriptionPage = (
         ? {
             text: "Picked Up",
             onPress: () => {
+              if (canCheck && !canCheck("prescription:updateStatus")) {
+                Toast.show("You do not have permission to update prescription status", {
+                  duration: Toast.durations.SHORT,
+                  position: Toast.positions.BOTTOM,
+                })
+                return
+              }
               Prescription.DB.updatePrescription(
                 prescriptionId,
                 { status: "picked-up" } as any,
@@ -107,7 +118,13 @@ export const VisitEventsListScreen: FC<VisitEventsListScreenProps> = ({ navigati
   const language = useSelector(languageStore, (state) => state.context.language)
   const provider = useSelector(providerStore, (state) => state.context)
   const { patientId, visitId, visitTimestamp } = route.params
-  const eventsList = useDBVisitEvents(visitId, patientId)
+  const { isOnline } = useDataAccess()
+  const { can } = usePermissionGuard()
+
+  // Offline: WatermelonDB observable events. Online: React Query events.
+  const offlineEventsList = useDBVisitEvents(visitId, patientId)
+  const onlineEvents = useProviderVisitEvents(isOnline ? visitId : null, isOnline ? patientId : null)
+  const eventsList = isOnline ? ((onlineEvents.data ?? []) as any) : offlineEventsList
   const appointmentsList = useDBVisitAppointments(visitId)
   const { prescriptions } = usePatientVisitPrescriptions(patientId, visitId)
 
@@ -118,6 +135,12 @@ export const VisitEventsListScreen: FC<VisitEventsListScreenProps> = ({ navigati
   }, [visitTimestamp])
 
   const goToNewPatientVisit = () => {
+    if (!can("visit:create")) {
+      return Toast.show("You do not have permission to create visits", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.BOTTOM,
+      })
+    }
     navigation.navigate("NewVisit", {
       patientId,
       visitId: visitId,
@@ -135,6 +158,12 @@ export const VisitEventsListScreen: FC<VisitEventsListScreenProps> = ({ navigati
         {
           text: translate("eventList:edit"),
           onPress: () => {
+            if (!can("event:edit")) {
+              return Toast.show("You do not have permission to edit events", {
+                duration: Toast.durations.SHORT,
+                position: Toast.positions.BOTTOM,
+              })
+            }
             navigation.navigate("EventForm", {
               patientId,
               visitId,
@@ -206,6 +235,7 @@ export const VisitEventsListScreen: FC<VisitEventsListScreenProps> = ({ navigati
               visitId,
               visitDate,
               provider,
+              can,
             )
           }
         />

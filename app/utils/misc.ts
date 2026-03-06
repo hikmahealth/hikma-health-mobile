@@ -141,3 +141,22 @@ export function getPrescriptionItemStatusColor(
       return ["#374151", "#ffffff"] // gray-700
   }
 }
+
+/**
+ * Check if a given URL is accessible over the network
+ * @param {string} url - URL or IP address
+ * @param {number} timeoutMs - Timeout in milliseconds before aborting the request
+ * @returns {Promise<boolean>} whether or not it is reachable over the network
+ */
+export const checkUrl = async (url: string, timeoutMs: number): Promise<boolean> => {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    const res = await fetch(url, { method: "HEAD", signal: controller.signal })
+    return res.ok
+  } catch {
+    return false
+  } finally {
+    clearTimeout(timer)
+  }
+}

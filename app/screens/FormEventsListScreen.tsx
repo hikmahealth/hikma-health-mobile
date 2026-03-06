@@ -4,10 +4,16 @@ import { LegendList } from "@legendapp/list"
 import { NativeStackScreenProps } from "@react-navigation/native-stack"
 import { useSelector } from "@xstate/react"
 
-import { EventListItem } from "@/components/EventListItem"
+import Toast from "react-native-root-toast"
+
+import { EventListItem, EventListItemPlain } from "@/components/EventListItem"
 import EventModel from "@/db/model/Event"
 import { useDBFormEvents } from "@/hooks/useDBFormEvents"
 import { useDBSingleEventForm } from "@/hooks/useDBSingleEventForm"
+import { usePermissionGuard } from "@/hooks/usePermissionGuard"
+import { useDataAccess } from "@/providers/DataAccessProvider"
+import { useProviderFormEvents } from "@/hooks/useProviderFormEvents"
+import { useDeleteEvent } from "@/hooks/useDeleteEvent"
 import { translate } from "@/i18n/translate"
 import Event from "@/models/Event"
 import { PatientNavigatorParamList } from "@/navigators/PatientNavigator"
@@ -20,7 +26,12 @@ interface FormEventsListScreenProps
 export const FormEventsListScreen: FC<FormEventsListScreenProps> = ({ navigation, route }) => {
   const { language } = useSelector(languageStore, (state) => state.context)
   const { patientId, formId } = route.params
-  const eventsList = useDBFormEvents(formId, patientId)
+  const { isOnline } = useDataAccess()
+  const offlineEventsList = useDBFormEvents(formId, patientId)
+  const onlineEventsQuery = useProviderFormEvents(isOnline ? formId : null, isOnline ? patientId : null)
+  const eventsList = isOnline ? (onlineEventsQuery.data ?? []) : offlineEventsList
+  const { can } = usePermissionGuard()
+  const deleteEventMutation = useDeleteEvent()
 
   const form = useDBSingleEventForm(formId)
   useEffect(() => {
@@ -28,7 +39,7 @@ export const FormEventsListScreen: FC<FormEventsListScreenProps> = ({ navigation
     navigation.setOptions({ title: `${formName} (${eventsList.length})` })
   }, [eventsList.length, form?.name])
 
-  const openEventOptions = (event: EventModel) => {
+  const openEventOptions = (event: any) => {
     Alert.alert(
       translate("eventList:eventOptions"),
       translate("eventList:eventOptionsDescription"),
@@ -36,6 +47,12 @@ export const FormEventsListScreen: FC<FormEventsListScreenProps> = ({ navigation
         {
           text: translate("eventList:edit"),
           onPress: () => {
+            if (!can("event:edit")) {
+              return Toast.show("You do not have permission to edit events", {
+                duration: Toast.durations.SHORT,
+                position: Toast.positions.BOTTOM,
+              })
+            }
             navigation.navigate("EventForm", {
               patientId,
               visitId: event.visitId,
@@ -47,14 +64,28 @@ export const FormEventsListScreen: FC<FormEventsListScreenProps> = ({ navigation
         {
           text: translate("eventList:delete"),
           onPress: () => {
-            Event.DB.softDelete(event.id)
-              .then(() => {
-                Alert.alert("Success", "Event deleted")
+            if (!can("event:delete")) {
+              return Toast.show("You do not have permission to delete events", {
+                duration: Toast.durations.SHORT,
+                position: Toast.positions.BOTTOM,
               })
-              .catch((error) => {
-                console.log(error)
-                Alert.alert("Error", "Could not delete event")
-              })
+            }
+            if (isOnline) {
+              deleteEventMutation
+                .mutateAsync(event.id)
+                .then(() => Alert.alert("Success", "Event deleted"))
+                .catch((error) => {
+                  console.log(error)
+                  Alert.alert("Error", "Could not delete event")
+                })
+            } else {
+              Event.DB.softDelete(event.id)
+                .then(() => Alert.alert("Success", "Event deleted"))
+                .catch((error) => {
+                  console.log(error)
+                  Alert.alert("Error", "Could not delete event")
+                })
+            }
           },
         },
       ],
@@ -67,11 +98,15 @@ export const FormEventsListScreen: FC<FormEventsListScreenProps> = ({ navigation
   return (
     <Screen preset="fixed">
       <LegendList
-        data={eventsList}
+        data={eventsList as any}
         contentContainerStyle={$contentContainerStyle}
-        renderItem={({ item }) => (
-          <EventListItem event={item} openEventOptions={openEventOptions} language={language} />
-        )}
+        renderItem={({ item }) =>
+          isOnline ? (
+            <EventListItemPlain event={item} openEventOptions={openEventOptions} language={language} />
+          ) : (
+            <EventListItem event={item} openEventOptions={openEventOptions} language={language} />
+          )
+        }
         keyExtractor={(item) => item.id}
         ListFooterComponent={() => <View style={$legendListFooter} />}
       />

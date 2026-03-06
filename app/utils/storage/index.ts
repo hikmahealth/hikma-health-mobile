@@ -1,9 +1,9 @@
 import * as SecureStore from "expo-secure-store"
 import { Option } from "effect"
 import Config from "react-native-config"
-import { MMKV } from "react-native-mmkv"
+import { createMMKV } from "react-native-mmkv"
 
-export const storage = new MMKV()
+export const storage = createMMKV()
 
 /**
  * Loads a string from storage.
@@ -71,7 +71,7 @@ export function save(key: string, value: unknown): boolean {
  */
 export function remove(key: string): void {
   try {
-    storage.delete(key)
+    storage.remove(key)
   } catch {}
 }
 
@@ -86,6 +86,7 @@ export function clear(): void {
 
 /**
  * Get the HH api URL stored in encrypted storage
+ * @deprecated - prefer the Peers table for information on all peers
  * @returns {Promise<string | null>}
  */
 export async function getHHApiUrl(): Promise<Option.Option<string>> {
@@ -100,6 +101,7 @@ export async function getHHApiUrl(): Promise<Option.Option<string>> {
 
 /**
  * Set the HH api URL stored in encrypted storage
+ * @deprecated - prefer the Peers table for information on all peers
  * @param {string} url The url to store.
  */
 export async function setHHApiUrl(url: string): Promise<boolean> {

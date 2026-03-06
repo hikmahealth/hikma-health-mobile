@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from "react"
+import { FC, useCallback, useEffect, useRef, useState } from "react"
 import {
   Alert,
   BackHandler,
@@ -8,90 +8,187 @@ import {
   ViewStyle,
   StyleSheet,
   TouchableOpacity,
+  TextStyle,
+  ActivityIndicator,
 } from "react-native"
-import { CameraType, useCameraPermissions, BarcodeScanningResult } from "expo-camera"
+import { CameraType, useCameraPermissions, BarcodeScanningResult, CameraView } from "expo-camera"
+import * as SecureStore from "expo-secure-store"
+import { useSelector } from "@xstate/react"
 import { Option } from "effect"
-import CameraView from "expo-camera/build/CameraView"
-import { LucideCamera, LucideRefreshCcw } from "lucide-react-native"
+import { LucideCamera, LucideRefreshCcw, LucideUpload, LucideDownload } from "lucide-react-native"
 import Toast from "react-native-root-toast"
-import { v1 as uuidV1 } from "uuid"
+
+import { useIsFocused } from "@react-navigation/native"
 
 import { Screen } from "@/components/Screen"
 import { Text } from "@/components/Text"
+import { TextField } from "@/components/TextField"
 import { View } from "@/components/View"
+import { useForceSyncActions } from "@/hooks/useForceSyncActions"
+import { usePeerRegistration } from "@/hooks/usePeerRegistration"
 import { useSync } from "@/hooks/useSync"
 import { translate } from "@/i18n/translate"
-import Sync from "@/models/Sync"
+import Peer from "@/models/Peer"
+import User from "@/models/User"
 import type { AppStackScreenProps } from "@/navigators/AppNavigator"
+import type { HubSession } from "@/rpc/handshake"
+import { createEncryptedTransport } from "@/rpc/transport"
+import { appStateStore } from "@/store/appState"
 import { colors } from "@/theme/colors"
 import { getHHApiUrl, setHHApiUrl } from "@/utils/storage"
 
+import {
+  peerToServerDisplay,
+  markSyncTarget,
+  getServerDisplayName,
+  type DisplayServerType,
+  type ServerDisplay,
+} from "./syncSettingsHelpers"
+import { If } from "@/components/If"
+
 interface SyncSettingsScreenProps extends AppStackScreenProps<"SyncSettings"> {}
+const { height, width } = Dimensions.get("screen")
 
-const { width, height } = Dimensions.get("window")
+// ── Helpers ───────────────────────────────────────────────────────────
 
-/**
- * Hook to get the current servers that have been configured
- * @returns {servers: Sync.Server.T[], setServers: (servers: Sync.Server.T[]) => void, refresh: () => Promise<void>}
- */
-function useSyncServerDetails() {
-  const [servers, setServers] = useState<Sync.Server.T[]>([])
+const formatTimestamp = (ts: number | null): string => {
+  if (!ts) return "Never"
+  return new Date(ts).toLocaleString()
+}
 
-  async function getDetails() {
-    try {
-      const servers = await Sync.Server.getAll()
-      return setServers(Object.values(servers))
-    } catch (error) {
-      console.error(error)
-      setServers([])
-    }
+const formatDateForInput = (ts: number | null): string => {
+  if (!ts) return ""
+  const d = new Date(ts)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
+const parseDateInput = (input: string): number => {
+  const parsed = new Date(input)
+  return isNaN(parsed.getTime()) ? 0 : parsed.getTime()
+}
+
+async function reauthWithHub(
+  hubSession: HubSession,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const email = await SecureStore.getItemAsync("provider_email")
+  const password = await SecureStore.getItemAsync("provider_password")
+
+  if (!email || !password) {
+    return { ok: false, error: "no_credentials" }
   }
 
-  useEffect(() => {
-    getDetails()
-  }, [])
+  const transport = createEncryptedTransport(hubSession)
+  const result = await transport.login(email, password)
 
-  return { servers, setServers, refresh: getDetails }
+  if (!result.ok) {
+    return { ok: false, error: result.error.message }
+  }
+
+  const updatedSession: HubSession = { ...hubSession, token: result.data.token }
+  await Peer.Session.save(updatedSession)
+  await User.setFromHubLogin(result.data, email, password)
+
+  return { ok: true }
 }
+
+// ── Hook ──────────────────────────────────────────────────────────────
+
+function usePeerServers(activeSyncPeerId: string | null) {
+  const [servers, setServers] = useState<ServerDisplay[]>([])
+
+  useEffect(() => {
+    const { unsubscribe } = Peer.DB.subscribe((peers) => {
+      setServers(markSyncTarget(peers.map(peerToServerDisplay), activeSyncPeerId))
+    })
+    return unsubscribe
+  }, [activeSyncPeerId])
+
+  return { servers }
+}
+
+const HEARTBEAT_INTERVAL_MS = 5000
+
+function useHeartbeats(servers: ServerDisplay[], active: boolean) {
+  const [statuses, setStatuses] = useState<Record<string, boolean>>({})
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const poll = useCallback(async () => {
+    const results: Record<string, boolean> = {}
+    await Promise.all(
+      servers.map(async (s) => {
+        if (!s.url) {
+          results[s.id] = false
+          return
+        }
+        results[s.id] = await Peer.heartbeat(s.url)
+      }),
+    )
+    setStatuses(results)
+  }, [servers])
+
+  useEffect(() => {
+    if (!active || servers.length === 0) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+      return
+    }
+
+    poll()
+    timerRef.current = setInterval(poll, HEARTBEAT_INTERVAL_MS)
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+    }
+  }, [active, poll, servers.length])
+
+  return statuses
+}
+
+// ── Screen ────────────────────────────────────────────────────────────
 
 export const SyncSettingsScreen: FC<SyncSettingsScreenProps> = () => {
   const [isCameraScannerActive, setIsCameraScannerActive] = useState(false)
   const [facing, setFacing] = useState<CameraType>("back")
   const [permission, requestPermission] = useCameraPermissions()
-  const [serverTypeScanner, setServerTypeScanner] = useState<Sync.ServerType>("local")
+  const [serverTypeScanner, setServerTypeScanner] = useState<DisplayServerType>("local")
+  const [scanned, setScanned] = useState(false)
+  const [processingServer, setProcessingServer] = useState(false)
 
-  const { servers, refresh } = useSyncServerDetails()
+  const activeSyncPeerId = useSelector(appStateStore, (s) => s.context.activeSyncPeerId)
+  const { servers } = usePeerServers(activeSyncPeerId)
+  const { registerFromQR } = usePeerRegistration()
+  const isFocused = useIsFocused()
+  const heartbeats = useHeartbeats(servers, isFocused)
+
+  const handleSetActivePeer = (peerId: string) => {
+    appStateStore.send({ type: "SET_ACTIVE_SYNC_PEER", peerId })
+  }
 
   /**
-   * Cold start problem: remote server is not set up as this feature is being introduced. It exists in the encrypted storage
+   * Cold start: ensure a cloud peer exists if the app has an API URL configured
+   * but no cloud_server peer is registered yet.
    */
   useEffect(() => {
-    const checkAndSetCloudServer = async () => {
-      const existingServers = await Sync.Server.getAll()
-      const hasCloudServer = Object.values(existingServers).some(
-        (server) => server.type === "cloud",
-      )
+    const ensureCloudPeer = async () => {
+      const clouds = await Peer.DB.getActiveByType("cloud_server")
+      if (clouds.length > 0) return
 
-      if (!hasCloudServer) {
-        const url = await getHHApiUrl()
-        if (url) {
-          await Sync.Server.set("cloud", {
-            id: uuidV1(),
-            name: "cloud",
-            url: Option.isOption(url) ? Option.getOrElse(url, () => "") : "",
-            isActive: true,
-            type: "cloud",
-          })
-
-          await refresh()
-        }
-      }
+      const url = await getHHApiUrl()
+      if (!url || !Option.isSome(url)) return
+      await Peer.DB.upsertCloud(Option.getOrElse(url, () => ""))
     }
 
-    checkAndSetCloudServer()
+    ensureCloudPeer()
   }, [])
 
-  // on back press of the phone, close the camera, if camera is closed, go back
   useEffect(() => {
     const backAction = () => {
       if (isCameraScannerActive) {
@@ -102,84 +199,71 @@ export const SyncSettingsScreen: FC<SyncSettingsScreenProps> = () => {
     }
 
     const backHandler = BackHandler.addEventListener("hardwareBackPress", backAction)
-
-    return () => {
-      backHandler.remove()
-    }
+    return () => backHandler.remove()
   }, [isCameraScannerActive])
 
-  async function setCameraActive(serverType: Sync.ServerType) {
+  async function setCameraActive(serverType: DisplayServerType) {
     const { status } = await requestPermission()
-    console.log("status", status)
     if (status === "granted") {
       setIsCameraScannerActive(true)
+      setScanned(false)
       setServerTypeScanner(serverType)
     } else {
       Alert.alert(translate("login:requiredCameraPermissions"))
     }
   }
 
-  // whether or not there exists a local sync server
   const hasLocalServer = servers.some((server) => server.type === "local")
 
   const handleBarCodeScanned =
-    (serverType: Sync.ServerType) =>
+    (_serverType: DisplayServerType) =>
     async ({ data }: BarcodeScanningResult) => {
+      setScanned(true)
+      setProcessingServer(true)
       try {
-        await Sync.Server.set(serverType, {
-          id: uuidV1(),
-          name: serverType,
-          url: data,
-          isActive: false,
-          type: serverType,
-        })
-        await setHHApiUrl(data)
-        await refresh()
+        const result = await registerFromQR(data)
+
+        if (!result.ok) {
+          Alert.alert(translate("login:invalidQRCode"))
+          setIsCameraScannerActive(false)
+          return
+        }
+
+        if (result.type !== "sync_hub") {
+          await setHHApiUrl(result.url)
+        }
 
         Vibration.vibrate(500)
+        await new Promise((resolve) => setTimeout(resolve, 2000))
 
-        // FIXME: Check that the scanned data is valid
+        if (result.type === "sync_hub") {
+          const authResult = await reauthWithHub(result.hubSession)
+
+          if (authResult.ok) {
+            Toast.show(translate("login:hubConnected"), {
+              position: Toast.positions.BOTTOM,
+              duration: Toast.durations.LONG,
+            })
+          } else {
+            console.error("[SyncSettings] Hub re-auth failed:", authResult.error)
+            Toast.show(translate("login:hubAuthFailed"), {
+              position: Toast.positions.BOTTOM,
+              duration: Toast.durations.LONG,
+            })
+          }
+        }
       } catch (error) {
         console.error(error)
         Alert.alert(translate("login:invalidQRCode"))
+      } finally {
+        setScanned(false)
+        setProcessingServer(false)
       }
       setIsCameraScannerActive(false)
     }
 
-  const handleSetActiveServer = (type: Sync.ServerType) => {
-    console.log({ type })
-    Alert.alert(
-      translate("syncSettingsScreen:confirmSetDefault"),
-      translate("syncSettingsScreen:confirmSetDefaultDescription"),
-      [
-        { text: translate("common:cancel"), style: "cancel" },
-        {
-          text: translate("common:confirm"),
-          onPress: () => {
-            Sync.Server.setActive(type)
-              .then(() => {
-                refresh()
-                Toast.show("Server set as default", {
-                  position: Toast.positions.BOTTOM,
-                  duration: Toast.durations.SHORT,
-                })
-              })
-              .catch((error) => {
-                console.error(error)
-                Alert.alert(translate("syncSettingsScreen:syncError"))
-              })
-          },
-        },
-      ],
-    )
-  }
-
-  const handleAddServer = (type: Sync.ServerType) => {
-    if (type === "local") {
-      setCameraActive("local")
-    } else if (type === "cloud") {
-      setCameraActive("cloud")
-    }
+  const handleAddServer = (type: DisplayServerType) => {
+    setCameraActive(type)
   }
 
   const cloudServer = servers.find((server) => server.type === "cloud")
@@ -195,9 +279,15 @@ export const SyncSettingsScreen: FC<SyncSettingsScreenProps> = () => {
             barcodeTypes: ["qr"],
           }}
           facing={facing}
-          onBarcodeScanned={handleBarCodeScanned(serverTypeScanner)}
+          onBarcodeScanned={scanned ? undefined : handleBarCodeScanned(serverTypeScanner)}
           style={StyleSheet.absoluteFillObject}
         />
+
+        <If condition={processingServer && scanned}>
+          <View style={$loadingIndicatorContainer}>
+            <ActivityIndicator size="large" color={colors.palette.primary600} />
+          </View>
+        </If>
       </View>
     )
   }
@@ -210,37 +300,6 @@ export const SyncSettingsScreen: FC<SyncSettingsScreenProps> = () => {
       console.error("Manual sync failed:", error)
     }
   }
-
-  const handleClearServer = async (type: Sync.ServerType) => {
-    handleBarCodeScanned(type)({
-      type,
-      data: "",
-      raw: undefined,
-      cornerPoints: [],
-      bounds: {
-        origin: { x: 0, y: 0 },
-        size: { width: 0, height: 0 },
-      },
-      extra: undefined,
-    })
-  }
-
-  // TODO: All time re-sync. Get all data from server.
-  const handleAllTimeSync = async () => {
-    // try {
-    //   await startSync()
-    // } catch (error) {
-    //   console.error("All time sync failed:", error)
-    // }
-  }
-
-  getHHApiUrl()
-    .then((url) => {
-      console.log("HH API URL:", url)
-    })
-    .catch((error) => {
-      console.error("Failed to get HH API URL:", error)
-    })
 
   return (
     <Screen style={$root} preset="scroll">
@@ -267,17 +326,18 @@ export const SyncSettingsScreen: FC<SyncSettingsScreenProps> = () => {
       {cloudServer && (
         <ServerTypeComponent
           handleAddServer={handleAddServer}
-          handleSetActiveServer={handleSetActiveServer}
           server={cloudServer}
+          isConnected={heartbeats[cloudServer.id]}
+          onSetActive={handleSetActivePeer}
         />
       )}
 
       {localServer && (
         <ServerTypeComponent
           handleAddServer={handleAddServer}
-          handleSetActiveServer={handleSetActiveServer}
           server={localServer}
-          clearServer={handleClearServer}
+          isConnected={heartbeats[localServer.id]}
+          onSetActive={handleSetActivePeer}
         />
       )}
 
@@ -295,12 +355,8 @@ export const SyncSettingsScreen: FC<SyncSettingsScreenProps> = () => {
   )
 }
 
-/**
- * Connect button
- * @param {Function} onPress - The function to call when the button is pressed
- * @param {"connect" | "change"} mode - The mode of the button
- * @returns {JSX.Element} The connect button
- */
+// ── Components ────────────────────────────────────────────────────────
+
 function ConnectButton({ onPress, mode }: { onPress: () => void; mode: "connect" | "change" }) {
   return (
     <Pressable onPress={onPress} style={$connectButton}>
@@ -314,63 +370,137 @@ function ConnectButton({ onPress, mode }: { onPress: () => void; mode: "connect"
   )
 }
 
-/**
- * Server type component
- * @param {Sync.Server.T} server - The server to display
- * @param {Function} handleSetActiveServer - The function to call when the server is set as active
- * @param {Function} handleAddServer - The function to call when the server is added
- * @param {Function} clearServer - The function to call when the server is cleared
- * @returns {JSX.Element} The server type component
- */
 function ServerTypeComponent({
   server,
-  handleSetActiveServer,
   handleAddServer,
-  clearServer,
+  isConnected,
+  onSetActive,
 }: {
-  server: Sync.Server.T
-  handleSetActiveServer: (type: Sync.ServerType) => void
-  handleAddServer: (type: Sync.ServerType) => void
-  clearServer?: (type: Sync.ServerType) => Promise<void>
+  server: ServerDisplay
+  handleAddServer: (type: DisplayServerType) => void
+  isConnected?: boolean
+  onSetActive: (peerId: string) => void
 }) {
   return (
     <View style={$withBottomBorder} py={12} direction="column" gap={4}>
-      <View direction="row" gap={4} justifyContent="space-between">
-        <Text text={getServerDisplayName(server.type)} size="md" />
-        {server.isActive && <ActiveBadge isDefault={server.isActive} />}
+      <View direction="row" gap={4} justifyContent="space-between" alignItems="center">
+        <View direction="row" gap={6} alignItems="center">
+          <View
+            style={[$connectionDot, isConnected ? $connectionDotOnline : $connectionDotOffline]}
+          />
+          <Text text={getServerDisplayName(server.type)} size="md" />
+        </View>
+        {server.isActive ? (
+          <ActiveBadge isDefault />
+        ) : (
+          <TouchableOpacity style={$setActiveButton} onPress={() => onSetActive(server.id)}>
+            <Text text="Set Active" size="xxs" color={colors.palette.primary600} />
+          </TouchableOpacity>
+        )}
       </View>
       <Text text={server.url} size="xxs" />
 
+      <Text
+        text={`Last synced: ${formatTimestamp(server.lastSyncedAt)}`}
+        size="xxs"
+        color={colors.palette.neutral500}
+      />
+
       <View direction="row" gap={4} justifyContent="space-between">
-        {!server.isActive && (
-          <Pressable onPress={() => handleSetActiveServer(server.type)} hitSlop={10}>
-            <View style={$makeDefaultButton}>
-              <Text
-                size="xs"
-                color={colors.palette.primary700}
-                text="Make Default"
-                textDecorationLine="underline"
-              />
-            </View>
-          </Pressable>
-        )}
-
-        {clearServer && (
-          <Pressable onPress={() => clearServer(server.type)} hitSlop={10}>
-            <View>
-              <Text
-                size="xs"
-                color={colors.palette.primary700}
-                text="Clear"
-                textDecorationLine="underline"
-              />
-            </View>
-          </Pressable>
-        )}
-
-        {/*{server.type === "local" && (*/}
         <ConnectButton onPress={() => handleAddServer(server.type)} mode="change" />
-        {/*)}*/}
+      </View>
+
+      <ForceSyncActions serverId={server.id} lastSyncedAt={server.lastSyncedAt} />
+    </View>
+  )
+}
+
+/**
+ * Force sync upload/download actions for a specific peer.
+ * Includes a date input and upload/download buttons.
+ */
+function ForceSyncActions({
+  serverId,
+  lastSyncedAt,
+}: {
+  serverId: string
+  lastSyncedAt: number | null
+}) {
+  const [dateInput, setDateInput] = useState(formatDateForInput(lastSyncedAt))
+  const { state, upload, download } = useForceSyncActions(serverId)
+
+  const isBusy = state.isUploading || state.isDownloading
+
+  const handleUpload = () => {
+    const ts = parseDateInput(dateInput)
+    Alert.alert(
+      "Upload Device Data",
+      `Upload all records changed since ${dateInput || "the beginning"} to this server?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Upload", onPress: () => upload(ts) },
+      ],
+    )
+  }
+
+  const handleDownload = () => {
+    const ts = parseDateInput(dateInput)
+    Alert.alert(
+      "Download Data From Server",
+      `Download all records since ${dateInput || "the beginning"} from this server?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Download", onPress: () => download(ts) },
+      ],
+    )
+  }
+
+  return (
+    <View pt={8} direction="column" gap={6}>
+      <Text text="Data Transfer" size="xs" color={colors.palette.neutral600} />
+
+      {/* TODO: THIS SHOULD BE A DATE PICKER */}
+      <TextField
+        label="Since:"
+        // style={$dateInput}
+        value={dateInput}
+        onChangeText={setDateInput}
+        placeholder="YYYY-MM-DD"
+        placeholderTextColor={colors.palette.neutral400}
+      />
+
+      <View direction="row" gap={8}>
+        <TouchableOpacity
+          style={[$forceSyncButton, isBusy && $syncButtonDisabled]}
+          onPress={handleUpload}
+          disabled={isBusy}
+        >
+          <LucideUpload
+            color={isBusy ? colors.palette.neutral400 : colors.palette.primary600}
+            size={14}
+          />
+          <Text
+            text={state.isUploading ? "Uploading..." : "Upload device data"}
+            size="xxs"
+            color={isBusy ? colors.palette.neutral400 : colors.palette.primary600}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[$forceSyncButton, isBusy && $syncButtonDisabled]}
+          onPress={handleDownload}
+          disabled={isBusy}
+        >
+          <LucideDownload
+            color={isBusy ? colors.palette.neutral400 : colors.palette.primary600}
+            size={14}
+          />
+          <Text
+            text={state.isDownloading ? "Downloading..." : "Download from server"}
+            size="xxs"
+            color={isBusy ? colors.palette.neutral400 : colors.palette.primary600}
+          />
+        </TouchableOpacity>
       </View>
     </View>
   )
@@ -384,21 +514,7 @@ function ActiveBadge({ isDefault }: { isDefault: boolean }) {
   )
 }
 
-/**
- * Given a server type, return the display name
- * @param {Sync.ServerType} type - The type of server
- * @returns {string} The display name of the server
- */
-const getServerDisplayName = (type: Sync.ServerType): string => {
-  switch (type) {
-    case "local":
-      return "Local Server"
-    case "cloud":
-      return "Cloud Server"
-    default:
-      return "Unknown Server"
-  }
-}
+// ── Styles ────────────────────────────────────────────────────────────
 
 const $root: ViewStyle = {
   flex: 1,
@@ -443,15 +559,66 @@ const $connectButton: ViewStyle = {
   gap: 4,
 }
 
-const $makeDefaultButton: ViewStyle = {
-  backgroundColor: colors.palette.neutral200,
-  borderRadius: 6,
-  padding: 4,
-}
-
 const $activeBadge: ViewStyle = {
   backgroundColor: colors.palette.neutral300,
   borderRadius: 6,
   paddingHorizontal: 8,
   paddingVertical: 4,
+}
+
+const $setActiveButton: ViewStyle = {
+  borderRadius: 6,
+  paddingHorizontal: 8,
+  paddingVertical: 4,
+  borderWidth: 1,
+  borderColor: colors.palette.primary200,
+  backgroundColor: colors.palette.primary50,
+}
+
+const $forceSyncButton: ViewStyle = {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 4,
+  paddingHorizontal: 12,
+  paddingVertical: 8,
+  borderRadius: 6,
+  borderWidth: 1,
+  borderColor: colors.palette.primary200,
+  backgroundColor: colors.palette.primary50,
+}
+
+const $dateInput: TextStyle = {
+  flex: 1,
+  borderWidth: 1,
+  borderColor: colors.palette.neutral300,
+  borderRadius: 6,
+  paddingHorizontal: 10,
+  paddingVertical: 6,
+  fontSize: 12,
+  color: colors.text,
+}
+
+const $loadingIndicatorContainer: ViewStyle = {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 999,
+}
+
+const $connectionDot: ViewStyle = {
+  width: 10,
+  height: 10,
+  borderRadius: 5,
+}
+
+const $connectionDotOnline: ViewStyle = {
+  backgroundColor: colors.palette.green600,
+}
+
+const $connectionDotOffline: ViewStyle = {
+  backgroundColor: colors.palette.neutral400,
 }

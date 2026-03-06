@@ -28,4 +28,11 @@ config.resolver.unstable_conditionNames = ["require", "default", "browser"]
 // such as Firebase that use the extension cjs.
 config.resolver.sourceExts.push("cjs")
 
+// Enable package exports resolution so Metro respects the "exports" field
+// in package.json files (e.g. @noble/curves, @noble/hashes, @noble/ciphers).
+// These packages define exports with .js extensions (e.g. "./ed25519.js")
+// but our code imports without extensions (e.g. "@noble/curves/ed25519").
+// unstable_enablePackageExports makes Metro resolve them correctly.
+config.resolver.unstable_enablePackageExports = true
+
 module.exports = config

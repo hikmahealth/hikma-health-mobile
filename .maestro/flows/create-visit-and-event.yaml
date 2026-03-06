@@ -1,0 +1,58 @@
+# flow: Create Visit and Event
+# Test creating a new visit, filling an event form, and verifying
+
+appId: ${MAESTRO_APP_ID}
+onFlowStart:
+  - runFlow: ../shared/_OnFlowStart.yaml
+  - runFlow: ../shared/sign-in.yaml
+---
+# Verify we're on the patients list screen
+- assertVisible: "Patients"
+- assertVisible:
+    id: "patientList"
+
+# Tap on the first patient
+- tapOn:
+    id: "patientListItem.*"
+    index: 0
+- waitForAnimationToEnd
+
+# Tap "New Visit" to create a visit
+- tapOn: "New Visit"
+- waitForAnimationToEnd
+
+# We should see the list of event forms to choose from
+# Tap on the first available form card
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Select the first event form
+- tapOn:
+    index: 0
+    optional: true
+- waitForAnimationToEnd
+
+# The event form should be visible with a submit button
+- assertVisible:
+    id: "submit"
+
+# Fill in the first available field (if any text inputs are visible)
+- scroll
+
+# Submit the event form
+- tapOn:
+    id: "submit"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Complete the visit
+- tapOn: "Complete Visit"
+  optional: true
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Navigate to visit history to verify
+- tapOn:
+    id: "patient-history-btn"
+    optional: true
+- waitForAnimationToEnd

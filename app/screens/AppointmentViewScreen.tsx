@@ -29,6 +29,7 @@ import { spacing } from "@/theme/spacing"
 import { useSelector } from "@xstate/react"
 import { providerStore } from "@/store/provider"
 import { useFocusEffect } from "@react-navigation/native"
+import { usePermissionGuard } from "@/hooks/usePermissionGuard"
 // import { useNavigation } from "@react-navigation/native"
 
 interface AppointmentViewScreenProps
@@ -40,6 +41,7 @@ export const AppointmentViewScreen: FC<AppointmentViewScreenProps> = ({ route, n
   const { appointmentId } = route.params
   const { providerId } = useSelector(providerStore, (state) => ({ providerId: state.context.id }))
 
+  const { can } = usePermissionGuard()
   const { appointment, patient, clinic, isLoading } = useAppointment(appointmentId)
 
   const visitEvents = useDBVisitEvents(appointment?.fulfilledVisitId, patient?.id)
@@ -83,6 +85,12 @@ export const AppointmentViewScreen: FC<AppointmentViewScreenProps> = ({ route, n
 
   const handleDateChange = (date: Date) => {
     if (!validateAppointment(appointment)) return
+    if (!can("appointment:update")) {
+      Toast.show("You do not have permission to reschedule appointments", {
+        position: Toast.positions.BOTTOM,
+      })
+      return
+    }
     // Confirm with the user that the want to reschedule to another date
     Alert.alert(
       "Reschedule Appointment",
@@ -127,6 +135,12 @@ export const AppointmentViewScreen: FC<AppointmentViewScreenProps> = ({ route, n
     let updatedMetadata: Record<string, any>
 
     if (!validateAppointment(appointment)) return
+    if (!can("appointment:update")) {
+      Toast.show("You do not have permission to update appointments", {
+        position: Toast.positions.BOTTOM,
+      })
+      return
+    }
     try {
       // Check if metadata is a valid object, if not, create a new object
       updatedMetadata =
@@ -166,6 +180,12 @@ export const AppointmentViewScreen: FC<AppointmentViewScreenProps> = ({ route, n
 
   const updateAppointmentStatus = (status: Appointment.Status) => {
     if (!validateAppointment(appointment)) return
+    if (!can("appointment:update")) {
+      Toast.show("You do not have permission to update appointment status", {
+        position: Toast.positions.BOTTOM,
+      })
+      return
+    }
     Appointment.DB.update(appointment.id, { status })
       .then(() => {
         Toast.show("✅ Appointment status updated", {
@@ -189,6 +209,12 @@ export const AppointmentViewScreen: FC<AppointmentViewScreenProps> = ({ route, n
 
   const checkinPatient = () => {
     if (!validateAppointment(appointment)) return
+    if (!can("appointment:update")) {
+      Toast.show("You do not have permission to check in patients", {
+        position: Toast.positions.BOTTOM,
+      })
+      return
+    }
     Appointment.DB.update(appointment.id, { status: "checked_in" })
       .then(() => {
         Toast.show("✅ Patient checked in", {
@@ -230,6 +256,12 @@ export const AppointmentViewScreen: FC<AppointmentViewScreenProps> = ({ route, n
 
   const markAppointmentComplete = () => {
     if (!validateAppointment(appointment)) return
+    if (!can("appointment:markComplete")) {
+      Toast.show("You do not have permission to mark appointments as complete", {
+        position: Toast.positions.BOTTOM,
+      })
+      return
+    }
     Alert.alert(
       "Mark Appointment Complete",
       "Do you want to mark this appointment as complete?",
@@ -295,6 +327,13 @@ export const AppointmentViewScreen: FC<AppointmentViewScreenProps> = ({ route, n
           containerStyle: {
             marginBottom: 100,
           },
+        })
+        return
+      }
+
+      if (!can("appointment:update")) {
+        Toast.show("You do not have permission to update department status", {
+          position: Toast.positions.BOTTOM,
         })
         return
       }

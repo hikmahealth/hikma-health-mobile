@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react"
-import { Option } from "effect"
 
 import Event from "@/models/Event"
 import Visit from "@/models/Visit"
 
 /**
  * Get all events for a visit, sorted by created_at
- * @param {Option.Option<string>} visitId
+ * @param {string | null} visitId
  * @returns {{ events: Event.DB.T[]; isLoading: boolean }}
  */
-export function useVisitEvents(visitId: Option.Option<string>): {
+export function useVisitEvents(visitId: string | null): {
   events: Event.DB.T[]
   isLoading: boolean
 } {
@@ -17,23 +16,20 @@ export function useVisitEvents(visitId: Option.Option<string>): {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (Option.isNone(visitId)) {
+    if (visitId == null) {
       setEvents([])
       setIsLoading(false)
       return
     }
     setIsLoading(true)
-    const sub = Visit.DB.subscribeToEvents(visitId.value, (events, isLoading) => {
-      setEvents(events.pipe(Option.getOrElse(() => [])))
-      if (isLoading) {
-        setEvents([])
-      }
-      setIsLoading(isLoading)
+    const sub = Visit.DB.subscribeToEvents(visitId, (events) => {
+      setEvents(events)
+      setIsLoading(false)
     })
     return () => {
-      return sub?.unsubscribe()
+      sub?.unsubscribe()
     }
-  }, [Option.getOrNull(visitId)])
+  }, [visitId])
 
   return { events, isLoading }
 }
