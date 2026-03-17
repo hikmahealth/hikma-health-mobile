@@ -5,8 +5,11 @@ import { Option } from "effect"
 // ---------------------------------------------------------------------------
 const mockStorage: Record<string, string | number | boolean | undefined> = {}
 
+jest.mock("../../app/models/Peer", () => ({
+  default: { getActiveUrl: jest.fn(() => Promise.resolve(null)) },
+}))
+
 jest.mock("../../app/utils/storage", () => ({
-  getHHApiUrl: jest.fn(),
   storage: {
     getString: jest.fn((key: string) => {
       const val = mockStorage[key]

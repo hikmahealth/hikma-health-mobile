@@ -34,6 +34,7 @@ import { initI18n } from "./i18n"
 import UserClinicPermissions from "./models/UserClinicPermissions"
 import { AppNavigator } from "./navigators/AppNavigator"
 import { useNavigationPersistence } from "./navigators/navigationUtilities"
+import Peer from "./models/Peer"
 import { hydrateAppState } from "./store/appState"
 import { languageStore } from "./store/language"
 import { providerStore } from "./store/provider"
@@ -90,6 +91,8 @@ export function App() {
 
   useEffect(() => {
     hydrateAppState()
+    // Migrate legacy SecureStore API URL → Peer table (one-time, safe to call repeatedly)
+    Peer.migrateFromLegacyApiUrl().catch(console.error)
   }, [])
 
   useEffect(() => {

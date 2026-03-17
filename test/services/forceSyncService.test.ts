@@ -52,6 +52,7 @@ jest.mock("../../app/models/Peer", () => ({
     Hub: {
       getTransport: (...args: any[]) => mockGetTransport(...args),
     },
+    getUrl: (peer: any) => peer?.metadata?.url ?? null,
   },
 }))
 
@@ -61,10 +62,6 @@ jest.mock("../../app/rpc/transport", () => ({
 
 jest.mock("expo-secure-store", () => ({
   getItemAsync: jest.fn(() => Promise.resolve("mock-token")),
-}))
-
-jest.mock("../../app/utils/storage", () => ({
-  getHHApiUrl: jest.fn(() => Promise.resolve({ _tag: "Some", value: "https://api.example.com" })),
 }))
 
 jest.mock("@sentry/react-native", () => ({
@@ -91,7 +88,7 @@ const makePeer = (overrides?: Partial<Peer.T>): Peer.T =>
     publicKey: "",
     isLeader: false,
     protocolVersion: "1",
-    metadata: {},
+    metadata: { url: "https://api.example.com" },
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,

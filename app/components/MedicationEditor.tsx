@@ -17,6 +17,7 @@ import { If } from "./If"
 import { TextField } from "./TextField"
 import { Text } from "../components/Text"
 import { stringsListToOptions } from "@/utils/misc"
+import { useSafeAreaInsetsStyle } from "@/utils/useSafeAreaInsetsStyle"
 // import {
 //   MedicationEntry,
 //   doseUnitOptions,
@@ -66,6 +67,7 @@ const initialValues: MapOrEntries<keyof Prescription.MedicationEntry, string | n
 export const MedicationEditor = function MedicationEditor(props: MedicationEditorProps) {
   const { style, onSubmit, medication } = props
   const $styles = [$container, style]
+  const { paddingTop: safeAreaPaddingTop } = useSafeAreaInsetsStyle(["top"])
 
   const [isSearching, setIsSearching] = useState(false)
   const [map, actions] = useMap<keyof Prescription.MedicationEntry, string | number>(initialValues)
@@ -167,6 +169,10 @@ export const MedicationEditor = function MedicationEditor(props: MedicationEdito
                 style={$dropDownPickerStyle}
                 zIndex={990000}
                 zIndexInverse={990000}
+                modalContentContainerStyle={[
+                  $modalContentContainerStyle,
+                  { paddingTop: safeAreaPaddingTop },
+                ]}
                 listMode="MODAL"
                 items={stringsListToOptions(Prescription.doseUnitList, false)}
                 value={getValue("form") || ""}
@@ -223,6 +229,10 @@ export const MedicationEditor = function MedicationEditor(props: MedicationEdito
                   zIndex={990000}
                   zIndexInverse={990000}
                   listMode="MODAL"
+                  modalContentContainerStyle={[
+                    $modalContentContainerStyle,
+                    { paddingTop: safeAreaPaddingTop },
+                  ]}
                   items={stringsListToOptions(Prescription.doseUnitList, false)}
                   value={getValue("doseUnits") || ""}
                   setValue={(cb) => {
@@ -265,6 +275,10 @@ export const MedicationEditor = function MedicationEditor(props: MedicationEdito
                 zIndexInverse={990000}
                 listMode="MODAL"
                 items={stringsListToOptions(Prescription.routeList)}
+                modalContentContainerStyle={[
+                  $modalContentContainerStyle,
+                  { paddingTop: safeAreaPaddingTop },
+                ]}
                 value={getValue("route") || ""}
                 setValue={(cb) => {
                   const data = cb(getValue("route"))
@@ -427,4 +441,14 @@ const $buttonSpacer: ViewStyle = {
 
 const $editText: TextStyle = {
   color: "#3A539B",
+}
+
+const $modalContentContainerStyle: ViewStyle = {
+  marginTop: 4,
+  borderWidth: 1,
+  borderRadius: 4,
+  backgroundColor: colors.palette.neutral200,
+  borderColor: colors.palette.neutral400,
+  zIndex: 990000,
+  flex: 1,
 }

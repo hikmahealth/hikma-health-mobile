@@ -15,7 +15,7 @@ import { Exit, Option } from "effect"
 import Sync from "@/models/Sync"
 import User from "@/models/User"
 import { safeStringify } from "@/utils/parsers"
-import { getHHApiUrl } from "@/utils/storage"
+import Peer from "@/models/Peer"
 
 import database from "."
 import { Platform } from "react-native"
@@ -382,11 +382,11 @@ export async function syncDB(
           try {
             const urlParams = `last_pulled_at=${lastPulledAt || 0}&schema_version=${schemaVersion}&migration=${encodeURIComponent(JSON.stringify(migration))}`
 
-            const HH_API = await getHHApiUrl()
-            if (Option.isNone(HH_API)) {
+            const HH_API = await Peer.getActiveUrl()
+            if (!HH_API) {
               throw new Error("HH API URL not found")
             }
-            const SYNC_API = `${HH_API.value}/api/v2/sync`
+            const SYNC_API = `${HH_API}/api/v2/sync`
 
             const response = await fetch(`${SYNC_API}?${urlParams}`, {
               headers: headers,

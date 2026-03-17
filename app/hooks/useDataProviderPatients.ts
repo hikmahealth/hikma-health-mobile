@@ -17,12 +17,12 @@ import PatientModel from "@/db/model/Patient"
 import PatientAdditionalAttribute from "@/db/model/PatientAdditionalAttribute"
 import type { RegistrationFormField } from "@/db/model/PatientRegistrationForm"
 import Patient from "@/models/Patient"
-import UserClinicPermissions from "@/models/UserClinicPermissions"
 import { useDataAccess } from "@/providers/DataAccessProvider"
 import { DataProviderError } from "../../types/data"
 import type { DataProvider } from "../../types/data"
 import { extendedSanitizeLikeString } from "@/utils/parsers"
 
+import { useClinicIdsWithPermission } from "./useClinicIdsWithPermission"
 import { useDebounce } from "./useDebounce"
 
 // Re-export SearchFilter so screens can reference it without importing the old hook
@@ -119,8 +119,6 @@ export function useDataProviderPatients(
     isOnline ? { provider, searchQuery: debouncedSearchFilter.query, pageSize } : null,
   )
 
-  console.log({ online })
-
   return {
     patients: isOnline ? online.patients : offline.patients,
     totalCount: isOnline ? online.totalCount : offline.totalCount,
@@ -152,19 +150,16 @@ type OfflineParams = {
 function useOfflinePatients(params: OfflineParams | null) {
   const [patients, setPatients] = useState<Patient.T[]>([])
   const [totalCount, setTotalCount] = useState(0)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [page, setPage] = useState(1)
-  const [canViewHistoryClinicIds, setCanViewHistoryClinicIds] = useState<string[]>([])
+
+  // Reactive permission subscription — updates live when permissions change
+  const { clinicIds: canViewHistoryClinicIds } = useClinicIdsWithPermission(
+    params?.userId ?? null,
+    "canViewHistory",
+  )
 
   const totalShowingResults = (params?.pageSize ?? 30) * page
-
-  // Permission loading
-  useEffect(() => {
-    if (!params) return
-    UserClinicPermissions.DB.getClinicIdsWithPermission(params.userId, "canViewHistory")
-      .then(setCanViewHistoryClinicIds)
-      .catch(() => setCanViewHistoryClinicIds([]))
-  }, [params?.userId])
 
   // Total count subscription
   useEffect(() => {
@@ -177,12 +172,15 @@ function useOfflinePatients(params: OfflineParams | null) {
     return () => sub.unsubscribe()
   }, [params !== null])
 
-  // Main patient list subscription
+  // Main patient list subscription — waits for permissions before querying
   useEffect(() => {
     if (!params) {
       setPatients([])
       return
     }
+
+    // Don't subscribe until permissions have loaded
+    if (canViewHistoryClinicIds === null) return
 
     setIsLoading(true)
     const { debouncedSearchFilter, debouncedSearchParams, formFields, searchFilterQuery } = params
@@ -306,7 +304,7 @@ function useOfflinePatients(params: OfflineParams | null) {
                 .query(
                   ...patientAttrsQueryConditions,
                   ...queryPtIds,
-                  Q.sortBy("updated_at"),
+                  Q.sortBy("updated_at", "desc"),
                   Q.take(totalShowingResults),
                 )
                 .fetch()
@@ -379,17 +377,11 @@ function useOnlinePatients(params: OnlineParams | null) {
         offset: 0,
         limit,
       })
-      console.log("🚩🚩🚩")
-      console.log({ params: params!.provider.patients })
-
-      console.log({ result })
       if (!result.ok) throw new DataProviderError(result.error)
       return result.data
     },
     enabled: params !== null,
   })
-
-  console.log({ query })
 
   return {
     patients: query.data?.data ?? [],

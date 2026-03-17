@@ -21,7 +21,10 @@ jest.mock("../../app/models/User", () => ({ default: {} }))
 jest.mock("../../app/utils/parsers", () => ({
   safeStringify: jest.fn((_v: unknown, d: string) => d),
 }))
-jest.mock("../../app/utils/storage", () => ({ getHHApiUrl: jest.fn() }))
+jest.mock("../../app/models/Peer", () => ({
+  default: { getActiveUrl: jest.fn(() => Promise.resolve(null)) },
+}))
+jest.mock("../../app/utils/storage", () => ({}))
 
 import { validateTurboResponsePayload } from "../../app/db/sync"
 

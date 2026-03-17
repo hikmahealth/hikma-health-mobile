@@ -29,7 +29,7 @@ jest.mock("../../app/models/User", () => ({ default: {} }))
 jest.mock("../../app/utils/parsers", () => ({
   safeStringify: jest.fn((v: unknown, d: string) => mockSafeStringify(v, d)),
 }))
-jest.mock("../../app/utils/storage", () => ({ getHHApiUrl: jest.fn() }))
+jest.mock("../../app/utils/storage", () => ({}))
 jest.mock("../../app/utils/date", () => ({
   toDateSafe: jest.fn((v: unknown, fallback: Date) => {
     const d = new Date(v as string | number)

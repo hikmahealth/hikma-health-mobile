@@ -160,6 +160,38 @@ namespace PatientRegistrationForm {
     fields: RegistrationFormModel["fields"]
     values: Record<RegistrationFormField["id"], number | Date | string | boolean>
   }
+  // ---------------------------------------------------------------------------
+  // Required-field validation
+  // ---------------------------------------------------------------------------
+
+  /** Context needed to validate required fields before submission */
+  export type RequiredFieldContext = {
+    fields: RegistrationFormField[]
+    values: Record<string, number | Date | string | boolean>
+  }
+
+  /**
+   * Returns the **labels** (en fallback) of required, visible fields that are
+   * missing a value.
+   *
+   * Pure function — no React or DB dependencies.
+   *
+   * Rules:
+   * - Only visible, non-deleted, required fields are checked.
+   * - `undefined`, `null`, and whitespace-only strings are treated as missing.
+   * - `0`, `false`, and valid Dates are treated as present.
+   */
+  export function getMissingRequiredFields(ctx: RequiredFieldContext): string[] {
+    return ctx.fields
+      .filter((field) => field.required && field.visible && !field.deleted)
+      .filter((field) => {
+        const value = ctx.values[field.id]
+        if (value === undefined || value === null) return true
+        if (typeof value === "string" && value.trim() === "") return true
+        return false
+      })
+      .map((field) => field.label.en || field.column)
+  }
 }
 
 export default PatientRegistrationForm

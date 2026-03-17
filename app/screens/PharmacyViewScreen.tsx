@@ -35,9 +35,12 @@ import { colors } from "@/theme/colors"
 import { useAppTheme } from "@/theme/context"
 import { ThemedStyle } from "@/theme/types"
 import { friendlyString, getPrescriptionStatusColor, toggleStringInArray } from "@/utils/misc"
+import { useSafeAreaInsetsStyle } from "@/utils/useSafeAreaInsetsStyle"
 
-interface PharmacyViewScreenProps
-  extends NativeStackScreenProps<PharmacyNavigatorParamList, "PharmacyView"> {}
+interface PharmacyViewScreenProps extends NativeStackScreenProps<
+  PharmacyNavigatorParamList,
+  "PharmacyView"
+> {}
 
 export const PharmacyViewScreen: FC<PharmacyViewScreenProps> = ({ route, navigation }) => {
   const { theme } = useAppTheme()
@@ -132,6 +135,7 @@ const PrescriptionsListHeader: FC<PrescriptionListHeaderProps> = ({
   onFiltersChange,
 }: PrescriptionListHeaderProps) => {
   const { themed } = useAppTheme()
+  const { paddingTop: safeAreaPaddingTop } = useSafeAreaInsetsStyle(["top"])
   const [openDropdown, setOpenDropdown] = useState<"clinic" | "status" | "department" | null>(null)
 
   return (
@@ -159,6 +163,10 @@ const PrescriptionsListHeader: FC<PrescriptionListHeaderProps> = ({
           modalTitle="Clinic"
           style={$dropDownPickerStyle}
           zIndex={990000}
+          modalContentContainerStyle={[
+            $modalContentContainerStyle,
+            { paddingTop: safeAreaPaddingTop },
+          ]}
           zIndexInverse={990000}
           listMode="MODAL"
           items={clinicsList.map((clinic) => ({
@@ -386,4 +394,14 @@ const $statusChipActive: ViewStyle = {
 
 const $statusChipActiveText: TextStyle = {
   color: colors.palette.neutral100,
+}
+
+const $modalContentContainerStyle: ViewStyle = {
+  marginTop: 4,
+  borderWidth: 1,
+  borderRadius: 4,
+  backgroundColor: colors.palette.neutral200,
+  borderColor: colors.palette.neutral400,
+  zIndex: 990000,
+  flex: 1,
 }

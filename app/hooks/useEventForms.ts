@@ -27,6 +27,7 @@ export function useEventForms(language: Option.Option<Language.LanguageName>): {
         onNone: () => [],
         onSome: (forms) => forms,
       })
+
       // Filter forms by clinic_id: if clinicIds is empty, the form is available to all clinics (backwards compat).
       // If clinicIds is non-empty, only show the form if the provider's clinic is in the list.
       const filtered = allForms.filter((form) => {

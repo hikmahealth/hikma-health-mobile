@@ -4,7 +4,7 @@ module.exports = {
   setupFiles: ["<rootDir>/test/setup.ts"],
   testPathIgnorePatterns: ["/node_modules/", "/.maestro/"],
   transformIgnorePatterns: [
-    "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg|@noble/curves|@noble/hashes|@noble/ciphers|@scure/base|immer|use-immer)",
+    "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg|@noble/curves|@noble/hashes|@noble/ciphers|@scure/base|immer|use-immer|uuid)",
   ],
   moduleNameMapper: {
     "^@noble/curves/([^.]+)$": "<rootDir>/node_modules/@noble/curves/$1.js",
@@ -14,7 +14,7 @@ module.exports = {
   coveragePathIgnorePatterns: ["/node_modules/", "app/db/sync.ts"],
   collectCoverage: false,
   coverageDirectory: "coverage",
-  coverageReporters: ["text", "text-summary", "lcov"],
+  coverageReporters: ["text", "text-summary", "lcov", "json-summary"],
   coverageThreshold: {
     "global": {
       branches: 20,

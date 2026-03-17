@@ -26,7 +26,7 @@ import { operationModeStore } from "@/store/operationMode"
 import { providerStore } from "@/store/provider"
 import { colors } from "@/theme/colors"
 import { generateDummyPatients, insertBenchmarkingData } from "@/utils/benchmarking"
-import { getHHApiUrl } from "@/utils/storage"
+import Peer from "@/models/Peer"
 
 interface SettingsScreenProps extends AppStackScreenProps<"Settings"> {}
 
@@ -207,11 +207,9 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ navigation }) => {
   const [HIKMA_URL, setHIKMA_URL] = useState<Option.Option<string>>(Option.none)
 
   useEffect(() => {
-    const loadHikmaUrl = async () => {
-      const url = await getHHApiUrl()
-      setHIKMA_URL(url)
-    }
-    loadHikmaUrl()
+    Peer.getActiveUrl().then((url) => {
+      setHIKMA_URL(Option.fromNullable(url))
+    })
   }, [])
 
   return (
@@ -290,22 +288,25 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ navigation }) => {
           />
         </View>
 
-        <View style={$withBottomBorder} py={12}>
-          <View direction="row" justifyContent="space-between">
-            <Text tx="settingsScreen:lockWhenIdle" size="sm" />
-            <Switch
-              containerStyle={[
-                state === "setting-pin"
-                  ? { borderWidth: 4, borderColor: colors.palette.accent500, borderRadius: 20 }
-                  : {},
-              ]}
-              value={state === "active"}
-              onValueChange={toggleLockWhenIdle}
-            />
-          </View>
-        </View>
-
+        {/* Disable for now. TODO: turn back on with cloud side pin code setting */}
         <If condition={false}>
+          <View style={$withBottomBorder} py={12}>
+            <View direction="row" justifyContent="space-between">
+              <Text tx="settingsScreen:lockWhenIdle" size="sm" />
+              <Switch
+                containerStyle={[
+                  state === "setting-pin"
+                    ? { borderWidth: 4, borderColor: colors.palette.accent500, borderRadius: 20 }
+                    : {},
+                ]}
+                value={state === "active"}
+                onValueChange={toggleLockWhenIdle}
+              />
+            </View>
+          </View>
+        </If>
+
+        <If condition={__DEV__}>
           {showModeToggle && (
             <View style={$withBottomBorder} py={12}>
               <View direction="row" justifyContent="space-between" alignItems="center">

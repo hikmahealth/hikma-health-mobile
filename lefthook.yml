@@ -1,0 +1,5 @@
+pre-commit:
+  commands:
+    test-and-badge:
+      run: bash scripts/update-coverage-badge.sh
+      stage_fixed: true

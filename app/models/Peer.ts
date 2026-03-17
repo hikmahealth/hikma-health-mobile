@@ -155,13 +155,26 @@ namespace Peer {
         url: params.url,
       })
 
-    export const upsertCloud = async (url: string): Promise<void> =>
-      upsert({
+    // We currently do not allow 2 cloud peers to be registered at the same time.
+    // If a cloud peer already exists, replace it with the new one.
+    export const upsertCloud = async (url: string): Promise<void> => {
+      const existing = await getActiveByType("cloud_server")
+      for (const peer of existing) {
+        if (peer.peerId !== `cloud:${url}`) {
+          await database.write(() =>
+            peer.update((rec) => {
+              rec.status = "revoked"
+            }),
+          )
+        }
+      }
+      await upsert({
         peerId: `cloud:${url}`,
         name: "Cloud Server",
         peerType: "cloud_server",
         url,
       })
+    }
 
     export const getById = async (id: string): Promise<Peer.T> => {
       const record = await collection().find(id)
@@ -325,6 +338,66 @@ namespace Peer {
       if (!session.token) return err({ _tag: "NotFound", entity: "SessionToken", id: peerId })
       return ok(session.token)
     }
+  }
+
+  // ── URL resolution ───────────────────────────────────────────────────
+
+  /** Extract the URL from a peer, preferring metadata.url, falling back to ipAddress:port. */
+  export const getUrl = (peer: T): string | null => {
+    const metadataUrl = peer.metadata?.url as string | undefined
+    if (metadataUrl) return metadataUrl
+    if (peer.ipAddress) {
+      return peer.port ? `${peer.ipAddress}:${peer.port}` : peer.ipAddress
+    }
+    return null
+  }
+
+  /**
+   * Resolve the active peer's URL. Drop-in replacement for the deprecated getHHApiUrl().
+   * Uses the user-selected activeSyncPeerId if set, otherwise falls back to
+   * the default peer priority (hub > cloud).
+   */
+  export const getActiveUrl = async (): Promise<string | null> => {
+    const { appStateStore } = require("@/store/appState")
+    const { activeSyncPeerId } = appStateStore.getSnapshot().context
+
+    if (activeSyncPeerId) {
+      try {
+        const peer = await DB.getById(activeSyncPeerId)
+        if (peer.status === "active" || peer.status === "untrusted") {
+          const url = getUrl(peer)
+          if (url) return url
+        }
+      } catch {
+        // Peer no longer exists — fall through to default resolution
+      }
+    }
+
+    const peer = await DB.resolveActive()
+    return peer ? getUrl(peer) : null
+  }
+
+  /**
+   * One-time migration: if there's a HIKMA_API value in SecureStore but no
+   * cloud peer registered, create the cloud peer from the legacy URL.
+   * Safe to call multiple times — no-ops if a cloud peer already exists.
+   */
+  export const migrateFromLegacyApiUrl = async (): Promise<void> => {
+    const clouds = await DB.getActiveByType("cloud_server")
+    if (clouds.length > 0) return
+
+    const SecureStore = require("expo-secure-store")
+    const legacyUrl = await SecureStore.getItemAsync("HIKMA_API")
+    if (!legacyUrl) {
+      // Check dev fallback
+      const devUrl = process.env.EXPO_PUBLIC_HIKMA_API_TESTING
+      if (__DEV__ && devUrl) {
+        await DB.upsertCloud(devUrl)
+      }
+      return
+    }
+
+    await DB.upsertCloud(legacyUrl)
   }
 
   // ── Reachability ─────────────────────────────────────────────────────

@@ -25,7 +25,6 @@ import Peer from "@/models/Peer"
 import User from "@/models/User"
 import { toDateSafe } from "@/utils/date"
 import { safeStringify } from "@/utils/parsers"
-import { getHHApiUrl } from "@/utils/storage"
 
 import { applyRemoteChanges, fetchLocalChanges, markLocalChangesAsSynced } from "./localSync"
 
@@ -267,10 +266,9 @@ const buildBasicAuthHeaders = (email: string, password: string): Headers => {
 }
 
 const getSyncApiUrl = async (): Promise<string> => {
-  const url = await getHHApiUrl()
-  // getHHApiUrl returns an Effect Option — unwrap it
-  if (url._tag === "None") throw new Error("HH API URL not found")
-  return `${url.value}/api/v2/sync`
+  const url = await Peer.getActiveUrl()
+  if (!url) throw new Error("HH API URL not found")
+  return `${url}/api/v2/sync`
 }
 
 // ── Strategy: Cloud ──────────────────────────────────────────────────

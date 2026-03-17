@@ -19,7 +19,7 @@ import DropDownPicker from "react-native-dropdown-picker"
 import Toast from "react-native-root-toast"
 import { useImmer } from "use-immer"
 
-import { getHHApiUrl } from "app/utils/storage"
+import Peer from "@/models/Peer"
 
 import { usePermissionGuard } from "@/hooks/usePermissionGuard"
 import { Button } from "@/components/Button"
@@ -54,6 +54,8 @@ import {
   getOptionId,
   type ResolvedFormTranslations,
 } from "@/utils/eventFormTranslations"
+import { sanitizeFieldName, unsanitizeFormData } from "@/utils/fieldNameSanitizer"
+import { useSafeAreaInsetsStyle } from "@/utils/useSafeAreaInsetsStyle"
 
 type ModalState =
   | { activeModal: null }
@@ -110,8 +112,10 @@ export function useEventProvider(
   return provider
 }
 
-interface EventFormScreenProps
-  extends NativeStackScreenProps<PatientNavigatorParamList, "EventForm"> {}
+interface EventFormScreenProps extends NativeStackScreenProps<
+  PatientNavigatorParamList,
+  "EventForm"
+> {}
 
 export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route }) => {
   const {
@@ -142,6 +146,8 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
   const updateEventMutation = useUpdateEvent()
   const { can, checkEditEvent } = usePermissionGuard()
 
+  const { paddingTop: safeAreaPaddingTop } = useSafeAreaInsetsStyle(["top"])
+
   // get the provider/user who created the form or the event
   const eventProvider = useEventProvider(eventId)
   const { control, handleSubmit, setValue, getValues, watch } = useForm<
@@ -149,6 +155,14 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
   >({
     defaultValues: {},
   })
+  // Debug: log all form state changes
+  useEffect(() => {
+    const subscription = watch((formValues, { name, type }) => {
+      console.log("[FormState change]", { changedField: name, type, formValues })
+    })
+    return () => subscription.unsubscribe()
+  }, [watch])
+
   const [diagnoses, setDiagnoses] = useState<ICDEntry.T[]>([])
   const [medicines, setMedicines] = useState<Prescription.MedicationEntry[]>([])
 
@@ -222,7 +236,7 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
           const medicineValue = Array.isArray(field?.value) ? field.value : []
           setMedicines(medicineValue as Prescription.MedicationEntry[])
         }
-        setValue(field.name, field.value)
+        setValue(sanitizeFieldName(field.name), field.value)
       })
     }
   }, [formState, form])
@@ -251,7 +265,8 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
     }
   }, [isEditing, form?.isEditable])
 
-  const onSubmit = async (data: Record<string, any>) => {
+  const onSubmit = async (rawData: Record<string, any>) => {
+    const data = unsanitizeFormData(rawData)
     console.log("onSubmit", data)
     if (loading) {
       return
@@ -285,6 +300,12 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
         fileUploads,
       })
       if (missingFields.length > 0) {
+        console.log(
+          "[EventForm] Missing required fields:",
+          missingFields,
+          "Form data:",
+          JSON.stringify(data, null, 2),
+        )
         Toast.show(`Please fill in required fields: ${missingFields.join(", ")}`, {
           duration: Toast.durations.LONG,
           position: Toast.positions.BOTTOM,
@@ -554,7 +575,8 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
       } as any)
 
       // Upload to server
-      const apiUrl = await getHHApiUrl()
+      const apiUrl = await Peer.getActiveUrl()
+      if (!apiUrl) throw new Error("No server URL configured")
       console.log(`Uploading to ${apiUrl}/v1/api/forms/resources`)
       const response = await fetch(`${apiUrl}/v1/api/forms/resources`, {
         method: "PUT",
@@ -666,7 +688,7 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
                         value={value}
                       />
                     )}
-                    name={field.name as never}
+                    name={sanitizeFieldName(field.name) as never}
                     control={control}
                   />
                 </If>
@@ -683,65 +705,77 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
                         multiline
                       />
                     )}
-                    name={field.name as never}
+                    name={sanitizeFieldName(field.name) as never}
                     control={control}
                   />
                 </If>
 
                 <If condition={field.inputType === "select" && field.fieldType !== "diagnosis"}>
-                  <View style={{}}>
-                    <Text text={resolved?.fieldNames[field.id] ?? field.name} preset="formLabel" />
-                    {getFieldDescription(field) ? (
-                      <Text
-                        text={getFieldDescription(field)}
-                        size="xs"
-                        color={colors.textDim}
-                        withAsterisk={field.required}
-                      />
-                    ) : null}
-                    <DropDownPicker
-                      open={isOpen(field.id)}
-                      // value={multiPickerValue(getValues(field.name) as any, field.multi || false)}
-                      value={multiPickerValue(
-                        watch(field.name) as any,
-                        Option.isOption(field.multi)
-                          ? Option.getOrElse(field.multi, () => false)
-                          : field.multi || false,
-                      )}
-                      searchable
-                      closeAfterSelecting
-                      style={$dropDownStyle}
-                      modalTitle={resolved?.fieldNames[field.id] ?? field.name}
-                      multiple={
-                        Option.isOption(field.multi)
-                          ? Option.getOrElse(field.multi, () => false)
-                          : field.multi || false
-                      }
-                      modalContentContainerStyle={$modalContentContainerStyle}
-                      mode="BADGE"
-                      searchPlaceholder={
-                        translate("common:search", { defaultValue: "Search" }) + "..."
-                      }
-                      searchTextInputStyle={$inputWrapperStyle as unknown as TextStyle}
-                      closeOnBackPressed
-                      onClose={closeDialogue}
-                      items={sortBy(getTranslatedItems(field), ["label"])}
-                      setOpen={openDialogue(field.id)}
-                      listMode="MODAL"
-                      // setValue={onChange}
-                      setValue={(callback) => {
-                        const pickerValue = multiPickerValue(
-                          getValues(field.name) as any,
-                          Option.getOrElse(field.multi, () => false),
-                        )
-                        const data = callback(pickerValue || "")
-
-                        const newValue = field.multi && Array.isArray(data) ? data.join("; ") : data
-
-                        setValue(field.name as never, newValue as never)
-                      }}
-                    />
-                  </View>
+                  <Controller
+                    name={sanitizeFieldName(field.name) as never}
+                    control={control}
+                    render={({ field: { value, onChange } }) => {
+                      const isMulti = Option.isOption(field.multi)
+                        ? Option.getOrElse(field.multi, () => false)
+                        : field.multi || false
+                      return (
+                        <View style={{}}>
+                          <Text
+                            text={resolved?.fieldNames[field.id] ?? field.name}
+                            preset="formLabel"
+                            withAsterisk={field.required}
+                          />
+                          {getFieldDescription(field) ? (
+                            <Text
+                              text={getFieldDescription(field)}
+                              size="xs"
+                              color={colors.textDim}
+                            />
+                          ) : null}
+                          <DropDownPicker
+                            open={isOpen(field.id)}
+                            value={multiPickerValue(value, isMulti)}
+                            searchable
+                            closeAfterSelecting
+                            style={$dropDownStyle}
+                            modalTitle={resolved?.fieldNames[field.id] ?? field.name}
+                            multiple={isMulti}
+                            modalContentContainerStyle={[
+                              $modalContentContainerStyle,
+                              { paddingTop: safeAreaPaddingTop },
+                            ]}
+                            mode="BADGE"
+                            searchPlaceholder={
+                              translate("common:search", { defaultValue: "Search" }) + "..."
+                            }
+                            searchTextInputStyle={$inputWrapperStyle as unknown as TextStyle}
+                            closeOnBackPressed
+                            onClose={closeDialogue}
+                            items={sortBy(getTranslatedItems(field), ["label"])}
+                            setOpen={openDialogue(field.id)}
+                            listMode="MODAL"
+                            // setValue={(callback) => {
+                            //   const pickerValue = multiPickerValue(value, isMulti)
+                            //   const result = callback(pickerValue || "")
+                            //   const newValue =
+                            //     isMulti && Array.isArray(result) ? result.join("; ") : result
+                            //   onChange(newValue)
+                            // }}
+                            setValue={(callback) => {
+                              const pickerValue = multiPickerValue(
+                                getValues(sanitizeFieldName(field.name)) as any,
+                                Option.getOrElse(field.multi, () => false),
+                              )
+                              const data = callback(pickerValue || "")
+                              const newValue =
+                                field.multi && Array.isArray(data) ? data.join("; ") : data
+                              setValue(sanitizeFieldName(field.name) as never, newValue as never)
+                            }}
+                          />
+                        </View>
+                      )
+                    }}
+                  />
                 </If>
 
                 <If condition={field.inputType === "checkbox"}>
@@ -754,9 +788,9 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
                           value={value}
                           onValueChange={(value) => {
                             if (value) {
-                              setValue(field.name as never, value as never)
+                              setValue(sanitizeFieldName(field.name) as never, value as never)
                             } else {
-                              setValue(field.name as never, "" as never)
+                              setValue(sanitizeFieldName(field.name) as never, "" as never)
                             }
                           }}
                         />
@@ -769,7 +803,7 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
                         ) : null}
                       </View>
                     )}
-                    name={field.name as never}
+                    name={sanitizeFieldName(field.name) as never}
                     control={control}
                   />
                 </If>
@@ -832,7 +866,7 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
                         </View>
                       </View>
                     )}
-                    name={field.name as never}
+                    name={sanitizeFieldName(field.name) as never}
                     control={control}
                   />
                 </If>
@@ -863,7 +897,7 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
                         </View>
                       </View>
                     )}
-                    name={field.name as never}
+                    name={sanitizeFieldName(field.name) as never}
                     control={control}
                   />
                 </If>
@@ -892,17 +926,20 @@ export const EventFormScreen: FC<EventFormScreenProps> = ({ navigation, route })
                             value={value === option.value}
                             onValueChange={(value) => {
                               if (value) {
-                                setValue(field.name as never, option.value as never)
+                                setValue(
+                                  sanitizeFieldName(field.name) as never,
+                                  option.value as never,
+                                )
                               } else {
                                 // set the default value to an empty string
-                                setValue(field.name as never, "" as never)
+                                setValue(sanitizeFieldName(field.name) as never, "" as never)
                               }
                             }}
                           />
                         ))}
                       </View>
                     )}
-                    name={field.name as never}
+                    name={sanitizeFieldName(field.name) as never}
                     control={control}
                   />
                 </If>

@@ -4,8 +4,11 @@ import Sync from "../../app/models/Sync"
 // ---------------------------------------------------------------------------
 // Mocks
 // ---------------------------------------------------------------------------
+jest.mock("../../app/models/Peer", () => ({
+  default: { getActiveUrl: jest.fn(() => Promise.resolve(null)) },
+}))
+
 jest.mock("../../app/utils/storage", () => ({
-  getHHApiUrl: jest.fn(),
   storage: {
     getString: jest.fn(),
     getNumber: jest.fn(),

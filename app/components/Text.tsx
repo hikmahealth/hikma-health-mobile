@@ -3,8 +3,11 @@ import { ReactNode, forwardRef, ForwardedRef } from "react"
 import { StyleProp, Text as RNText, TextProps as RNTextProps, TextStyle } from "react-native"
 import { TOptions } from "i18next"
 
-import { isRTL, TxKeyPath } from "@/i18n"
+import { useSelector } from "@xstate/react"
+
+import { TxKeyPath } from "@/i18n"
 import { translate } from "@/i18n/translate"
+import { languageStore } from "@/store/language"
 import { useAppTheme } from "@/theme/context"
 import type { ThemedStyle, ThemedStyleArray } from "@/theme/types"
 import { typography } from "@/theme/typography"
@@ -89,6 +92,7 @@ export const Text = forwardRef(function Text(props: TextProps, ref: ForwardedRef
     ...rest
   } = props
   const { themed } = useAppTheme()
+  const { isRTL } = useSelector(languageStore, (state) => state.context)
 
   const i18nText = tx && translate(tx, txOptions)
   const content = i18nText || text || children
@@ -96,13 +100,16 @@ export const Text = forwardRef(function Text(props: TextProps, ref: ForwardedRef
 
   const preset: Presets = props.preset ?? "default"
   const $styles: StyleProp<TextStyle> = [
-    $rtlStyle,
+    isRTL ? $rtlStyle : undefined,
     themed($presets[preset]),
     weight && $fontWeightStyles[weight],
+    // When RTL, drop the custom fontFamily so the system font handles non-Latin
+    // glyphs while preserving the numeric fontWeight for correct rendering.
+    isRTL && { fontFamily: undefined },
     size && $sizeStyles[size],
     color ? { color } : {},
     textDecorationLine ? { textDecorationLine } : {},
-    align ? { textAlign: align } : {},
+    { textAlign: align ?? (isRTL ? "right" : "left") },
     $styleOverride,
   ]
 
@@ -123,8 +130,16 @@ const $sizeStyles = {
   xxs: { fontSize: 12, lineHeight: 18 } satisfies TextStyle,
 }
 
+const fontWeightMap: Record<string, TextStyle["fontWeight"]> = {
+  light: "300",
+  normal: "400",
+  medium: "500",
+  semiBold: "600",
+  bold: "700",
+}
+
 const $fontWeightStyles = Object.entries(typography.primary).reduce((acc, [weight, fontFamily]) => {
-  return { ...acc, [weight]: { fontFamily } }
+  return { ...acc, [weight]: { fontFamily, fontWeight: fontWeightMap[weight] ?? "400" } }
 }, {}) as Record<Weights, TextStyle>
 
 const $baseStyle: ThemedStyle<TextStyle> = (theme) => ({
@@ -147,4 +162,4 @@ const $presets: Record<Presets, ThemedStyleArray<TextStyle>> = {
   formLabel: [$baseStyle, { ...$fontWeightStyles.medium }],
   formHelper: [$baseStyle, { ...$sizeStyles.sm, ...$fontWeightStyles.normal }],
 }
-const $rtlStyle: TextStyle = isRTL ? { writingDirection: "rtl" } : {}
+const $rtlStyle: TextStyle = { writingDirection: "rtl" }

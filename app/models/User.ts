@@ -1,8 +1,8 @@
 import * as SecureStorage from "expo-secure-store"
 import { Option } from "effect"
 
+import Peer from "@/models/Peer"
 import { providerStore } from "@/store/provider"
-import { getHHApiUrl } from "@/utils/storage"
 import UserClinicPermissions from "./UserClinicPermissions"
 import database from "@/db"
 import UserModel from "@/db/model/User"
@@ -65,8 +65,8 @@ namespace User {
    * @returns A promise that resolves to the provider or admin
    */
   export const signIn = async (email: string, password: string): Promise<Provider> => {
-    const HIKMA_API = await getHHApiUrl()
-    if (Option.isNone(HIKMA_API)) {
+    const HIKMA_API = await Peer.getActiveUrl()
+    if (!HIKMA_API) {
       throw new Error("Invalid API URL")
     }
 
@@ -75,7 +75,7 @@ namespace User {
     }
 
     try {
-      const response = await fetch(`${HIKMA_API.value}/api/login`, {
+      const response = await fetch(`${HIKMA_API}/api/login`, {
         method: "POST",
         headers: {
           "Accept": "application/json",
@@ -96,7 +96,7 @@ namespace User {
 
         // Obtain Bearer token for online mode tRPC calls
         try {
-          const tokenResponse = await fetch(`${HIKMA_API.value}/api/auth/sign-in`, {
+          const tokenResponse = await fetch(`${HIKMA_API}/api/auth/sign-in`, {
             method: "POST",
             headers: { "Accept": "application/json", "Content-Type": "application/json" },
             body: JSON.stringify({ email, password }),

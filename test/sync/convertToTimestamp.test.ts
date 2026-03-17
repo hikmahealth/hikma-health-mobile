@@ -41,9 +41,7 @@ jest.mock("../../app/utils/parsers", () => ({
     }
   }),
 }))
-jest.mock("../../app/utils/storage", () => ({
-  getHHApiUrl: jest.fn(),
-}))
+jest.mock("../../app/utils/storage", () => ({}))
 jest.mock("../../app/utils/date", () => ({ toDateSafe: jest.fn() }))
 
 import { convertToTimestamp } from "../../app/db/peerSync"

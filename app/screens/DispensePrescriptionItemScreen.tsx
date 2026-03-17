@@ -19,16 +19,21 @@ import PrescriptionItem from "@/models/PrescriptionItem"
 import { PharmacyNavigatorParamList } from "@/navigators/PharmacyNavigator"
 import { providerStore } from "@/store/provider"
 import { colors } from "@/theme/colors"
+import { useSafeAreaInsetsStyle } from "@/utils/useSafeAreaInsetsStyle"
 // import { useNavigation } from "@react-navigation/native"
 
-interface DispensePrescriptionItemScreenProps
-  extends NativeStackScreenProps<PharmacyNavigatorParamList, "DispensePrescriptionItem"> {}
+interface DispensePrescriptionItemScreenProps extends NativeStackScreenProps<
+  PharmacyNavigatorParamList,
+  "DispensePrescriptionItem"
+> {}
 
 export const DispensePrescriptionItemScreen: FC<DispensePrescriptionItemScreenProps> = ({
   route,
   navigation,
 }) => {
   const { prescriptionItemId } = route.params
+  const { paddingTop: safeAreaPaddingTop } = useSafeAreaInsetsStyle(["top"])
+
   const { id: providerId } = useSelector(providerStore, (state) => state.context)
   const { can } = usePermissionGuard()
   const [prescriptionItem, setPrescriptionItem] = useState<PrescriptionItem.DB.T | null>(null)
@@ -220,6 +225,10 @@ export const DispensePrescriptionItemScreen: FC<DispensePrescriptionItemScreenPr
           zIndex={990000}
           zIndexInverse={990000}
           listMode="MODAL"
+          modalContentContainerStyle={[
+            $modalContentContainerStyle,
+            { paddingTop: safeAreaPaddingTop },
+          ]}
           mode="BADGE"
           items={inventoryOptions}
           multiple
@@ -270,6 +279,16 @@ const $root: ViewStyle = {
 
 const $dropDownPickerStyle: ViewStyle = {
   marginTop: 2,
+  borderWidth: 1,
+  borderRadius: 4,
+  backgroundColor: colors.palette.neutral200,
+  borderColor: colors.palette.neutral400,
+  zIndex: 990000,
+  flex: 1,
+}
+
+const $modalContentContainerStyle: ViewStyle = {
+  marginTop: 4,
   borderWidth: 1,
   borderRadius: 4,
   backgroundColor: colors.palette.neutral200,

@@ -16,7 +16,6 @@
 import { Alert } from "react-native"
 import { hasUnsyncedChanges } from "@nozbe/watermelondb/sync"
 import * as Sentry from "@sentry/react-native"
-import { Option } from "effect"
 import Toast from "react-native-root-toast"
 
 import database from "@/db"
@@ -27,7 +26,6 @@ import Sync from "@/models/Sync"
 import { appStateStore } from "@/store/appState"
 import { operationModeStore } from "@/store/operationMode"
 import { syncStore } from "@/store/sync"
-import { getHHApiUrl } from "@/utils/storage"
 
 /**
  * Find the active peer to sync with.
@@ -101,21 +99,14 @@ export const startSync = async (providerEmail?: string): Promise<void> => {
   }
 
   try {
-    // Verify app activation
-    const url = await getHHApiUrl()
-    if (Option.isNone(url)) {
-      Alert.alert("Please activate your app on the administrator portal to continue syncing")
-      return Promise.reject(new Error("App not activated"))
-    }
-
-    const hasLocalChangesToPush = await hasUnsyncedChanges({ database })
-
     // Find the active peer to sync with — prefer hub if available, fall back to cloud
     const activePeer = await resolveActivePeer()
     if (!activePeer) {
       Alert.alert("No sync peer configured. Please pair with a hub or register a cloud server.")
       return Promise.reject(new Error("No active sync peer"))
     }
+
+    const hasLocalChangesToPush = await hasUnsyncedChanges({ database })
 
     Toast.show(translate("common:syncStarted"), {
       position: Toast.positions.BOTTOM,
@@ -179,8 +170,8 @@ export const startSync = async (providerEmail?: string): Promise<void> => {
  */
 export const isSyncAvailable = async (): Promise<boolean> => {
   try {
-    const url = await getHHApiUrl()
-    return Option.isSome(url)
+    const peer = await Peer.DB.resolveActive()
+    return peer !== null
   } catch {
     return false
   }

@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Pressable, ViewStyle } from "react-native"
+import { Pressable, TextStyle, ViewStyle } from "react-native"
 import {
   BottomSheetModal,
   BottomSheetView,
@@ -38,8 +38,10 @@ import { toDateSafe } from "@/utils/date"
 import { resolveFormTranslations } from "@/utils/eventFormTranslations"
 import { formatDate } from "@/utils/formatDate"
 
-interface NewVisitScreenProps
-  extends NativeStackScreenProps<PatientNavigatorParamList, "NewVisit"> {}
+interface NewVisitScreenProps extends NativeStackScreenProps<
+  PatientNavigatorParamList,
+  "NewVisit"
+> {}
 
 type Filters = {
   language: Language.LanguageName | "all"
@@ -76,7 +78,10 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = ({ route, navigation }) =
   // Offline: WatermelonDB observable events. Online: React Query events.
   const visitIdStr = Option.isSome(visitId) ? (visitId.value as string) : null
   const { events: offlineEvents, isLoading: _isLoadingOfflineEvents } = useVisitEvents(visitIdStr)
-  const onlineEvents = useProviderVisitEvents(isOnline ? visitIdStr : null, isOnline ? patientId : null)
+  const onlineEvents = useProviderVisitEvents(
+    isOnline ? visitIdStr : null,
+    isOnline ? patientId : null,
+  )
   const eventsList = isOnline ? ((onlineEvents.data ?? []) as any) : offlineEvents
   const _isLoadingEvents = isOnline ? onlineEvents.isLoading : _isLoadingOfflineEvents
 
@@ -85,6 +90,8 @@ export const NewVisitScreen: FC<NewVisitScreenProps> = ({ route, navigation }) =
   const formLanguageFilter =
     filters.language === "all" ? Option.none() : Option.some(filters.language)
   const { forms, isLoading: _isLoadingForms } = useEventForms(formLanguageFilter)
+
+  console.log({ forms })
 
   const snapPoints = useMemo(() => ["40%", "40%"], [])
   // ref
@@ -234,12 +241,15 @@ function EventFormItem({
   return (
     <View style={$formListItem}>
       <Pressable onPress={onPress} style={$formListItemBtn}>
-        <View>
-          <View direction="row" gap={8}>
-            {entries.length > 0 && <LucideCheckCheck color="green" />}
-            <Text weight="bold">{translatedName}</Text>
-            <Text></Text>
-            <View justifyContent="flex-end">
+        <View direction="row" flexWrap="wrap" justifyContent="space-between">
+          <View direction="row" justifyContent="space-between" gap={8}>
+            <View direction="row" flexWrap="wrap" gap={6}>
+              {entries.length > 0 && <LucideCheckCheck color="green" />}
+              <Text weight="bold" style={$eventFormTitle}>
+                {translatedName}
+              </Text>
+            </View>
+            {/*<View justifyContent="flex-end">
               <View
                 alignContent="center"
                 justifyContent="center"
@@ -248,7 +258,7 @@ function EventFormItem({
               >
                 <Text text={form.language} color="white" size="xxs" />
               </View>
-            </View>
+            </View>*/}
           </View>
           <Text size="xs">{translatedDescription}</Text>
         </View>
@@ -282,11 +292,16 @@ const $formListItem: ViewStyle = {
   borderBottomColor: colors.border,
 }
 
+const $eventFormTitle: TextStyle = {
+  flexWrap: "wrap",
+}
+
 const $formListItemBtn: ViewStyle = {
   display: "flex",
   flexDirection: "row",
   justifyContent: "space-between",
   alignItems: "center",
+  paddingRight: 10,
 }
 
 const $languageBadge: ViewStyle = {
