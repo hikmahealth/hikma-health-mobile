@@ -102,7 +102,7 @@ function DiagnosisSearchStep({ onSelect }: { onSelect: (diagnosis: SelectedDiagn
         {searchQuery.length > 0 && (
           <Pressable onPress={() => onSelect({ code: "custom", label: searchQuery })}>
             <View my={6} py={10} px={14} style={$resultItem}>
-              <Text size="md" text={`+ Create "${searchQuery}"`} />
+              <Text size="md" text={translate("diagnosisSearch:createCustom", { query: searchQuery })} />
             </View>
           </Pressable>
         )}
@@ -110,7 +110,7 @@ function DiagnosisSearchStep({ onSelect }: { onSelect: (diagnosis: SelectedDiagn
         {debouncedQuery.length > 0 && searchResults.length === 0 && (
           <View pt={20} alignItems="center">
             <Text
-              text="No results found. You can create a custom diagnosis above."
+              tx="diagnosisSearch:noResults"
               color={colors.textDim}
               size="sm"
             />
@@ -139,18 +139,18 @@ const VERIFICATION_STATUSES: PatientProblems.VerificationStatus[] = [
   "unconfirmed",
 ]
 
-const clinicalStatusLabels: Record<PatientProblems.ClinicalStatus, string> = {
-  active: "Active",
-  remission: "Remission",
-  resolved: "Resolved",
-  unknown: "Unknown",
+const clinicalStatusKeys: Record<PatientProblems.ClinicalStatus, string> = {
+  active: "diagnosisEditor:active",
+  remission: "diagnosisEditor:remission",
+  resolved: "diagnosisEditor:resolved",
+  unknown: "diagnosisEditor:unknown",
 }
 
-const verificationStatusLabels: Record<PatientProblems.VerificationStatus, string> = {
-  provisional: "Provisional",
-  confirmed: "Confirmed",
-  refuted: "Refuted",
-  unconfirmed: "Unconfirmed",
+const verificationStatusKeys: Record<PatientProblems.VerificationStatus, string> = {
+  provisional: "diagnosisEditor:provisional",
+  confirmed: "diagnosisEditor:confirmed",
+  refuted: "diagnosisEditor:refuted",
+  unconfirmed: "diagnosisEditor:unconfirmed",
 }
 
 function DiagnosisDetailsForm({
@@ -181,7 +181,7 @@ function DiagnosisDetailsForm({
 
   const validateAndSave = async () => {
     if (!canCreateDiagnosis) {
-      return Toast.show("You do not have permission to create diagnoses", {
+      return Toast.show(translate("diagnosisSearch:noPermission"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.BOTTOM,
       })
@@ -190,7 +190,7 @@ function DiagnosisDetailsForm({
     if (severityScore) {
       const score = parseInt(severityScore, 10)
       if (isNaN(score) || score < 1 || score > 10) {
-        Alert.alert("Validation Error", "Severity score must be between 1 and 10.")
+        Alert.alert(translate("diagnosisEditor:validationError"), translate("diagnosisEditor:severityRange"))
         return
       }
     }
@@ -220,7 +220,7 @@ function DiagnosisDetailsForm({
       onSaved()
     } catch (error) {
       console.error("Error saving diagnosis:", error)
-      Alert.alert("Error", "Failed to save diagnosis. Please try again.")
+      Alert.alert(translate("common:error"), translate("diagnosisSearch:saveError"))
     } finally {
       setSaving(false)
     }
@@ -238,12 +238,12 @@ function DiagnosisDetailsForm({
 
           {/* Clinical Status */}
           <View mb={spacing.md}>
-            <Text text="Clinical Status" preset="formLabel" style={$label} />
+            <Text tx="diagnosisEditor:clinicalStatus" preset="formLabel" style={$label} />
             <View style={$radioGroup}>
               {CLINICAL_STATUSES.map((status) => (
                 <Radio
                   key={status}
-                  label={clinicalStatusLabels[status]}
+                  label={translate(clinicalStatusKeys[status])}
                   value={clinicalStatus === status}
                   onPress={() => setClinicalStatus(status)}
                 />
@@ -253,12 +253,12 @@ function DiagnosisDetailsForm({
 
           {/* Verification Status */}
           <View mb={spacing.md}>
-            <Text text="Verification Status" preset="formLabel" style={$label} />
+            <Text tx="diagnosisEditor:verificationStatus" preset="formLabel" style={$label} />
             <View style={$radioGroup}>
               {VERIFICATION_STATUSES.map((status) => (
                 <Radio
                   key={status}
-                  label={verificationStatusLabels[status]}
+                  label={translate(verificationStatusKeys[status])}
                   value={verificationStatus === status}
                   onPress={() => setVerificationStatus(status)}
                 />
@@ -269,8 +269,8 @@ function DiagnosisDetailsForm({
           {/* Severity Score */}
           <View mb={spacing.md}>
             <TextField
-              label="Severity Score (1-10)"
-              placeholder="Optional"
+              label={translate("diagnosisEditor:severityScore")}
+              placeholder={translate("diagnosisEditor:optional")}
               value={severityScore}
               onChangeText={setSeverityScore}
               keyboardType="numeric"
@@ -279,7 +279,7 @@ function DiagnosisDetailsForm({
 
           {/* Onset Date */}
           <View mb={spacing.md}>
-            <Text text="Onset Date" preset="formLabel" style={$label} />
+            <Text tx="diagnosisEditor:onsetDate" preset="formLabel" style={$label} />
             <DatePickerButton
               date={onsetDate}
               onDateChange={setOnsetDate}
@@ -301,7 +301,7 @@ function DiagnosisDetailsForm({
               }}
             >
               <Text
-                text={showEndDate ? "Remove End Date" : "+ Add End Date"}
+                text={translate(showEndDate ? "diagnosisSearch:removeEndDate" : "diagnosisSearch:addEndDate")}
                 color={colors.palette.primary500}
                 textDecorationLine="underline"
               />
@@ -320,9 +320,9 @@ function DiagnosisDetailsForm({
 
           {/* Action buttons */}
           <View style={$buttonContainer}>
-            <Button text="Back" preset="default" onPress={onBack} style={$button} />
+            <Button text={translate("common:back")} preset="default" onPress={onBack} style={$button} />
             <Button
-              text="Save"
+              text={translate("common:save")}
               preset="filled"
               onPress={validateAndSave}
               style={$button}

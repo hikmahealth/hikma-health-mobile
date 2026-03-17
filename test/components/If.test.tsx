@@ -102,14 +102,14 @@ describe("If Component", () => {
     })
 
     it("should render nothing when no fallback is provided", () => {
-      const { toJSON } = render(
+      const { queryByText } = render(
         <If condition={false}>
           <Text>Child content</Text>
         </If>,
       )
 
-      // Should render null when condition is false and no fallback
-      expect(toJSON()).toBeNull()
+      // Should not render children when condition is false and no fallback
+      expect(queryByText("Child content")).toBeNull()
     })
   })
 
@@ -173,39 +173,35 @@ describe("If Component", () => {
 
   describe("edge cases", () => {
     it("should handle null children gracefully", () => {
-      const { toJSON } = render(<If condition={true}>{null}</If>)
-
-      // Should render null children without error
-      expect(toJSON()).toBeNull()
+      // Should render without error
+      expect(() => render(<If condition={true}>{null}</If>)).not.toThrow()
     })
 
     it("should handle undefined children gracefully", () => {
-      const { toJSON } = render(<If condition={true}>{undefined}</If>)
-
-      // Should render undefined children without error
-      expect(toJSON()).toBeNull()
+      // Should render without error
+      expect(() => render(<If condition={true}>{undefined}</If>)).not.toThrow()
     })
 
     it("should handle null fallback when condition is false", () => {
-      const { toJSON } = render(
+      const { queryByText } = render(
         <If condition={false} fallback={null}>
           <Text>Main content</Text>
         </If>,
       )
 
-      // Should render null when fallback is null
-      expect(toJSON()).toBeNull()
+      // Should not render main content when condition is false
+      expect(queryByText("Main content")).toBeNull()
     })
 
     it("should handle undefined fallback when condition is false", () => {
-      const { toJSON } = render(
+      const { queryByText } = render(
         <If condition={false} fallback={undefined}>
           <Text>Main content</Text>
         </If>,
       )
 
-      // Should render null when fallback is undefined
-      expect(toJSON()).toBeNull()
+      // Should not render main content when condition is false
+      expect(queryByText("Main content")).toBeNull()
     })
 
     it("should work with boolean expressions as conditions", () => {

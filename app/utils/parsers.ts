@@ -96,8 +96,8 @@ export default function invariant(condition: any, errorMessage?: string): void {
  * @param {string} defaultValue - The default value to return if stringification fails
  * @returns {string} The stringified object or the default value
  */
-/** Separator for joining multiple checkbox selections into a single string */
-export const CHECKBOX_SEPARATOR = ";;"
+/** Separator for joining multiple checkbox selections into a single string (ASCII Unit Separator) */
+export const CHECKBOX_SEPARATOR = "\x1F"
 
 export const joinCheckboxValues = (values: string[]): string => values.join(CHECKBOX_SEPARATOR)
 

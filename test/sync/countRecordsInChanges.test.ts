@@ -28,7 +28,7 @@ jest.mock("../../app/models/User", () => ({ default: {} }))
 jest.mock("../../app/utils/parsers", () => ({
   safeStringify: jest.fn((_v: unknown, d: string) => d),
 }))
-jest.mock("../../app/utils/storage", () => ({ getHHApiUrl: jest.fn() }))
+jest.mock("../../app/utils/storage", () => ({}))
 jest.mock("../../app/utils/date", () => ({ toDateSafe: jest.fn() }))
 
 import { countRecordsInChanges } from "../../app/db/peerSync"

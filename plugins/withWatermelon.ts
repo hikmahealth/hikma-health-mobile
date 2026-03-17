@@ -82,23 +82,34 @@ function mainApplicationSDK52(config: ExpoConfig): ExpoConfig {
     if (
       !mod.modResults.contents.includes("import com.nozbe.watermelondb.jsi.WatermelonDBJSIPackage")
     ) {
-      mod.modResults["contents"] = mod.modResults.contents.replace(
+      mod.modResults.contents = mod.modResults.contents.replace(
         "import android.app.Application",
-        `
-import android.app.Application
-import com.nozbe.watermelondb.jsi.WatermelonDBJSIPackage;
-`,
+        `import android.app.Application
+import com.nozbe.watermelondb.jsi.WatermelonDBJSIPackage;`,
       )
     }
 
-    if (!mod.modResults.contents.includes("packages.add(WatermelonDBJSIPackage())")) {
-      const newContents2 = mod.modResults.contents.replace(
-        "return packages",
-        `
-            packages.add(WatermelonDBJSIPackage())
+    if (!mod.modResults.contents.includes("add(WatermelonDBJSIPackage())")) {
+      // Pattern 1: Kotlin .apply {} block (SDK 52+)
+      if (mod.modResults.contents.includes("PackageList(this).packages.apply")) {
+        mod.modResults.contents = mod.modResults.contents.replace(
+          /(\/\/ add\(MyReactNativePackage\(\)\))/,
+          `$1
+              add(WatermelonDBJSIPackage())`,
+        )
+      }
+      // Pattern 2: Java return packages (older SDKs)
+      else if (mod.modResults.contents.includes("return packages")) {
+        mod.modResults.contents = mod.modResults.contents.replace(
+          "return packages",
+          `packages.add(WatermelonDBJSIPackage())
         return packages`,
-      )
-      mod.modResults.contents = newContents2
+        )
+      } else {
+        console.warn(
+          "[WatermelonDB] Could not find suitable pattern to inject WatermelonDBJSIPackage(). Please add it manually.",
+        )
+      }
     }
 
     return mod

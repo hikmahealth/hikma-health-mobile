@@ -10,7 +10,7 @@ This app is built using React Native with Expo and can be compiled for either iO
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 
-![check-code-coverage](https://img.shields.io/badge/code--coverage-11.41%25-red)
+![check-code-coverage](./badges/coverage.svg)
 
 ## Quick Start
 

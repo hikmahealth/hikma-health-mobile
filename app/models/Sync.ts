@@ -8,7 +8,8 @@ import {
 import { Exit, Match, Option, pipe } from "effect"
 import { result } from "es-toolkit/compat"
 
-import { getHHApiUrl, storage } from "@/utils/storage"
+import { storage } from "@/utils/storage"
+import Peer from "@/models/Peer"
 
 namespace Sync {
   export type StateT = "idle" | "fetching" | "resolving" | "pushing" | "error"
@@ -213,11 +214,11 @@ namespace Sync {
       JSON.stringify(migration),
     )}`
 
-    const HH_API = await getHHApiUrl()
-    if (Option.isNone(HH_API)) {
+    const HH_API = await Peer.getActiveUrl()
+    if (!HH_API) {
       throw new Error("HH API URL not found")
     }
-    const SYNC_API = `${HH_API.value}/api/v2/sync`
+    const SYNC_API = `${HH_API}/api/v2/sync`
 
     console.warn("SYNC_API:", SYNC_API)
 
@@ -248,11 +249,11 @@ namespace Sync {
     changes: SyncDatabaseChangeSet,
     headers: Headers,
   ): Promise<Exit.Exit<SyncPushResult, string>> {
-    const HH_API = await getHHApiUrl()
-    if (Option.isNone(HH_API)) {
+    const HH_API = await Peer.getActiveUrl()
+    if (!HH_API) {
       throw new Error("HH API URL not found")
     }
-    const SYNC_API = `${HH_API.value}/api/v2/sync`
+    const SYNC_API = `${HH_API}/api/v2/sync`
     const result = await fetch(`${SYNC_API}?last_pulled_at=${lastPulledAt}`, {
       method: "POST",
       headers: headers,

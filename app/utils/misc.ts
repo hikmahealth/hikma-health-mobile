@@ -160,3 +160,12 @@ export const checkUrl = async (url: string, timeoutMs: number): Promise<boolean>
     clearTimeout(timer)
   }
 }
+
+/**
+ * Checks if a string is a valid UUID. Checks for uuid v1 to v8
+ * @param {string} str - The string to check
+ * @returns {boolean} True if the string is a valid UUID, false otherwise
+ */
+export function isValidUUID(str: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str)
+}

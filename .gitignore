@@ -35,6 +35,7 @@ local.properties
 # Any build files generated locally
 **/build-**.tar.gz
 
+.local
 
 # node.js
 #
@@ -120,3 +121,5 @@ web-build/
 
 # eas ota update builds
 dist/*
+
+.env.local

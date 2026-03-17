@@ -11,7 +11,6 @@ import {
 import { BarcodeScanningResult, Camera, CameraView } from "expo-camera"
 import * as SecureStore from "expo-secure-store"
 import { useSelector } from "@xstate/react"
-import { Option } from "effect"
 import { InfoIcon, QrCodeIcon, XIcon } from "lucide-react-native"
 import Toast from "react-native-root-toast"
 import { useImmer } from "use-immer"
@@ -33,7 +32,11 @@ import { createEncryptedTransport } from "@/rpc/transport"
 import { providerStore } from "@/store/provider"
 import { colors } from "@/theme/colors"
 import { useAppTheme } from "@/theme/context"
-import { getHHApiUrl } from "@/utils/storage"
+import {
+  initialWindowMetrics,
+  SafeAreaProvider,
+  SafeAreaView,
+} from "react-native-safe-area-context"
 
 const HIKMA_API_TESTING = process.env.EXPO_PUBLIC_HIKMA_API_TESTING
 
@@ -153,9 +156,9 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
       return
     }
 
-    // Cloud login flow (existing)
-    const HIKMA_API = await getHHApiUrl()
-    if (Option.isNone(HIKMA_API)) {
+    // Cloud login flow — verify a cloud peer is registered
+    const cloudUrl = await Peer.getActiveUrl()
+    if (!cloudUrl) {
       Alert.alert(translate("login:invalidQRMessage"))
       return
     }
@@ -262,7 +265,7 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
   }
 
   return (
-    <>
+    <SafeAreaView style={$root}>
       <Screen style={$root} preset="scroll">
         <View
           style={$brandingContainer}
@@ -336,14 +339,15 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
       <Pressable
         testID="login-privacy-policy"
         onPress={openPrivacyPolicy}
-        style={{ position: "absolute", bottom: 0, left: 12, zIndex: 1 }}
+        style={{ margin: 8 }}
+        // style={{ position: "absolute", bottom: 0, left: 12, zIndex: 1 }}
       >
         <InfoIcon
           size={24}
           color={isDarkmode ? colors.palette.neutral700 : colors.palette.neutral700}
         />
       </Pressable>
-    </>
+    </SafeAreaView>
   )
 }
 const $root: ViewStyle = {

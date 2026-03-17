@@ -9,6 +9,7 @@ import { format } from "date-fns"
 import Patient from "@/models/Patient"
 import type PatientRegistrationForm from "@/models/PatientRegistrationForm"
 import type { CreatePatientInput, UpdatePatientInput } from "../../../types/patient"
+import { uuidv7 } from "uuidv7"
 
 /**
  * Extract a base field value from the patient record by column name.
@@ -25,6 +26,7 @@ export function patientRecordToCreateInput(
   const dob = field(record, "date_of_birth", new Date())
   return {
     patient: {
+      id: uuidv7(), // Add a default UUIDv7 - the server can choose to create its own but we init one anyways
       givenName: field(record, "given_name", ""),
       surname: field(record, "surname", ""),
       dateOfBirth: dob instanceof Date ? format(dob, "yyyy-MM-dd") : String(dob),

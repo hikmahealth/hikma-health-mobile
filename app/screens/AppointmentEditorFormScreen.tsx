@@ -30,10 +30,13 @@ import { providerStore } from "@/store/provider"
 import { colors } from "@/theme/colors"
 import { spacing } from "@/theme/spacing"
 import { If } from "@/components/If"
+import { useSafeAreaInsetsStyle } from "@/utils/useSafeAreaInsetsStyle"
 // import { useNavigation } from "@react-navigation/native"
 
-interface AppointmentEditorFormScreenProps
-  extends NativeStackScreenProps<PatientNavigatorParamList, "AppointmentEditorForm"> {}
+interface AppointmentEditorFormScreenProps extends NativeStackScreenProps<
+  PatientNavigatorParamList,
+  "AppointmentEditorForm"
+> {}
 
 const durationOptions = [
   { label: "Unknown", value: 0 },
@@ -74,6 +77,8 @@ export const AppointmentEditorFormScreen: FC<AppointmentEditorFormScreenProps> =
     providerId: state.context.id,
     clinicId: state.context.clinic_id,
   }))
+  const { paddingTop: safeAreaPaddingTop } = useSafeAreaInsetsStyle(["top"])
+
   const [isTimePickerOpen, setIsTimePickerOpen] = useState(false)
   const { clinics, isLoading } = useDBClinicsList()
   const { can } = usePermissionGuard()
@@ -271,6 +276,10 @@ export const AppointmentEditorFormScreen: FC<AppointmentEditorFormScreenProps> =
             multiple
             mode="BADGE"
             listMode="MODAL"
+            modalContentContainerStyle={[
+              $modalContentContainerStyle,
+              { paddingTop: safeAreaPaddingTop },
+            ]}
             items={clinicDepartments.map((dept) => ({
               label: dept.name,
               value: dept.id,
@@ -448,4 +457,14 @@ export const $pickerContainer: ViewStyle = {
   borderWidth: 1,
   borderRadius: 4,
   justifyContent: "center",
+}
+
+const $modalContentContainerStyle: ViewStyle = {
+  marginTop: 4,
+  borderWidth: 1,
+  borderRadius: 4,
+  backgroundColor: colors.palette.neutral200,
+  borderColor: colors.palette.neutral400,
+  zIndex: 990000,
+  flex: 1,
 }

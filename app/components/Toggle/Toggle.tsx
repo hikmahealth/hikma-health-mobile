@@ -13,9 +13,12 @@ import {
   ViewStyle,
 } from "react-native"
 
+import { useSelector } from "@xstate/react"
+
 import { useAppTheme } from "@/theme/context"
 import { $styles } from "@/theme/styles"
 import type { ThemedStyle } from "@/theme/types"
+import { languageStore } from "@/store/language"
 
 import { Text, TextProps } from "../Text"
 
@@ -147,6 +150,8 @@ export function Toggle<T>(props: ToggleProps<T>) {
     themed,
   } = useAppTheme()
 
+  const { isRTL } = useSelector(languageStore, (state) => state.context)
+
   const disabled = editable === false || status === "disabled" || props.disabled
 
   const Wrapper = useMemo(
@@ -155,7 +160,11 @@ export function Toggle<T>(props: ToggleProps<T>) {
   )
 
   const $containerStyles = [$containerStyleOverride]
-  const $inputWrapperStyles = [$styles.row, $inputWrapper, $inputWrapperStyleOverride]
+  const $inputWrapperStyles = [
+    isRTL ? $styles.rowReverse : $styles.row,
+    $inputWrapper,
+    $inputWrapperStyleOverride,
+  ]
   const $helperStyles = themed([
     $helper,
     status === "error" && { color: colors.error },
@@ -254,6 +263,7 @@ function FieldLabel<T>(props: ToggleProps<T>) {
 
 const $inputWrapper: ViewStyle = {
   alignItems: "center",
+  gap: 8,
 }
 
 export const $inputOuterBase: ViewStyle = {
@@ -273,13 +283,13 @@ const $helper: ThemedStyle<TextStyle> = ({ spacing }) => ({
 })
 
 const $label: TextStyle = {
-  flex: 1,
+  flexShrink: 1,
 }
 
-const $labelRight: ThemedStyle<TextStyle> = ({ spacing }) => ({
-  marginStart: spacing.md,
+const $labelRight: ThemedStyle<TextStyle> = () => ({
+  // gap is handled by $inputWrapper
 })
 
-const $labelLeft: ThemedStyle<TextStyle> = ({ spacing }) => ({
-  marginEnd: spacing.md,
+const $labelLeft: ThemedStyle<TextStyle> = () => ({
+  // gap is handled by $inputWrapper
 })

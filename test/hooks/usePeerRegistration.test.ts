@@ -18,10 +18,6 @@ jest.mock("../../app/hub/peerStore", () => ({
   upsertCloudPeer: (...args: any[]) => mockUpsertCloudPeer(...args),
 }))
 
-const mockSetHHApiUrl = jest.fn()
-jest.mock("../../app/utils/storage", () => ({
-  setHHApiUrl: (...args: any[]) => mockSetHHApiUrl(...args),
-}))
 
 const mockFetch = jest.fn()
 global.fetch = mockFetch
@@ -37,7 +33,6 @@ import { parseQRCode, isHubQR } from "../../app/rpc/qrParser"
 describe("usePeerRegistration — underlying logic", () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockSetHHApiUrl.mockResolvedValue(true)
     mockUpsertCloudPeer.mockResolvedValue(undefined)
   })
 
@@ -102,13 +97,13 @@ describe("usePeerRegistration — underlying logic", () => {
       expect(mockUpsertCloudPeer).toHaveBeenCalledWith(url)
     })
 
-    it("setHHApiUrl is called for cloud URLs", async () => {
+    it("Peer.DB.upsertCloud registers the cloud peer", async () => {
       const url = "https://api.example.com"
 
-      const { setHHApiUrl } = require("../../app/utils/storage")
-      await setHHApiUrl(url)
+      const { upsertCloudPeer } = require("../../app/hub/peerStore")
+      await upsertCloudPeer(url)
 
-      expect(mockSetHHApiUrl).toHaveBeenCalledWith(url)
+      expect(mockUpsertCloudPeer).toHaveBeenCalledWith(url)
     })
   })
 })

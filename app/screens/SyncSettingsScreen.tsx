@@ -14,7 +14,6 @@ import {
 import { CameraType, useCameraPermissions, BarcodeScanningResult, CameraView } from "expo-camera"
 import * as SecureStore from "expo-secure-store"
 import { useSelector } from "@xstate/react"
-import { Option } from "effect"
 import { LucideCamera, LucideRefreshCcw, LucideUpload, LucideDownload } from "lucide-react-native"
 import Toast from "react-native-root-toast"
 
@@ -35,7 +34,6 @@ import type { HubSession } from "@/rpc/handshake"
 import { createEncryptedTransport } from "@/rpc/transport"
 import { appStateStore } from "@/store/appState"
 import { colors } from "@/theme/colors"
-import { getHHApiUrl, setHHApiUrl } from "@/utils/storage"
 
 import {
   peerToServerDisplay,
@@ -172,23 +170,6 @@ export const SyncSettingsScreen: FC<SyncSettingsScreenProps> = () => {
     appStateStore.send({ type: "SET_ACTIVE_SYNC_PEER", peerId })
   }
 
-  /**
-   * Cold start: ensure a cloud peer exists if the app has an API URL configured
-   * but no cloud_server peer is registered yet.
-   */
-  useEffect(() => {
-    const ensureCloudPeer = async () => {
-      const clouds = await Peer.DB.getActiveByType("cloud_server")
-      if (clouds.length > 0) return
-
-      const url = await getHHApiUrl()
-      if (!url || !Option.isSome(url)) return
-      await Peer.DB.upsertCloud(Option.getOrElse(url, () => ""))
-    }
-
-    ensureCloudPeer()
-  }, [])
-
   useEffect(() => {
     const backAction = () => {
       if (isCameraScannerActive) {
@@ -227,10 +208,6 @@ export const SyncSettingsScreen: FC<SyncSettingsScreenProps> = () => {
           Alert.alert(translate("login:invalidQRCode"))
           setIsCameraScannerActive(false)
           return
-        }
-
-        if (result.type !== "sync_hub") {
-          await setHHApiUrl(result.url)
         }
 
         Vibration.vibrate(500)
@@ -410,7 +387,10 @@ function ServerTypeComponent({
         <ConnectButton onPress={() => handleAddServer(server.type)} mode="change" />
       </View>
 
-      <ForceSyncActions serverId={server.id} lastSyncedAt={server.lastSyncedAt} />
+      {/* Disabled in production for now */}
+      <If condition={__DEV__}>
+        <ForceSyncActions serverId={server.id} lastSyncedAt={server.lastSyncedAt} />
+      </If>
     </View>
   )
 }

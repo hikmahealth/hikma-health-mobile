@@ -7,6 +7,7 @@ import { colors } from "@/theme/colors"
 import { If } from "./If"
 import { Text } from "./Text"
 import { View } from "./View"
+import { useSafeAreaInsetsStyle } from "@/utils/useSafeAreaInsetsStyle"
 
 type BaseProps = {
   options: { label: string; value: string | number | boolean }[]
@@ -27,6 +28,7 @@ type Props = BaseProps | IOSProps
 
 export const PlatformPicker = (props: Props) => {
   const { options, fieldKey, isIos, value, setValue, label, modalTitle } = props
+  const { paddingTop: safeAreaPaddingTop } = useSafeAreaInsetsStyle(["top"])
 
   // Only access isOpen and setOpen when isIos is true
   const isOpen = isIos && "isOpen" in props ? props.isOpen : false
@@ -57,6 +59,10 @@ export const PlatformPicker = (props: Props) => {
             modalTitle={modalTitle || label}
             style={$dropDownPickerStyle}
             zIndex={990000}
+            modalContentContainerStyle={[
+              $modalContentContainerStyle,
+              { paddingTop: safeAreaPaddingTop },
+            ]}
             zIndexInverse={990000}
             listMode="MODAL"
             items={options}
@@ -90,4 +96,14 @@ export const $pickerContainer: ViewStyle = {
   borderWidth: 1,
   borderRadius: 4,
   justifyContent: "center",
+}
+
+const $modalContentContainerStyle: ViewStyle = {
+  marginTop: 4,
+  borderWidth: 1,
+  borderRadius: 4,
+  backgroundColor: colors.palette.neutral200,
+  borderColor: colors.palette.neutral400,
+  zIndex: 990000,
+  flex: 1,
 }

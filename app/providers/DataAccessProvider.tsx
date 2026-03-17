@@ -7,10 +7,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 import { useSelector } from "@xstate/react"
 import * as SecureStore from "expo-secure-store"
 import { useQueryClient } from "@tanstack/react-query"
-import { Option } from "effect"
-
 import database from "@/db"
-import { getHHApiUrl } from "@/utils/storage"
 import { operationModeStore, type OperationMode } from "@/store/operationMode"
 import { createCloudTransport } from "@/rpc/transport"
 import Peer from "@/models/Peer"
@@ -37,7 +34,7 @@ export function useDataAccess(): DataAccessContextValue {
 type Credentials = { authHeader: string; baseUrl: string }
 
 /** Load auth credentials from SecureStore. Prefers Bearer token, falls back to Basic auth. */
-async function loadCredentials(): Promise<Credentials> {
+async function loadCredentials(activePeer: Peer.T | null): Promise<Credentials> {
   console.log("[DataAccess] loadCredentials started")
 
   const token = await SecureStore.getItemAsync("provider_token")
@@ -57,8 +54,7 @@ async function loadCredentials(): Promise<Credentials> {
     }
   }
 
-  const url = await getHHApiUrl()
-  const baseUrl = Option.getOrElse(url, () => "")
+  const baseUrl = activePeer ? (Peer.getUrl(activePeer) ?? "") : ""
   console.log("[DataAccess] baseUrl:", baseUrl || "(empty)")
   console.log("[DataAccess] loadCredentials complete")
   return { authHeader, baseUrl }
@@ -114,16 +110,6 @@ export function DataAccessProvider({ children }: { children: React.ReactNode }) 
     queryClient.clear()
   }, [mode, activePeer?.id])
 
-  // Load credentials when mode is online
-  useEffect(() => {
-    if (mode === "online") {
-      console.log("[DataAccess] Mode is online — loading credentials")
-      loadCredentials().then(setCredentials)
-    } else {
-      setCredentials(null)
-    }
-  }, [mode])
-
   // Resolve active peer when mode is online
   useEffect(() => {
     if (mode === "online") {
@@ -132,6 +118,16 @@ export function DataAccessProvider({ children }: { children: React.ReactNode }) 
       setActivePeer(null)
     }
   }, [mode])
+
+  // Load credentials when mode is online and active peer is resolved
+  useEffect(() => {
+    if (mode === "online") {
+      console.log("[DataAccess] Mode is online — loading credentials")
+      loadCredentials(activePeer).then(setCredentials)
+    } else {
+      setCredentials(null)
+    }
+  }, [mode, activePeer])
 
   const provider = useMemo(
     () => buildProvider(providerKind, credentials),

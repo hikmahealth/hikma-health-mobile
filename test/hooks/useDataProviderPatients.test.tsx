@@ -130,39 +130,32 @@ jest.mock("../../app/db", () => ({
 }))
 
 // ---------------------------------------------------------------------------
-// Mock UserClinicPermissions
+// Mock useClinicIdsWithPermission (replaces old UserClinicPermissions mock)
 // ---------------------------------------------------------------------------
 
-jest.mock("../../app/models/UserClinicPermissions", () => ({
-  __esModule: true,
-  default: {
-    DB: {
-      getClinicIdsWithPermission: jest.fn().mockResolvedValue(["c1", "c2"]),
-    },
-  },
+// Stable reference to avoid infinite re-render loops in useEffect dependencies
+const mockClinicIds = ["c1", "c2"]
+const mockPermissionResult = { clinicIds: mockClinicIds, isLoading: false }
+
+jest.mock("../../app/hooks/useClinicIdsWithPermission", () => ({
+  useClinicIdsWithPermission: () => mockPermissionResult,
 }))
 
 // ---------------------------------------------------------------------------
 // Mock Patient.DB.fromDB
 // ---------------------------------------------------------------------------
 
-jest.mock("../../app/models/Patient", () => {
-  const actual = jest.requireActual("../../app/models/Patient")
-  return {
-    ...actual,
-    __esModule: true,
-    default: {
-      ...actual.default,
-      DB: {
-        ...actual.default?.DB,
-        fromDB: jest.fn((dbPatient: any) => ({
-          ...dbPatient,
-          deletedAt: { _tag: "None" },
-        })),
-      },
+jest.mock("../../app/models/Patient", () => ({
+  __esModule: true,
+  default: {
+    DB: {
+      fromDB: jest.fn((dbPatient: any) => ({
+        ...dbPatient,
+        deletedAt: { _tag: "None" },
+      })),
     },
-  }
-})
+  },
+}))
 
 // ---------------------------------------------------------------------------
 // Configurable mock for useDataAccess

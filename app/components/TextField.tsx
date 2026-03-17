@@ -11,8 +11,8 @@ import {
   ViewStyle,
 } from "react-native"
 
-import { isRTL } from "@/i18n"
 import { translate } from "@/i18n/translate"
+import { useLanguage } from "@/hooks/useLanguage"
 import { useAppTheme } from "@/theme/context"
 import { $styles } from "@/theme/styles"
 import type { ThemedStyle, ThemedStyleArray } from "@/theme/types"
@@ -163,6 +163,7 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
     themed,
     theme: { colors },
   } = useAppTheme()
+  const { isRTL } = useLanguage()
 
   const disabled = TextInputProps.editable === false || status === "disabled"
 
@@ -172,9 +173,9 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
 
   const $containerStyles = [$containerStyleOverride]
 
-  const $labelStyles = [$labelStyle, LabelTextProps?.style]
+  const $labelStyles = [$labelStyle, isRTL && { textAlign: "right" as TextStyle["textAlign"] }, LabelTextProps?.style]
 
-  const $descriptionStyles = [$descriptionStyle, DescriptionTextProps?.style]
+  const $descriptionStyles = [$descriptionStyle, isRTL && { textAlign: "right" as TextStyle["textAlign"] }, DescriptionTextProps?.style]
 
   const $inputWrapperStyles = [
     $styles.row,
@@ -183,13 +184,14 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
     TextInputProps.multiline && { minHeight: 112 },
     LeftAccessory && { paddingStart: 0 },
     RightAccessory && { paddingEnd: 0 },
+    isRTL && { flexDirection: "row-reverse" as const },
     $inputWrapperStyleOverride,
   ]
 
   const $inputStyles: ThemedStyleArray<TextStyle> = [
     $inputStyle,
     disabled && { color: colors.textDim },
-    isRTL && { textAlign: "right" as TextStyle["textAlign"] },
+    isRTL && { textAlign: "right" as TextStyle["textAlign"], writingDirection: "rtl" as const },
     TextInputProps.multiline && { height: "auto" },
     $inputStyleOverride,
   ]
@@ -197,6 +199,7 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
   const $helperStyles = [
     $helperStyle,
     status === "error" && { color: colors.error },
+    isRTL && { textAlign: "right" as TextStyle["textAlign"] },
     HelperTextProps?.style,
   ]
 

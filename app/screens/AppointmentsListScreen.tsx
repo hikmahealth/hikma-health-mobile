@@ -40,9 +40,12 @@ import { colors } from "@/theme/colors"
 import { useAppTheme } from "@/theme/context"
 import type { ThemedStyle } from "@/theme/types"
 import { friendlyString, getAppintmentStatusColor } from "@/utils/misc"
+import { useSafeAreaInsetsStyle } from "@/utils/useSafeAreaInsetsStyle"
 
-interface AppointmentsListScreenProps
-  extends NativeStackScreenProps<AppointmentNavigatorParamList, "AppointmentsList"> {}
+interface AppointmentsListScreenProps extends NativeStackScreenProps<
+  AppointmentNavigatorParamList,
+  "AppointmentsList"
+> {}
 
 export const AppointmentsListScreen: FC<AppointmentsListScreenProps> = ({ navigation }) => {
   const { themed } = useAppTheme()
@@ -158,6 +161,7 @@ export const AppointmentListHeader: FC<AppointmentListHeaderProps> = enhanceHead
       null,
     )
     const [isCollapsed, setIsCollapsed] = useState(true)
+    const { paddingTop: safeAreaPaddingTop } = useSafeAreaInsetsStyle(["top"])
 
     const selectedClinic = clinicsList.find((clinic) => clinic.id === filters.clinicId)
     const selectedStatus = filters.status
@@ -215,6 +219,10 @@ export const AppointmentListHeader: FC<AppointmentListHeaderProps> = enhanceHead
               }}
               modalTitle="Clinic"
               style={$dropDownPickerStyle}
+              modalContentContainerStyle={[
+                $modalContentContainerStyle,
+                { paddingTop: safeAreaPaddingTop },
+              ]}
               zIndex={990000}
               zIndexInverse={990000}
               listMode="MODAL"
@@ -244,6 +252,10 @@ export const AppointmentListHeader: FC<AppointmentListHeaderProps> = enhanceHead
               zIndex={990000}
               zIndexInverse={990000}
               listMode="MODAL"
+              modalContentContainerStyle={[
+                $modalContentContainerStyle,
+                { paddingTop: safeAreaPaddingTop },
+              ]}
               items={departmentList.map((department) => ({
                 label: department.name,
                 value: department.id,
@@ -554,3 +566,13 @@ const $emptySubtext: ThemedStyle<TextStyle> = ({ colors }) => ({
   color: colors.textDim,
   marginTop: 8,
 })
+
+const $modalContentContainerStyle: ViewStyle = {
+  marginTop: 4,
+  borderWidth: 1,
+  borderRadius: 4,
+  backgroundColor: colors.palette.neutral200,
+  borderColor: colors.palette.neutral400,
+  zIndex: 990000,
+  flex: 1,
+}

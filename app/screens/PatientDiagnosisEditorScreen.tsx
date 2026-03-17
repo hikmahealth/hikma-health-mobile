@@ -15,6 +15,7 @@ import database from "@/db"
 import PatientProblemModel from "@/db/model/PatientProblems"
 import { usePermissionGuard } from "@/hooks/usePermissionGuard"
 import { useUpdateProblem } from "@/hooks/useUpdateProblem"
+import { translate } from "@/i18n/translate"
 import { useDataAccess } from "@/providers/DataAccessProvider"
 import PatientProblems from "@/models/PatientProblems"
 import { PatientStackScreenProps } from "@/navigators/PatientNavigator"
@@ -35,22 +36,21 @@ const VERIFICATION_STATUSES: PatientProblems.VerificationStatus[] = [
   "unconfirmed",
 ]
 
-const clinicalStatusLabels: Record<PatientProblems.ClinicalStatus, string> = {
-  active: "Active",
-  remission: "Remission",
-  resolved: "Resolved",
-  unknown: "Unknown",
+const clinicalStatusKeys: Record<PatientProblems.ClinicalStatus, string> = {
+  active: "diagnosisEditor:active",
+  remission: "diagnosisEditor:remission",
+  resolved: "diagnosisEditor:resolved",
+  unknown: "diagnosisEditor:unknown",
 }
 
-const verificationStatusLabels: Record<PatientProblems.VerificationStatus, string> = {
-  provisional: "Provisional",
-  confirmed: "Confirmed",
-  refuted: "Refuted",
-  unconfirmed: "Unconfirmed",
+const verificationStatusKeys: Record<PatientProblems.VerificationStatus, string> = {
+  provisional: "diagnosisEditor:provisional",
+  confirmed: "diagnosisEditor:confirmed",
+  refuted: "diagnosisEditor:refuted",
+  unconfirmed: "diagnosisEditor:unconfirmed",
 }
 
-interface PatientDiagnosisEditorScreenProps
-  extends PatientStackScreenProps<"PatientDiagnosisEditor"> {}
+interface PatientDiagnosisEditorScreenProps extends PatientStackScreenProps<"PatientDiagnosisEditor"> {}
 
 export const PatientDiagnosisEditorScreen: FC<PatientDiagnosisEditorScreenProps> = ({
   navigation,
@@ -97,9 +97,7 @@ export const PatientDiagnosisEditorScreen: FC<PatientDiagnosisEditorScreenProps>
             setShowEndDate(true)
           }
         } else {
-          const record = await database
-            .get<PatientProblemModel>("patient_problems")
-            .find(problemId)
+          const record = await database.get<PatientProblemModel>("patient_problems").find(problemId)
           setProblemLabel(record.problemLabel)
           setProblemCode(record.problemCode)
           setClinicalStatus(record.clinicalStatus as PatientProblems.ClinicalStatus)
@@ -114,7 +112,7 @@ export const PatientDiagnosisEditorScreen: FC<PatientDiagnosisEditorScreenProps>
         setLoading(false)
       } catch (err) {
         console.error("Error loading diagnosis:", err)
-        Alert.alert("Error", "Could not load diagnosis.")
+        Alert.alert(translate("common:error"), translate("diagnosisEditor:loadError"))
         navigation.goBack()
       }
     }
@@ -123,7 +121,7 @@ export const PatientDiagnosisEditorScreen: FC<PatientDiagnosisEditorScreenProps>
 
   const validateAndSave = async () => {
     if (!can("diagnosis:edit")) {
-      return Toast.show("You do not have permission to edit diagnoses", {
+      return Toast.show(translate("diagnosisEditor:noPermission"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.BOTTOM,
       })
@@ -131,7 +129,7 @@ export const PatientDiagnosisEditorScreen: FC<PatientDiagnosisEditorScreenProps>
     if (severityScore) {
       const score = parseInt(severityScore, 10)
       if (isNaN(score) || score < 1 || score > 10) {
-        Alert.alert("Validation Error", "Severity score must be between 1 and 10.")
+        Alert.alert(translate("diagnosisEditor:validationError"), translate("diagnosisEditor:severityRange"))
         return
       }
     }
@@ -156,7 +154,7 @@ export const PatientDiagnosisEditorScreen: FC<PatientDiagnosisEditorScreenProps>
       navigation.goBack()
     } catch (error) {
       console.error("Error updating diagnosis:", error)
-      Alert.alert("Error", "Failed to update diagnosis. Please try again.")
+      Alert.alert(translate("common:error"), translate("diagnosisEditor:saveError"))
     } finally {
       setSaving(false)
     }
@@ -166,7 +164,7 @@ export const PatientDiagnosisEditorScreen: FC<PatientDiagnosisEditorScreenProps>
     return (
       <Screen style={$root}>
         <View pt={40} alignItems="center">
-          <Text text="Loading..." color={colors.textDim} />
+          <Text tx="common:loading" color={colors.textDim} />
         </View>
       </Screen>
     )
@@ -184,12 +182,12 @@ export const PatientDiagnosisEditorScreen: FC<PatientDiagnosisEditorScreenProps>
 
           {/* Clinical Status */}
           <View mb={spacing.md}>
-            <Text text="Clinical Status" preset="formLabel" style={$label} />
+            <Text tx="diagnosisEditor:clinicalStatus" preset="formLabel" style={$label} />
             <View style={$radioGroup}>
               {CLINICAL_STATUSES.map((status) => (
                 <Radio
                   key={status}
-                  label={clinicalStatusLabels[status]}
+                  label={translate(clinicalStatusKeys[status])}
                   value={clinicalStatus === status}
                   onPress={() => setClinicalStatus(status)}
                 />
@@ -199,12 +197,12 @@ export const PatientDiagnosisEditorScreen: FC<PatientDiagnosisEditorScreenProps>
 
           {/* Verification Status */}
           <View mb={spacing.md}>
-            <Text text="Verification Status" preset="formLabel" style={$label} />
+            <Text tx="diagnosisEditor:verificationStatus" preset="formLabel" style={$label} />
             <View style={$radioGroup}>
               {VERIFICATION_STATUSES.map((status) => (
                 <Radio
                   key={status}
-                  label={verificationStatusLabels[status]}
+                  label={translate(verificationStatusKeys[status])}
                   value={verificationStatus === status}
                   onPress={() => setVerificationStatus(status)}
                 />
@@ -215,8 +213,8 @@ export const PatientDiagnosisEditorScreen: FC<PatientDiagnosisEditorScreenProps>
           {/* Severity Score */}
           <View mb={spacing.md}>
             <TextField
-              label="Severity Score (1-10)"
-              placeholder="Optional"
+              label={translate("diagnosisEditor:severityScore")}
+              placeholder={translate("diagnosisEditor:optional")}
               value={severityScore}
               onChangeText={setSeverityScore}
               keyboardType="numeric"
@@ -225,7 +223,7 @@ export const PatientDiagnosisEditorScreen: FC<PatientDiagnosisEditorScreenProps>
 
           {/* Onset Date */}
           <View mb={spacing.md}>
-            <Text text="Onset Date" preset="formLabel" style={$label} />
+            <Text tx="diagnosisEditor:onsetDate" preset="formLabel" style={$label} />
             <DatePickerButton
               date={onsetDate}
               onDateChange={setOnsetDate}
@@ -247,7 +245,7 @@ export const PatientDiagnosisEditorScreen: FC<PatientDiagnosisEditorScreenProps>
               }}
             >
               <Text
-                text={showEndDate ? "Remove End Date" : "+ Add End Date"}
+                text={translate(showEndDate ? "diagnosisEditor:removeResolvedDate" : "diagnosisEditor:addResolvedDate")}
                 color={colors.palette.primary500}
                 textDecorationLine="underline"
               />
@@ -267,13 +265,13 @@ export const PatientDiagnosisEditorScreen: FC<PatientDiagnosisEditorScreenProps>
           {/* Action buttons */}
           <View style={$buttonContainer}>
             <Button
-              text="Cancel"
+              text={translate("common:cancel")}
               preset="default"
               onPress={() => navigation.goBack()}
               style={$button}
             />
             <Button
-              text="Save"
+              text={translate("common:save")}
               preset="filled"
               onPress={validateAndSave}
               style={$button}

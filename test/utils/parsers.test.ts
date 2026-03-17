@@ -248,16 +248,16 @@ describe("safeStringify", () => {
 })
 
 describe("joinCheckboxValues / splitCheckboxValues", () => {
-  it("joins values with ;; separator", () => {
-    expect(joinCheckboxValues(["A", "B"])).toBe("A;;B")
+  it("joins values with \\x1F separator", () => {
+    expect(joinCheckboxValues(["A", "B"])).toBe("A\x1FB")
   })
 
   it("returns empty string for empty array", () => {
     expect(joinCheckboxValues([])).toBe("")
   })
 
-  it("splits ;; separated string", () => {
-    expect(splitCheckboxValues("A;;B;;C")).toEqual(["A", "B", "C"])
+  it("splits \\x1F separated string", () => {
+    expect(splitCheckboxValues("A\x1FB\x1FC")).toEqual(["A", "B", "C"])
   })
 
   it("returns empty array for falsy input", () => {
@@ -266,9 +266,9 @@ describe("joinCheckboxValues / splitCheckboxValues", () => {
     expect(splitCheckboxValues(undefined)).toEqual([])
   })
 
-  it("round-trips: split(join(arr)) === arr for option labels (no semicolons)", () => {
-    // Option labels in practice are human-readable text without semicolons
-    const optionLabel = fc.string({ minLength: 1 }).filter((s) => !s.includes(";"))
+  it("round-trips: split(join(arr)) === arr for option labels", () => {
+    // \x1F is a non-printable control char that won't appear in human-readable labels
+    const optionLabel = fc.string({ minLength: 1 }).filter((s) => !s.includes("\x1F"))
     fc.assert(
       fc.property(fc.array(optionLabel), (values) => {
         expect(splitCheckboxValues(joinCheckboxValues(values))).toEqual(values)
@@ -277,7 +277,7 @@ describe("joinCheckboxValues / splitCheckboxValues", () => {
   })
 
   it("join then split preserves count for option labels", () => {
-    const optionLabel = fc.string({ minLength: 1 }).filter((s) => !s.includes(";"))
+    const optionLabel = fc.string({ minLength: 1 }).filter((s) => !s.includes("\x1F"))
     fc.assert(
       fc.property(fc.array(optionLabel, { minLength: 1 }), (values) => {
         const result = splitCheckboxValues(joinCheckboxValues(values))

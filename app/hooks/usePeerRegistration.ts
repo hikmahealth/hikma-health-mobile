@@ -13,7 +13,6 @@ import { useState, useCallback, useEffect } from "react"
 import Peer from "@/models/Peer"
 import type { HubSession } from "@/rpc/handshake"
 import { parseQRCode, isHubQR } from "@/rpc/qrParser"
-import { setHHApiUrl } from "@/utils/storage"
 
 export type PeerConnectionType = "sync_hub" | "cloud"
 
@@ -68,8 +67,7 @@ export function usePeerRegistration() {
         return { ok: false, error: "URL is not reachable" }
       }
 
-      // Store as the active API URL and register as a cloud peer
-      await setHHApiUrl(url)
+      // Register as a cloud peer (Peer table is the source of truth for URLs)
       await Peer.DB.upsertCloud(url)
       setConnectionType("cloud")
       return { ok: true, type: "cloud", url }

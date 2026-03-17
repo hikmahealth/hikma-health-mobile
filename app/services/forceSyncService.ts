@@ -13,13 +13,10 @@
 import * as SecureStore from "expo-secure-store"
 import * as Sentry from "@sentry/react-native"
 import { SyncDatabaseChangeSet } from "@nozbe/watermelondb/sync"
-import { Option } from "effect"
-
 import { applyRemoteChanges, getLocalChangesSince } from "@/db/localSync"
 import { countRecordsInChanges, updateDates } from "@/db/peerSync"
 import Peer from "@/models/Peer"
 import { createCloudTransport, type RpcTransport } from "@/rpc/transport"
-import { getHHApiUrl } from "@/utils/storage"
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -55,8 +52,7 @@ const getTransportForPeer = async (peer: Peer.T): Promise<RpcTransport | null> =
         authHeader = `Basic ${btoa(`${email}:${password}`)}`
       }
 
-      const url = await getHHApiUrl()
-      const baseUrl = Option.getOrElse(url, () => "")
+      const baseUrl = Peer.getUrl(peer)
       if (!baseUrl) return null
 
       return createCloudTransport(baseUrl, () => authHeader)

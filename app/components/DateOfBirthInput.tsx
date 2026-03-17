@@ -70,6 +70,11 @@ export interface DateOfBirthInputProps {
   onChangeDate: (date: Date | null) => void
 
   testId?: string
+
+  /**
+   * Whether the field is required. When true, displays an asterisk on the label.
+   */
+  required?: boolean
 }
 
 /**
@@ -87,6 +92,7 @@ export const DateOfBirthInput = (props: DateOfBirthInputProps) => {
     date: defaultDate,
     onChangeDate,
     testId,
+    required,
   } = props
   const $styles = [$container, style]
   const { themed } = useAppTheme()
@@ -165,7 +171,7 @@ export const DateOfBirthInput = (props: DateOfBirthInputProps) => {
   return (
     <View style={$styles}>
       {(labelTx || label) && (
-        <Text style={themed($labelStyle)} preset="formLabel" tx={labelTx} text={label} />
+        <Text style={themed($labelStyle)} preset="formLabel" tx={labelTx} text={label} withAsterisk={required} />
       )}
       {(description || descriptionTx) && (
         <Text style={themed($descriptionStyle)} tx={descriptionTx} text={description} />
