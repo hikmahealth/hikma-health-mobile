@@ -30,8 +30,8 @@ export function parseQRCode(data: string): QRData | null {
     // Not JSON — fall through to cloud check
   }
 
-  // Plain URL string → cloud
-  if (data.startsWith("http://") || data.startsWith("https://")) {
+  // Plain URL string → cloud (HTTPS only to prevent credential leakage over HTTP)
+  if (data.startsWith("https://")) {
     return { type: "cloud", url: data }
   }
 

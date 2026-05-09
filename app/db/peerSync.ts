@@ -24,6 +24,7 @@ import type { PeerType } from "@/db/model/Peer"
 import Peer from "@/models/Peer"
 import User from "@/models/User"
 import { toDateSafe } from "@/utils/date"
+import { logger } from "@/utils/logger"
 import { safeStringify } from "@/utils/parsers"
 
 import { applyRemoteChanges, fetchLocalChanges, markLocalChangesAsSynced } from "./localSync"
@@ -357,7 +358,7 @@ const syncHub = async (peer: Peer.T, callbacks: SyncCallbacks): Promise<void> =>
   //     return undefined
   //   }
   // }
-  console.log("[HUB SYNC]", { lastPulledAt, peer: JSON.stringify(peer, null, 2), token })
+  logger.log("[HUB SYNC]", { lastPulledAt, peer: JSON.stringify(peer, null, 2), token })
 
   // ── Pull ─────────────────────────────────────────────────────────
   const pullResult = await transport.sendQuery<SyncPullResponse>(
@@ -365,7 +366,7 @@ const syncHub = async (peer: Peer.T, callbacks: SyncCallbacks): Promise<void> =>
     { lastPulledAt },
     token,
   )
-  console.log("[Sync] After pullResult: ", pullResult)
+  logger.log("[Sync] After pullResult: ", pullResult)
   if (!pullResult.ok) {
     throw new Error(`sync_pull failed: ${pullResult.error.message}`)
   }

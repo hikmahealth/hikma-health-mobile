@@ -9,6 +9,7 @@ import { performHandshake, type HubSession } from "@/rpc/handshake"
 import { createEncryptedTransport, type RpcTransport } from "@/rpc/transport"
 import type { RpcResult } from "@/rpc/types"
 import { ok, err, type Result, type DataError } from "../../types/data"
+import { logger } from "@/utils/logger"
 import { checkUrl } from "@/utils/misc"
 
 namespace Peer {
@@ -157,7 +158,11 @@ namespace Peer {
 
     // We currently do not allow 2 cloud peers to be registered at the same time.
     // If a cloud peer already exists, replace it with the new one.
+    // HTTPS is required to prevent Basic Auth credentials from being sent in cleartext.
     export const upsertCloud = async (url: string): Promise<void> => {
+      if (!url.startsWith("https://")) {
+        throw new Error("Cloud peer URL must use HTTPS")
+      }
       const existing = await getActiveByType("cloud_server")
       for (const peer of existing) {
         if (peer.peerId !== `cloud:${url}`) {
@@ -328,7 +333,7 @@ namespace Peer {
 
     export const getTokenByPeerId = async (peerId: string): Promise<Result<string>> => {
       const session = await load()
-      console.log("[getTokenByPeerId]: ", { session })
+      logger.log("[getTokenByPeerId]: ", { session })
       if (!session) return err({ _tag: "NotFound", entity: "HubSession", id: peerId })
       if (session.hubId !== peerId)
         return err({

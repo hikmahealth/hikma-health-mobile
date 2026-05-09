@@ -1,5 +1,15 @@
 # Hikma Health Mobile Application
 
+> ## ⚠️ This repository is deprecated
+>
+> Development of Hikma Health Mobile application has moved to a **monorepo** for greater system stability and code coherence across the platform. Active development and future updates now happens on the **[hikma-health-platform](https://github.com/hikmahealth/hikma-health-platform/)** repository.
+>
+> **Please migrate to `hikma-health-platform` as soon as possible.** Updates to this repo will be a much, much lower priority and limited to **security patches only**. New features, bug fixes, and improvements will land in `hikma-health-mobile`.
+
+---
+
+A full-stack health management system designed for offline-first operation in low-resource settings. Built with modern web technologies and optimized for reliability and performance.
+
 The Hikma Health platform is a mobile electronic health record system designed for organizations working in low-resource settings to collect and access patient health information. The repository contains the mobile application (Android tested, iOS support included) that supports offline functionality, thousands of patients and multiple languages including Arabic, Spanish, and English. Other languages can be added trivially.
 
 The platform is designed to be intuitive and allow for efficient patient workflows for patient registration, data entry, and data download. You can see a user demo here: https://drive.google.com/file/d/1ssBdEPShWCu3ZXNCXnoodbwWgqlTncJb/view?usp=drive_link

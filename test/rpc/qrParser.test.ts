@@ -16,16 +16,21 @@ describe("rpc/qrParser", () => {
     )
   })
 
-  it("parses plain URL to CloudQRData", () => {
+  it("parses HTTPS URL to CloudQRData", () => {
     fc.assert(
-      fc.property(fc.webUrl({ withFragments: false, withQueryParameters: false }), (url) => {
-        const result = parseQRCode(url)
-        expect(result).not.toBeNull()
-        expect(result!.type).toBe("cloud")
-        expect(result!.url).toBe(url)
-        expect(isCloudQR(result!)).toBe(true)
-        expect(isHubQR(result!)).toBe(false)
-      }),
+      fc.property(
+        fc.webUrl({ withFragments: false, withQueryParameters: false }).filter((u) =>
+          u.startsWith("https://"),
+        ),
+        (url) => {
+          const result = parseQRCode(url)
+          expect(result).not.toBeNull()
+          expect(result!.type).toBe("cloud")
+          expect(result!.url).toBe(url)
+          expect(isCloudQR(result!)).toBe(true)
+          expect(isHubQR(result!)).toBe(false)
+        },
+      ),
     )
   })
 
@@ -39,11 +44,9 @@ describe("rpc/qrParser", () => {
     expect(parseQRCode('{"type":"sync_hub","url":""}')).toBeNull() // empty url
   })
 
-  it("handles http:// URLs as cloud", () => {
+  it("rejects http:// URLs for cloud (HTTPS required)", () => {
     const result = parseQRCode("http://192.168.1.100:8080")
-    expect(result).not.toBeNull()
-    expect(result!.type).toBe("cloud")
-    expect(result!.url).toBe("http://192.168.1.100:8080")
+    expect(result).toBeNull()
   })
 
   it("hub JSON takes precedence over URL-like content", () => {
