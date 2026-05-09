@@ -106,10 +106,9 @@ export function parseYYYYMMDD<T>(dateStr: string | undefined, defaultReturn: T):
     const [year, month, day] = dateStr.split("-").map(Number)
     if (isNaN(year) || isNaN(month) || isNaN(day)) return defaultReturn
 
-    const date = new Date() // Preserves current time
-    date.setFullYear(year)
-    date.setMonth(month - 1)
-    date.setDate(day)
+    // Use explicit constructor to avoid day-of-month overflow when setting fields incrementally
+    // (e.g. setting month to Feb while current day is 31 causes month to shift)
+    const date = new Date(year, month - 1, day)
 
     // Validation
     if (isNaN(date.getTime())) return defaultReturn

@@ -44,6 +44,7 @@ import { useOperationModeInit } from "./hooks/useOperationModeInit"
 import { ThemeProvider, useAppTheme } from "./theme/context"
 import { customFontsToLoad } from "./theme/typography"
 import { loadDateFnsLocale } from "./utils/formatDate"
+import { logger } from "./utils/logger"
 import * as storage from "./utils/storage"
 
 export const NAVIGATION_PERSISTENCE_KEY = "NAVIGATION_STATE"
@@ -111,7 +112,7 @@ export function App() {
         const email = await SecureStorage.getItemAsync("provider_email")
         const password = await SecureStorage.getItemAsync("provider_password")
 
-        console.warn("First one 🚩🚩🚩: ", { storedProvider, email, password })
+        logger.warn("First one 🚩🚩🚩: ", { storedProvider, email, password })
 
         // Fallback to old storage method for backward compatibility
         let credentials = { email: "", password: "" }
@@ -123,7 +124,7 @@ export function App() {
         const finalEmail = email || credentials.email
         const finalPassword = password || credentials.password
 
-        console.warn("🚩🚩🚩: ", { storedProvider, finalEmail, finalPassword })
+        logger.warn("🚩🚩🚩: ", { storedProvider, finalEmail, finalPassword })
 
         if (storedProvider && finalEmail && finalPassword) {
           const payload = JSON.parse(storedProvider)
